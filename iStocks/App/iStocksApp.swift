@@ -11,7 +11,7 @@ import SwiftUI
 struct iStocksApp: App {
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            TabBarContainer()
         }
     }
 }
