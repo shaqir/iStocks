@@ -41,7 +41,7 @@ enum TabViewEnum: Identifiable, CaseIterable, View, Hashable {
     
     var body: some View {
         switch self {
-        case .watchlist: WatchListView()
+        case .watchlist: WatchlistView()
         case .orders: OrderView()
         case .portfolio: PortfolioView()
         case .bids: BidsView()
