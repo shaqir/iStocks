@@ -7,7 +7,19 @@
 
 import SwiftUI
 
-struct TabBarContainer: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> some UIViewController { MainTabBar() }
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context){}
+struct TabBarContainer: View {
+    @State private var selectedTab: TabViewEnum = .watchlist
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                TabRouterView(tab: selectedTab)
+                Spacer(minLength: 0)
+            }
+
+            CustomTabBar(selectedTab: $selectedTab)
+                .padding(.bottom, 12)
+        }
+        .edgesIgnoringSafeArea(.bottom)
+    }
 }

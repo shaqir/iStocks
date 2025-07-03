@@ -25,7 +25,7 @@ enum AppStrings {
     }
     
     enum tabNames{
-        static let watchlist = "WatchList"
+        static let watchlist = "Watchlist"
         static let orders = "Orders"
         static let portfolio = "Portfolio"
         static let bids = "Bids"
