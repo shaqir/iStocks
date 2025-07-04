@@ -42,6 +42,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
     private func setupTimer() {
         timer
             .autoconnect() // starts the timer
+            .prefix(1) // Take only the first event : Timer will be called only once.
             .sink { [weak self] _ in
                 self?.simulatePriceChange()
             }

@@ -44,3 +44,17 @@ extension Stock {
         return String(format: "%@%.2f", diff >= 0 ? "+" : "", diff)
     }
 }
+
+extension Stock {
+    static func dummy() -> Stock {
+        Stock(
+            id: UUID(),
+            symbol: "AAPL",
+            price: 123.45,
+            previousPrice: 120.0,
+            isPriceUp: true,
+            qty: 10,
+            averageBuyPrice: 100.0
+        )
+    }
+}

@@ -10,6 +10,8 @@ import Combine
 final class WatchlistViewModel: ObservableObject {
     
     @Published var stocks: [Stock] = []
+    var didUpdateStocks: (([Stock]) -> Void)? // Callback
+
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var searchText: String = ""

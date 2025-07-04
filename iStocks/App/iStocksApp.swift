@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct iStocksApp: App {
@@ -13,5 +14,6 @@ struct iStocksApp: App {
         WindowGroup {
             TabBarContainer()
         }
+        .modelContainer(for: [WatchlistEntity.self, StockEntity.self])
     }
 }

@@ -6,18 +6,20 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TabRouterView: View {
     
     let tab: TabViewEnum
-    @StateObject private var watchlistsViewModel = WatchlistDIContainer.makeWatchlistsViewModel()
-
+    @Environment(\.modelContext) private var context
+    
     var body: some View {
         switch tab {
         
         case .watchlist:
-           // WatchlistView()
-            WatchlistTabView(viewModel: watchlistsViewModel)
+            
+            let vm = WatchlistDIContainer.makeWatchlistsViewModel(context: context)
+            WatchlistTabView(viewModel: vm)
         
         case .orders:
             OrderView()
