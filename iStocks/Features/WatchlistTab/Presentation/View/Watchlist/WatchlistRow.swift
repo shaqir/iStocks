@@ -66,5 +66,5 @@ struct WatchlistRow: View {
 }
 
 #Preview {
-    WatchlistRow(stock: MockData.sampleStocks.first!)
+    WatchlistRow(stock: MockStockData.allStocks.first!)
 }

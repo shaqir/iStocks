@@ -21,6 +21,16 @@ struct WatchlistTabView: View {
     @State private var isPresentingEdit = false
     @State private var isPresentingNewWatchlist = false
     
+    init(viewModel: WatchlistsViewModel) {
+        self.viewModel = viewModel
+
+        // Set up persistence callback when a stock is added
+        viewModelProvider.onUpdate = { updatedWatchlist in
+            viewModel.updateWatchlist(id: updatedWatchlist.id, with: updatedWatchlist)
+        }
+    }
+
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -116,7 +126,10 @@ struct WatchlistTabView: View {
                 EditSingleWatchlistView(
                     watchlist: watchlist,
                     onSave: { updated in
-                        viewModel.updateWatchlist(id: updated.id, with: updated)
+                        if let index = viewModel.watchlists.firstIndex(where: { $0.id == updated.id }) {
+                            viewModel.watchlists[index] = updated
+                            viewModel.saveAllWatchlists()
+                        }
                         isPresentingEdit = false
                     },
                     onDismiss: {

@@ -24,11 +24,14 @@ final class WatchlistViewModel: ObservableObject {
     }
     
     // MARK: - Computed filteredStocks (replaces @Published)
+    // MARK: - Computed filteredStocks (returns [Stock])
     var filteredStocks: [Stock] {
-        guard !searchText.isEmpty else { return stocks }
-        return stocks.filter {
-            $0.symbol.localizedCaseInsensitiveContains(searchText)
+        guard !searchText.isEmpty else {
+            return Array(stocks).sorted(by: { $0.symbol < $1.symbol })
         }
+        return stocks
+            .filter { $0.symbol.localizedCaseInsensitiveContains(searchText) }
+            .sorted(by: { $0.symbol < $1.symbol })
     }
     
     private func setupSearchBinding() {
@@ -40,7 +43,13 @@ final class WatchlistViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
-    func refresh() {
+    func addStock(_ stock: Stock) {
+        guard !stocks.contains(stock), stocks.count < 50 else { return }
+        stocks.append(stock)
+        // Notify parent VM
+        didUpdateStocks?(stocks)
+
     }
+    
 }
 

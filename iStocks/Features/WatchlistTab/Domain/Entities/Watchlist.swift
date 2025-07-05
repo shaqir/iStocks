@@ -18,3 +18,4 @@ struct Watchlist: Identifiable, Equatable {
         self.stocks = stocks
     }
 }
+ 

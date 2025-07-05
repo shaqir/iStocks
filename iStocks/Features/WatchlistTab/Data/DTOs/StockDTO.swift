@@ -38,10 +38,12 @@ struct StockDTO: Decodable {
         
         return Stock(
             symbol: symbol,
-            price: price,
+            name: "name", price: price,
             previousPrice: previous,
             isPriceUp: price >= previous,
-            qty: qty, averageBuyPrice: averageBuyPrice,
+            qty: qty,
+            averageBuyPrice: averageBuyPrice,
+            sector: "sector",
         )
     }
 

@@ -40,6 +40,19 @@ final class WatchlistPersistenceService {
         }
     }
     
+    func updateWatchlist(_ updated: Watchlist) {
+        let idToFind = updated.id
+        let descriptor = FetchDescriptor<WatchlistEntity>(
+            predicate: #Predicate { $0.id == idToFind }
+        )
+
+        if let entity = try? context.fetch(descriptor).first {
+            entity.name = updated.name
+            entity.stocks = updated.stocks.compactMap { StockEntity.from($0) }
+            try? context.save()
+        }
+    }
+
     func save(_ watchlist: Watchlist) {
            // Convert and save each stock
            for stock in watchlist.stocks {

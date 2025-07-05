@@ -11,53 +11,80 @@ struct EditAllWatchlistsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var editMode: EditMode = .active
     var onSave: () -> Void
-    
+
     var body: some View {
         NavigationStack {
             List {
-                ForEach($watchlists) { $watchlist in
+                ForEach(watchlists) { watchlist in
                     HStack {
-                        TextField("Watchlist name", text: $watchlist.name)
-                            .font(.system(size: 16))
-                            .textFieldStyle(.roundedBorder)
-                        
+                        TextField("Watchlist name", text: binding(for: watchlist))
+                            .font(.body)
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+
                         Spacer()
-                        
+
                         Button(role: .destructive) {
                             withAnimation {
-                                watchlists.removeAll { $0.id == watchlist.id }
+                                remove(watchlist)
                             }
                         } label: {
                             Image(systemName: "trash")
+                                .foregroundColor(.red)
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
                 }
                 .onMove(perform: moveWatchlists)
             }
             .environment(\.editMode, $editMode)
+            .listStyle(.insetGrouped)
             .navigationTitle("Edit Watchlists")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Done") {
-                    onSave()
-                    dismiss()
-                },
-                trailing: Button(action: addNewWatchlist) {
-                    Image(systemName: "plus")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        onSave()
+                        dismiss()
+                    }
                 }
-            )
-            
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        addNewWatchlist()
+                    } label: {
+                        Label("Add", systemImage: "plus")
+                    }
+                }
+            }
         }
     }
-    
+
+    // MARK: - Helpers
+
     private func addNewWatchlist() {
-        let newWatchlist = Watchlist(name: "New Watchlist \(watchlists.count + 1)", stocks: [])
-        watchlists.append(newWatchlist)
+        if watchlists.count < 10 {
+            let newWatchlist = Watchlist(name: "New Watchlist", stocks: [])
+            watchlists.append(newWatchlist)
+        }
     }
-    
+
+    private func remove(_ watchlist: Watchlist) {
+        if let index = watchlists.firstIndex(of: watchlist) {
+            watchlists.remove(at: index)
+        }
+    }
+
     private func moveWatchlists(from source: IndexSet, to destination: Int) {
         watchlists.move(fromOffsets: source, toOffset: destination)
+    }
+
+    private func binding(for watchlist: Watchlist) -> Binding<String> {
+        guard let index = watchlists.firstIndex(of: watchlist) else {
+            return .constant("")
+        }
+        return $watchlists[index].name
     }
 }

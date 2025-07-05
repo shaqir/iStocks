@@ -45,25 +45,24 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     private func initializeWatchlists(with stocks: [Stock]) {
-        
-        self.watchlists = [
-            Watchlist(name: "Tech Giants", stocks: stocks),
-            Watchlist(name: "Nifty 50", stocks: stocks.shuffled()),
-            Watchlist(name: "US Energy", stocks: stocks.shuffled()),
-            Watchlist(name: "European Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "Japanese Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "Indian Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "Australian Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "British Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "Canadian Stocks", stocks: stocks.shuffled()),
-            Watchlist(name: "South African Stocks", stocks: stocks.shuffled()),
-        ]
-        
-        if WatchlistDIContainer.mode == .live {
-            persistenceService.saveWatchlists(self.watchlists)
+        // Group stocks by sector
+        let grouped = Dictionary(grouping: stocks, by: { $0.sector })
+
+        // Limit to 10 sectors
+        let limitedSectors = grouped
+            .sorted(by: { $0.key.count < $1.key.count })
+            .prefix(10)
+
+        // Create watchlists per sector, capping stocks to 50
+        let sectorWatchlists = limitedSectors.map { sector, sectorStocks in
+            let limitedStocks = Array(sectorStocks.prefix(50))
+            return Watchlist(name: sector, stocks: limitedStocks)
         }
-        
+
+        self.watchlists = Array(sectorWatchlists)
+        persistenceService.saveWatchlists(self.watchlists)
     }
+
     
     func loadFromServer() {
         useCase.execute()
@@ -93,7 +92,7 @@ final class WatchlistsViewModel: ObservableObject {
     func updateWatchlist(id: UUID, with updated: Watchlist) {
         if let index = watchlists.firstIndex(where: { $0.id == id }) {
             watchlists[index] = updated
-            persistenceService.saveWatchlists(watchlists)
+            persistenceService.updateWatchlist(updated)
         }
     }
     
@@ -101,5 +100,5 @@ final class WatchlistsViewModel: ObservableObject {
         watchlists.move(fromOffsets: source, toOffset: destination)
         saveAllWatchlists()
     }
-
+    
 }

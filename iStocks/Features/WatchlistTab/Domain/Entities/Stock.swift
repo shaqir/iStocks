@@ -9,13 +9,15 @@ import Foundation
 struct Stock: Identifiable, Decodable, Equatable {
     var id = UUID()
     let symbol: String
+    let name: String
     let price: Double              // Current market price
     let previousPrice: Double
     let isPriceUp: Bool
 
     let qty: Double                // Total quantity owned
     let averageBuyPrice: Double    // Weighted average buy price
-    
+    let sector: String
+
     var invested: Double {
         qty * averageBuyPrice
     }
@@ -50,11 +52,13 @@ extension Stock {
         Stock(
             id: UUID(),
             symbol: "AAPL",
+            name: "Technology",
             price: 123.45,
             previousPrice: 120.0,
             isPriceUp: true,
             qty: 10,
-            averageBuyPrice: 100.0
+            averageBuyPrice: 100.0, 
+            sector: "Technology"
         )
     }
 }

@@ -42,11 +42,13 @@ extension StockEntity {
         Stock(
             id: id,
             symbol: symbol,
+            name: "name",
             price: price,
             previousPrice: previousPrice,
             isPriceUp: isPriceUp,
             qty: qty,
-            averageBuyPrice: averageBuyPrice
+            averageBuyPrice: averageBuyPrice,
+            sector: "sector"
         )
     }
 
