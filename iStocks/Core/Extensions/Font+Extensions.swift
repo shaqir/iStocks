@@ -42,6 +42,5 @@ extension Font {
     static let stockPnlValue   = Font.system(size: 15, weight: .bold)
     static let stockPercentage = Font.system(size: 14, weight: .semibold)
     static let stockCaption    = Font.system(size: 13, weight: .regular)
-    static let watchlistTabCaption    = Font.system(size: 14, weight: .semibold)
-
+    static let watchlistTabCaption    = Font.system(size: 16, weight: .regular)
 }

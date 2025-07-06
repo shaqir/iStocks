@@ -2,7 +2,7 @@
 //  iStocksApp.swift
 //  iStocks
 //
-//  Created by Sakir Saiyed on 2025-06-07.
+//  Created by Sakir Saiyed
 //
 
 import SwiftUI
@@ -13,7 +13,10 @@ struct iStocksApp: App {
     var body: some Scene {
         WindowGroup {
             TabBarContainer()
+                .environmentObject(SharedAlertManager.shared)
         }
         .modelContainer(for: [WatchlistEntity.self, StockEntity.self])
     }
 }
+
+ 

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI 
-import SwiftUI
 
 struct CustomTabBar: View {
     @Binding var selectedTab: TabViewEnum

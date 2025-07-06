@@ -8,6 +8,7 @@
 import Foundation
 
 final class WatchlistViewModelProvider {
+    
     private var cache: [UUID: WatchlistViewModel] = [:]
     var onUpdate: ((Watchlist) -> Void)? // 🔁 Pass updates upward
 
@@ -16,7 +17,7 @@ final class WatchlistViewModelProvider {
             return existing
         }
 
-        let new = WatchlistViewModel(stocks: Array(watchlist.stocks))
+        let new = WatchlistViewModel(watchlist: watchlist)
 
         // Wire up callback to persist any changes
         new.didUpdateStocks = { [weak self] updatedStocks in

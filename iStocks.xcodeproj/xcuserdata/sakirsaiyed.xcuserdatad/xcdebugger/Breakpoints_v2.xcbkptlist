@@ -7,22 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "86F2E967-8A00-4DA9-AD09-BB83C4069763"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/WatchlistTab/Data/DataSources/Local/WatchlistPersistenceService.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "44"
-            endingLineNumber = "44"
-            landmarkName = "updateWatchlist(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "DE553EB4-4F7B-41D3-B4BE-CDF7B91BF849"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -30,8 +14,8 @@
             filePath = "iStocks/Features/WatchlistTab/Presentation/View/Watchlist/WatchlistTabView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "29"
-            endingLineNumber = "29"
+            startingLineNumber = "26"
+            endingLineNumber = "26"
             landmarkName = "init(viewModel:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -50,50 +34,6 @@
             endingLineNumber = "93"
             landmarkName = "updateWatchlist(id:with:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "D3BB84C8-5B1A-436E-A18B-3AE6E5C6E1E7 - 13c664e95a186bab"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "iStocks.WatchlistsViewModel.updateWatchlist(id: Foundation.UUID, with: iStocks.Watchlist) -&gt; ()"
-                  moduleName = "iStocks.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/sakirsaiyed/Documents/iOS-RoadMap/iStocks/iStocks/Features/WatchlistTab/Presentation/ViewModel/WatchlistsViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "93"
-                  endingLineNumber = "93">
-               </Location>
-               <Location
-                  uuid = "D3BB84C8-5B1A-436E-A18B-3AE6E5C6E1E7 - 13c664e95a186bab"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "iStocks.WatchlistsViewModel.updateWatchlist(id: Foundation.UUID, with: iStocks.Watchlist) -&gt; ()"
-                  moduleName = "iStocks.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/sakirsaiyed/Documents/iOS-RoadMap/iStocks/iStocks/Features/WatchlistTab/Presentation/ViewModel/WatchlistsViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "93"
-                  endingLineNumber = "93">
-               </Location>
-               <Location
-                  uuid = "D3BB84C8-5B1A-436E-A18B-3AE6E5C6E1E7 - 4a366b82c0911572"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (iStocks.Watchlist) -&gt; Swift.Bool in iStocks.WatchlistsViewModel.updateWatchlist(id: Foundation.UUID, with: iStocks.Watchlist) -&gt; ()"
-                  moduleName = "iStocks.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/sakirsaiyed/Documents/iOS-RoadMap/iStocks/iStocks/Features/WatchlistTab/Presentation/ViewModel/WatchlistsViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "93"
-                  endingLineNumber = "93">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -109,6 +49,38 @@
             startingLineNumber = "95"
             endingLineNumber = "95"
             landmarkName = "updateWatchlist(id:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F57392F5-A251-495D-B7CF-A5FBC2142991"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Features/WatchlistTab/Presentation/View/Watchlist/WatchlistTabView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "194"
+            endingLineNumber = "194"
+            landmarkName = "buildTabView(for:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A51C6073-A8DD-4700-BED1-169361B305A0"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Shared/Components/Alert/GlobalAlertModifier.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "19"
+            endingLineNumber = "19"
+            landmarkName = "body(content:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -24,11 +24,14 @@ struct StockPickerView: View {
         let lowercasedSearchText = searchText.lowercased()
         
         return allStocks
-            .filter { _ in !alreadySelectedStocks.contains(where: { $0.symbol == $0.symbol }) }
-            .filter{
+            .filter { stock in
+                !alreadySelectedStocks.contains(where: { $0.symbol == stock.symbol })
+            }
+            .filter {
                 $0.symbol.lowercased().contains(lowercasedSearchText) ||
                 $0.name.lowercased().contains(lowercasedSearchText)
             }
+
     }
     
     var body: some View {

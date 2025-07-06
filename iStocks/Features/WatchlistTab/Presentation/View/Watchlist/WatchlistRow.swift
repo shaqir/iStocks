@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct WatchlistRow: View {
     let stock: Stock
 

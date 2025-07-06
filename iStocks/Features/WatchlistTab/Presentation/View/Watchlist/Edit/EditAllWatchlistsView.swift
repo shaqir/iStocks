@@ -65,10 +65,8 @@ struct EditAllWatchlistsView: View {
     // MARK: - Helpers
 
     private func addNewWatchlist() {
-        if watchlists.count < 10 {
-            let newWatchlist = Watchlist(name: "New Watchlist", stocks: [])
-            watchlists.append(newWatchlist)
-        }
+        let newWatchlist = Watchlist(name: "New Watchlist", stocks: [])
+        watchlists.append(newWatchlist)
     }
 
     private func remove(_ watchlist: Watchlist) {

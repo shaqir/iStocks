@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct WatchlistTabView: View {
     
     @ObservedObject var viewModel: WatchlistsViewModel
@@ -18,57 +16,58 @@ struct WatchlistTabView: View {
     
     @State private var isEditingAllWatchlists = false
     @State private var watchlistToEdit: Watchlist?
-    @State private var isPresentingEdit = false
     @State private var isPresentingNewWatchlist = false
     
     init(viewModel: WatchlistsViewModel) {
         self.viewModel = viewModel
-
+        
         // Set up persistence callback when a stock is added
         viewModelProvider.onUpdate = { updatedWatchlist in
             viewModel.updateWatchlist(id: updatedWatchlist.id, with: updatedWatchlist)
         }
     }
-
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(.systemGray6).ignoresSafeArea()
-                
                 VStack(spacing: 0) {
                     
                     // MARK: - Tab Bar with trailing + button
-                    HStack(spacing: 0) {
+                    HStack(spacing: 8) {
+                        // Scrollable Tab Bar
                         ScrollViewReader { proxy in
                             ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 20) {
+                                HStack(spacing: 16) {
                                     ForEach(viewModel.watchlists.indices, id: \.self) { index in
                                         let isSelected = viewModel.selectedIndex == index
-                                        
+
                                         Button(action: {
                                             withAnimation(.easeInOut) {
                                                 viewModel.selectedIndex = index
                                                 proxy.scrollTo(index, anchor: .center)
                                             }
                                         }) {
-                                            VStack(spacing: 2) {
+                                            VStack(alignment: .leading, spacing: 4) {
                                                 Text(viewModel.watchlists[index].name)
                                                     .font(.watchlistTabCaption)
                                                     .foregroundColor(isSelected ? Color.blue : .captionGray)
-                                                
+
                                                 ZStack {
                                                     if isSelected {
                                                         Capsule()
                                                             .fill(Color.blue)
                                                             .matchedGeometryEffect(id: "underline", in: underlineNamespace)
-                                                            .frame(height: 2)
+                                                            .frame(width: 24, height: 2)
+                                                            .offset(x: 0)
+                                                            
                                                     } else {
                                                         Color.clear.frame(height: 2)
                                                     }
                                                 }
                                             }
                                             .id(index)
+                                            .padding(.horizontal, 6) // Add a little side padding
                                             .onLongPressGesture {
                                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                                 isEditingAllWatchlists = true
@@ -86,20 +85,41 @@ struct WatchlistTabView: View {
                                 }
                             }
                         }
-                        
-                        // ➕ Button always visible and aligned
+                        .layoutPriority(1) //Let ScrollView take all available space first
+
+                        // Add Button
                         Button(action: {
-                            isPresentingNewWatchlist = true
+                            if viewModel.watchlists.count >= 20 {
+                                SharedAlertManager.shared.show(
+                                    SharedAlertData(
+                                        title: "Limit Reached",
+                                        message: "You can only create up to 20 watchlists.",
+                                        icon: "exclamationmark.triangle.fill",
+                                        action: nil
+                                    )
+                                )
+                            } else {
+                                isPresentingNewWatchlist = true
+                            }
                         }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(.blue)
-                                .padding(.horizontal, 12)
+                                .padding(.trailing, 16)
                         }
+                        .offset(y: -4) // Slightly float the button above center
                     }
-                    
-                    Divider().background(Color.gray.opacity(0.2))
-                    
+                    .frame(height: 48) // Consistent height for the entire row
+                    .background(.ultraThinMaterial) //  Elevated, blurred background
+                    .clipShape(Rectangle()) // ensures shadow is tight
+                    .shadow(color: Color.black.opacity(0.04), radius: 1.5, x: 0, y: 1)
+                    .overlay(
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.15))
+                            .frame(height: 0.5),
+                        alignment: .bottom
+                    )
+                     
                     // MARK: - Swipeable Tab Content
                     TabView(selection: $viewModel.selectedIndex) {
                         ForEach(viewModel.watchlists.indices, id: \.self) { index in
@@ -120,23 +140,25 @@ struct WatchlistTabView: View {
                     viewModel.saveAllWatchlists()
                 }
             )
+            .environmentObject(SharedAlertManager.shared)
         }
-        .sheet(isPresented: $isPresentingEdit) {
-            if let watchlist = watchlistToEdit {
-                EditSingleWatchlistView(
-                    watchlist: watchlist,
-                    onSave: { updated in
-                        if let index = viewModel.watchlists.firstIndex(where: { $0.id == updated.id }) {
-                            viewModel.watchlists[index] = updated
-                            viewModel.saveAllWatchlists()
-                        }
-                        isPresentingEdit = false
-                    },
-                    onDismiss: {
-                        isPresentingEdit = false
+        
+        .sheet(item: $watchlistToEdit) { watchlist in
+            EditSingleWatchlistView(
+                watchlist: watchlist,
+                onSave: { updated in
+                    if let index = viewModel.watchlists.firstIndex(where: { $0.id == updated.id }) {
+                        viewModel.watchlists[index] = updated
+                        viewModel.saveAllWatchlists()
                     }
-                )
-            }
+                    watchlistToEdit = nil
+                },
+                onDismiss: {
+                    watchlistToEdit = nil
+                },
+                isNewWatchlist: false
+            )
+            .environmentObject(SharedAlertManager.shared)
         }
         .sheet(isPresented: $isPresentingNewWatchlist) {
             EditSingleWatchlistView(
@@ -148,8 +170,8 @@ struct WatchlistTabView: View {
                 },
                 onDismiss: {
                     isPresentingNewWatchlist = false
-                }
-            )
+                }, isNewWatchlist: true
+            ).environmentObject(SharedAlertManager.shared)
         }
     }
     
@@ -170,7 +192,7 @@ struct WatchlistTabView: View {
         )
         .onLongPressGesture {
             self.watchlistToEdit = watchlist
-            self.isPresentingEdit = true
         }
     }
 }
+
