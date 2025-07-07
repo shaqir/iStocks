@@ -13,11 +13,13 @@ class WatchlistEntity {
     @Attribute(.unique) var id: UUID
     var name: String
     var stocks: [StockEntity]
+    var orderIndex: Int
     
-    init(id: UUID = UUID(), name: String, stocks: [StockEntity]) {
+    init(id: UUID = UUID(), name: String, stocks: [StockEntity], orderIndex: Int = 0) {
         self.id = id
         self.name = name
         self.stocks = stocks
+        self.orderIndex = orderIndex
     }
 }
 
@@ -26,7 +28,7 @@ extension WatchlistEntity {
         Watchlist(id: id, name: name, stocks: stocks.map { $0.toDomain() })
     }
 
-    static func from(_ watchlist: Watchlist) -> WatchlistEntity? {
+    static func from(_ watchlist: Watchlist, orderIndex: Int) -> WatchlistEntity? {
         let stockEntities = watchlist.stocks.compactMap { StockEntity.from($0) }
 
         guard !watchlist.name.isEmpty else {
@@ -37,7 +39,8 @@ extension WatchlistEntity {
         return WatchlistEntity(
             id: watchlist.id,
             name: watchlist.name,
-            stocks: stockEntities
+            stocks: stockEntities,
+            orderIndex: orderIndex
         )
     }
 

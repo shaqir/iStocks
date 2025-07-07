@@ -19,7 +19,7 @@ final class WatchlistPersistenceService {
     func saveWatchlists(_ watchlists: [Watchlist]) {
         clearAll() // prevent duplicates
 
-        for watchlist in watchlists {
+        for (index, watchlist) in watchlists.enumerated() {
             print("Saving watchlist:", watchlist)
             let validStocks = watchlist.stocks.compactMap { StockEntity.from($0) }
 
@@ -27,8 +27,7 @@ final class WatchlistPersistenceService {
                 print("Skipping empty watchlist:", watchlist.name)
                 continue
             }
-
-            let entity = WatchlistEntity(id: watchlist.id, name: watchlist.name, stocks: validStocks)
+            let entity = WatchlistEntity(id: watchlist.id, name: watchlist.name, stocks: validStocks, orderIndex: index)
             context.insert(entity)
         }
 
@@ -42,9 +41,10 @@ final class WatchlistPersistenceService {
     
     func updateWatchlist(_ updated: Watchlist) {
         let idToFind = updated.id
-        let descriptor = FetchDescriptor<WatchlistEntity>(
+        var descriptor = FetchDescriptor<WatchlistEntity>(
             predicate: #Predicate { $0.id == idToFind }
         )
+        descriptor.sortBy = [SortDescriptor(\.orderIndex)]
 
         if let entity = try? context.fetch(descriptor).first {
             entity.name = updated.name
@@ -65,7 +65,8 @@ final class WatchlistPersistenceService {
        }
 
     func load() -> [Watchlist] {
-        let descriptor = FetchDescriptor<WatchlistEntity>()
+        var descriptor = FetchDescriptor<WatchlistEntity>()
+        descriptor.sortBy = [SortDescriptor(\.orderIndex)]
         do {
             let results = try context.fetch(descriptor)
             print("Fetched \(results.count) WatchlistEntities")

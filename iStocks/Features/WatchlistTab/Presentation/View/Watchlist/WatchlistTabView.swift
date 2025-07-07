@@ -41,10 +41,10 @@ struct WatchlistTabView: View {
                                 HStack(spacing: 16) {
                                     ForEach(viewModel.watchlists.indices, id: \.self) { index in
                                         let isSelected = viewModel.selectedIndex == index
-
+                                        
                                         Button(action: {
+                                            viewModel.selectedIndex = index
                                             withAnimation(.easeInOut) {
-                                                viewModel.selectedIndex = index
                                                 proxy.scrollTo(index, anchor: .center)
                                             }
                                         }) {
@@ -52,7 +52,7 @@ struct WatchlistTabView: View {
                                                 Text(viewModel.watchlists[index].name)
                                                     .font(.watchlistTabCaption)
                                                     .foregroundColor(isSelected ? Color.blue : .captionGray)
-
+                                                
                                                 ZStack {
                                                     if isSelected {
                                                         Capsule()
@@ -60,7 +60,7 @@ struct WatchlistTabView: View {
                                                             .matchedGeometryEffect(id: "underline", in: underlineNamespace)
                                                             .frame(width: 24, height: 2)
                                                             .offset(x: 0)
-                                                            
+                                                        
                                                     } else {
                                                         Color.clear.frame(height: 2)
                                                     }
@@ -86,7 +86,7 @@ struct WatchlistTabView: View {
                             }
                         }
                         .layoutPriority(1) //Let ScrollView take all available space first
-
+                        
                         // Add Button
                         Button(action: {
                             if viewModel.watchlists.count >= 20 {
@@ -119,14 +119,17 @@ struct WatchlistTabView: View {
                             .frame(height: 0.5),
                         alignment: .bottom
                     )
-                     
+                    
                     // MARK: - Swipeable Tab Content
-                    TabView(selection: $viewModel.selectedIndex) {
+                    ZStack {
                         ForEach(viewModel.watchlists.indices, id: \.self) { index in
-                            buildTabView(for: index).tag(index)
+                            if viewModel.selectedIndex == index {
+                                buildTabView(for: index)
+                                    .transition(.opacity)
+                            }
                         }
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .animation(.easeInOut(duration: 0.15), value: viewModel.selectedIndex)
                 }
                 .onAppear {
                     viewModel.loadWatchlists()
@@ -136,6 +139,7 @@ struct WatchlistTabView: View {
         .sheet(isPresented: $isEditingAllWatchlists) {
             EditAllWatchlistsView(
                 watchlists: $viewModel.watchlists,
+                persistenceService: viewModel.persistenceService,
                 onSave: {
                     viewModel.saveAllWatchlists()
                 }

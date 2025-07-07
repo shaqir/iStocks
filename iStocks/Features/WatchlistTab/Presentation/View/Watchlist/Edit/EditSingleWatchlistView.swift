@@ -115,13 +115,12 @@ struct EditSingleWatchlistView: View {
             StockPickerView(
                 allStocks: MockStockData.allStocks,
                 alreadySelectedStocks: watchlist.stocks,
-                onSelect: { handleAddStock($0)}
+                onSelect: { selectedStocks in
+                    selectedStocks.forEach { handleAddStock($0) }
+                }
             )
             .environmentObject(SharedAlertManager.shared)
         }
-
-
-        
     }
     
     // MARK: - Helper Methods
@@ -146,9 +145,8 @@ struct EditSingleWatchlistView: View {
     }
 
     private func deleteStock(at offsets: IndexSet) {
-        var array = Array(watchlist.stocks)
         for offset in offsets {
-            let stock = array[offset]
+            let stock = watchlist.stocks[offset]
             do {
                 try watchlist.tryRemoveStock(stock)
             } catch let error as StockValidationError {

@@ -11,7 +11,20 @@ struct EditAllWatchlistsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var editMode: EditMode = .active
     var onSave: () -> Void
-
+    
+    // Injected : SwiftData
+    let persistenceService: WatchlistPersistenceService
+    
+    init(
+            watchlists: Binding<[Watchlist]>,
+            persistenceService: WatchlistPersistenceService,
+            onSave: @escaping () -> Void
+        ) {
+            self._watchlists = watchlists
+            self.persistenceService = persistenceService
+            self.onSave = onSave
+        }
+    
     var body: some View {
         NavigationStack {
             List {
@@ -77,6 +90,7 @@ struct EditAllWatchlistsView: View {
 
     private func moveWatchlists(from source: IndexSet, to destination: Int) {
         watchlists.move(fromOffsets: source, toOffset: destination)
+        persistenceService.saveWatchlists(watchlists)// to update order while saving.
     }
 
     private func binding(for watchlist: Watchlist) -> Binding<String> {

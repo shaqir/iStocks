@@ -16,7 +16,7 @@ final class WatchlistsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     // Injected : SwiftData
-    let persistenceService: WatchlistPersistenceService
+    var persistenceService: WatchlistPersistenceService
     
     @Published var watchlists: [Watchlist] = []
     @Published var selectedIndex: Int = 0
@@ -84,7 +84,6 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     func saveAllWatchlists() {
-        persistenceService.clearAll()
         persistenceService.saveWatchlists(watchlists)
     }
     
