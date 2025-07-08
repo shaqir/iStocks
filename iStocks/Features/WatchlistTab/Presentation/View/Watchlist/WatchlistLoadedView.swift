@@ -53,11 +53,11 @@ struct WatchlistLoadedView: View {
         .sheet(isPresented: $isShowingStockPicker) {
             StockPickerView(
                 allStocks: MockStockData.allStocks,
-                alreadySelectedStocks: viewModel.stocks,
-                onSelectMultiple: { selectedStocks in
-                    selectedStocks.forEach { viewModel.addStock($0) }
-                }
+                selectedStocks: $viewModel.watchlist.stocks,
             )
+            .onDisappear {
+                viewModel.syncWithParent()
+            }
             .environmentObject(SharedAlertManager.shared)
         }
     }
@@ -78,7 +78,7 @@ struct WatchlistScrollContainer<Content: View>: View {
     let onAddTapped: () -> Void
     let content: () -> Content
     let scrollOffset: Binding<CGFloat>
-
+    
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView {
@@ -90,7 +90,7 @@ struct WatchlistScrollContainer<Content: View>: View {
                         )
                 }
                 .frame(height: 0)
-
+                
                 LazyVStack(pinnedViews: [.sectionHeaders]) {
                     // Sticky search bar
                     Section(header: stickySearchBar) {
@@ -108,18 +108,18 @@ struct WatchlistScrollContainer<Content: View>: View {
             .ignoresSafeArea(.keyboard)
         }
     }
-
+    
     private var stickySearchBar: some View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-
+                
                 TextField("Search stocks", text: searchText)
                     .font(.system(size: 14))
                     .disableAutocorrection(true)
                     .frame(maxWidth: .infinity)
-
+                
                 if !searchText.wrappedValue.isEmpty {
                     Button(action: {
                         searchText.wrappedValue = ""
@@ -136,7 +136,7 @@ struct WatchlistScrollContainer<Content: View>: View {
                     .fill(Color.white)
                     .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             )
-
+            
             if isAddButtonVisible {
                 Button(action: onAddTapped) {
                     HStack(spacing: 6) {

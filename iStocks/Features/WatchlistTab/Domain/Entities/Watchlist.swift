@@ -30,10 +30,10 @@ extension Watchlist {
     }
     
     mutating func tryAddStock(_ stock: Stock) throws {
-        if stocks.count >= 10 {
-            throw StockValidationError.limitReached(num: 10)
+        if stocks.count >= AppConstants.maxStocksPerWatchlist {
+            print("tryAddStock.....limit reached")
+            throw StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist)
         }
-        
         if stock.symbol.isEmpty {
             throw StockValidationError.invalidSymbol
         }
@@ -45,7 +45,7 @@ extension Watchlist {
     }
     
     mutating func tryRemoveStock(_ stock: Stock) throws {
-        guard let index = stocks.firstIndex(where: { $0.id == stock.id }) else {
+        guard let index = stocks.firstIndex(where: { $0.symbol == stock.symbol }) else {
             throw StockValidationError.notFound
         }
         stocks.remove(at: index)

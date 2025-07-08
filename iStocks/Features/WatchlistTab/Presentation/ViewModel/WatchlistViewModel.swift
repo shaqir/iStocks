@@ -14,9 +14,9 @@ final class WatchlistViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var searchText: String = ""
     
-    // Combine publisher to notify changes
+    // Combine publisher to notify changes to parent
     let watchlistDidUpdate = PassthroughSubject<Watchlist, Never>()
-
+    
     private var cancellables = Set<AnyCancellable>()
     
     var stocks: [Stock] {
@@ -28,8 +28,14 @@ final class WatchlistViewModel: ObservableObject {
         setupSearchBinding()
     }
     
+    func syncWithParent() {
+           watchlistDidUpdate.send(watchlist)
+    }
+    
     func updateWatchlist(_ newValue: Watchlist) {
-        self.watchlist = newValue
+        DispatchQueue.main.async {
+            self.watchlist = newValue
+        }
     }
     var filteredStocks: [Stock] {
         guard !searchText.isEmpty else {
@@ -52,8 +58,8 @@ final class WatchlistViewModel: ObservableObject {
         var updated = watchlist
         do {
             try updated.tryAddStock(stock)
-            watchlist = updated             // Triggers $watchlist
-            watchlistDidUpdate.send(updated) //  Notify parent on change: Manually emit
+            watchlist = updated    // Triggers $watchlist
+            syncWithParent()  //  Notify parent on change: Manually emit
         } catch let error as StockValidationError {
             SharedAlertManager.shared.show(error.alert)
         } catch {
@@ -65,13 +71,13 @@ final class WatchlistViewModel: ObservableObject {
             ))
         }
     }
-
+    
     func removeStock(_ stock: Stock) {
         var updated = watchlist
         do {
             try updated.tryRemoveStock(stock)
             watchlist = updated
-            watchlistDidUpdate.send(updated)//Notify parent
+            syncWithParent() //Notify parent
         } catch {
             SharedAlertManager.shared.show(
                 SharedAlertData(
@@ -82,6 +88,11 @@ final class WatchlistViewModel: ObservableObject {
                 )
             )
         }
+    }
+    
+    func replaceStocks(_ newStocks: [Stock]) {
+        watchlist.stocks = newStocks
+        syncWithParent()
     }
 }
 

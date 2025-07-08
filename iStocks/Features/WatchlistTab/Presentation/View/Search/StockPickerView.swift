@@ -4,30 +4,19 @@
 //
 //  Created by Sakir Saiyed on 2025-07-04.
 //
-
+import Foundation
 import SwiftUI
+import Combine
 
 struct StockPickerView: View {
     var allStocks: [Stock]
-    var alreadySelectedStocks: [Stock]
-    let onSelectMultiple: ([Stock]) -> Void
+    @Binding var selectedStocks: [Stock]
 
     @Environment(\.dismiss) var dismiss
     @State private var searchText: String = ""
-    @State private var selectedStocks: [Stock] = []
-    
-    private let maxStockLimit = 10
-    
-    private var hasReachedMaxStockLimit: Bool {
-        selectedStocks.count >= maxStockLimit
-    }
 
-    var filteredStocks: [Stock] {
-        let base = searchText.isEmpty ? allStocks : allStocks.filter {
-            $0.symbol.localizedCaseInsensitiveContains(searchText) ||
-            $0.name.localizedCaseInsensitiveContains(searchText)
-        }
-        return base.sorted(by: { $0.symbol < $1.symbol })
+    private var hasReachedMaxStockLimit: Bool {
+        selectedStocks.count >= AppConstants.maxStocksPerWatchlist
     }
 
     var body: some View {
@@ -50,89 +39,90 @@ struct StockPickerView: View {
                     }
                 }
                 .padding()
-                
-                // 📊 Count
-                Text("\(selectedStocks.count) / \(maxStockLimit) stocks added")
-                    .font(.footnote)
+
+                // Count
+                Text("\(selectedStocks.count) / \(AppConstants.maxStocksPerWatchlist) stocks added")
+                    .font(.caption)
                     .foregroundColor(hasReachedMaxStockLimit ? .red : .gray)
                     .padding(.horizontal)
                     .padding(.top, 4)
-                
-                if hasReachedMaxStockLimit {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        Text("Limit reached. You can only add up to \(maxStockLimit) stocks.")
-                            .font(.footnote)
-                            .foregroundColor(.orange)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 4)
-                }
 
-                // 📋 Stock List
+                // Stock List
                 List {
                     ForEach(filteredStocks) { stock in
-                        Button(action: {
-                            toggle(stock)
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(stock.symbol)
-                                        .font(.headline)
-                                    Text(stock.name)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                Spacer()
-                                
-                                if selectedStocks.contains(where: { $0.symbol == stock.symbol }) {
-                                    Image(systemName: "checkmark.square.fill")
-                                        .foregroundColor(.green)
-                                        .font(.system(size: 22, weight: .medium))
-                                } else {
-                                    Image(systemName: "plus.square")
-                                        .foregroundColor(.blue)
-                                        .font(.system(size: 22, weight: .medium))
-                                }
-                            }
-                            .opacity(isDisabled(stock) ? 0.5 : 1.0)
-                        }
-                        .disabled(isDisabled(stock))
+                        stockRow(stock)
                     }
                 }
                 .listStyle(.plain)
-                
-                // Bottom Action Buttons
+
+                // Bottom Buttons
                 HStack {
                     Button("Cancel") {
                         dismiss()
                     }
                     Spacer()
-                    Button("Add \(selectedStocks.count)") {
-                        onSelectMultiple(selectedStocks)
+                    Button("Done") {
                         dismiss()
                     }
                     .disabled(selectedStocks.isEmpty)
                 }
                 .padding()
             }
-            .onAppear {
-                self.selectedStocks = alreadySelectedStocks
-            }
         }
     }
-    
-    private func toggle(_ stock: Stock) {
-        if let index = selectedStocks.firstIndex(where: { $0.symbol == stock.symbol }) {
-            selectedStocks.remove(at: index)
-        } else if !hasReachedMaxStockLimit {
+
+    // MARK: - View Builders
+
+    private func stockRow(_ stock: Stock) -> some View {
+        let selected = isSelected(stock)
+        let disabled = !selected && hasReachedMaxStockLimit
+
+        return HStack {
+            VStack(alignment: .leading) {
+                Text(stock.symbol)
+                    .font(.headline)
+                Text(stock.name)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            Image(systemName: selected ? "checkmark.square.fill" : "plus.square")
+                .foregroundColor(selected ? .green : .blue)
+                .font(.system(size: 22, weight: .medium))
+        }
+        .opacity(disabled ? 0.4 : 1.0)
+        .contentShape(Rectangle()) // Ensures full row is tappable
+        .onTapGesture {
+            handleToggle(stock, isSelected: selected, isDisabled: disabled)
+        }
+    }
+
+    // MARK: - Logic
+
+    private func isSelected(_ stock: Stock) -> Bool {
+        selectedStocks.contains(where: { $0.symbol == stock.symbol })
+    }
+
+    private func handleToggle(_ stock: Stock, isSelected: Bool, isDisabled: Bool) {
+        guard !isDisabled || isSelected else {
+            SharedAlertManager.shared.show(
+                StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist).alert
+            )
+            return
+        }
+
+        if isSelected {
+            selectedStocks.removeAll(where: { $0.symbol == stock.symbol })
+        } else {
             selectedStocks.append(stock)
         }
     }
-    
-    private func isDisabled(_ stock: Stock) -> Bool {
-        hasReachedMaxStockLimit
+
+    private var filteredStocks: [Stock] {
+        let base = searchText.isEmpty ? allStocks : allStocks.filter {
+            $0.symbol.localizedCaseInsensitiveContains(searchText) ||
+            $0.name.localizedCaseInsensitiveContains(searchText)
+        }
+        return base.sorted { $0.symbol < $1.symbol }
     }
 }

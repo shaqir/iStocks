@@ -30,7 +30,9 @@ final class WatchlistsViewModel: ObservableObject {
         viewModelProvider.watchlistDidUpdate
             .receive(on: DispatchQueue.main)
             .sink { [weak self] updated in
-                self?.updateWatchlist(id: updated.id, with: updated)
+                DispatchQueue.main.async {
+                    self?.updateWatchlist(id: updated.id, with: updated)
+                }
             }
             .store(in: &cancellables)
     }
