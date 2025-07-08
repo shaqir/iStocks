@@ -78,7 +78,7 @@ struct EditAllWatchlistsView: View {
     // MARK: - Helpers
 
     private func addNewWatchlist() {
-        let newWatchlist = Watchlist(name: "New Watchlist", stocks: [])
+        let newWatchlist = Watchlist(id: UUID(), name: "New Watchlist", stocks: [])
         watchlists.append(newWatchlist)
     }
 

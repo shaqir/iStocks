@@ -9,7 +9,7 @@ import Foundation
 
 enum StockValidationError: Error {
     case duplicate
-    case limitReached
+    case limitReached(num: Int)
     case invalidSymbol
     case notFound
 
@@ -22,10 +22,10 @@ enum StockValidationError: Error {
                 icon: "arrow.2.squarepath",
                 action: nil
             )
-        case .limitReached:
+        case .limitReached(num: let num):
             return SharedAlertData(
                 title: "Limit Reached",
-                message: "You can add a maximum of 10 stocks.",
+                message: "You can add a maximum of \(num) stocks.",
                 icon: "exclamationmark.triangle.fill",
                 action: nil
             )

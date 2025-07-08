@@ -6,133 +6,134 @@
 //
 
 import SwiftUI
+import Combine
 
 struct EditSingleWatchlistView: View {
     @State var watchlist: Watchlist
-    var onSave: (Watchlist) -> Void
-    var onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
     var isNewWatchlist: Bool
     
-    @Environment(\.dismiss) private var dismiss
-    @State private var isShowingStockPicker = false
+    @State private var searchText = ""
+    private let maxStockLimit = 10
+    
+    var watchlistDidSave: PassthroughSubject<Watchlist, Never>
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text("Watchlist Name")) {
-                    TextField(isNewWatchlist ? "New Watchlist" : watchlist.name, text: $watchlist.name)
-                        .textInputAutocapitalization(.words)
+            VStack(spacing: 0) {
+                // MARK: - Watchlist Name Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Watchlist Name")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                    TextField("New Watchlist", text: $watchlist.name)
+                        .textFieldStyle(.roundedBorder)
                         .disableAutocorrection(true)
+                        .textInputAutocapitalization(.words)
                 }
+                .padding()
                 
-                Section(header: Text("Stocks (\(watchlist.stocks.count))")) {
-                    if watchlist.stocks.isEmpty {
-                        Text("No stocks added yet")
-                            .foregroundColor(.gray)
-                    } else {
-                        ForEach(Array(watchlist.stocks).sorted(by: { $0.symbol < $1.symbol }), id: \.id) { stock in
-                            HStack {
-                                Text(stock.symbol)
-                                    .font(.body)
-                                Spacer()
-                                Text("\(stock.price, specifier: "%.2f")")
-                                    .foregroundColor(.gray)
-                            }
+                // MARK: - Search Bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    TextField("Search stocks", text: $searchText)
+                        .disableAutocorrection(true)
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
                         }
-                        .onDelete(perform: deleteStock)
                     }
                 }
-                Section(header: Text("Add Stocks")) {
-                    Button {
-                        isShowingStockPicker = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                            Text("Search & add stock")
-                            Spacer()
-                        }
-                        .foregroundColor(.blue)
-                        .padding(.vertical, 6)
+                .padding(10)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding(.horizontal)
+                .padding(.top, 6)
+                
+                Text("\(watchlist.stocks.count) / \(maxStockLimit) stocks added")
+                    .font(.footnote)
+                    .foregroundColor(hasReachedMaxStockLimit ? .red : .gray)
+                    .padding(.horizontal)
+                    .padding(.top, 4)
+                
+                if hasReachedMaxStockLimit {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text("Limit reached. You can only add up to \(maxStockLimit) stocks.")
+                            .font(.footnote)
+                            .foregroundColor(.orange)
+                        Spacer()
                     }
+                    .padding(.horizontal)
+                    .padding(.bottom, 6)
                 }
                 
+                // MARK: - Filtered Stock List
+                List(filteredStocks) { stock in
+                    Button(action: {
+                        handleStockToggle(stock)
+                    }) {
+                        StockRowView(stock: stock,
+                                     isSelected: isSelectedStock(stock),
+                                     isDisabled: isStockDisabled(stock))
+                    }
+                }
+                .listStyle(.plain)
             }
-            .navigationTitle(isNewWatchlist ? "Add New Watchlist" : watchlist.name)
+            .navigationTitle(isNewWatchlist ? "Add Watchlist" : watchlist.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        onDismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let trimmedName = watchlist.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if trimmedName.isEmpty {
-                            SharedAlertManager.shared.show(
-                                SharedAlertData(
-                                    title: "Watchlist Name Missing",
-                                    message: "Watchlist name cannot be empty.",
-                                    icon: "exclamationmark.circle.fill",
-                                    action: nil
-                                )
-                            )
-                            return
-                        }
-                        
-                        if watchlist.stocks.isEmpty {
-                            SharedAlertManager.shared.show(
-                                SharedAlertData(
-                                    title: "No Stocks Added",
-                                    message: "Please add at least one stock to your watchlist.",
-                                    icon: "chart.line.uptrend.xyaxis",
-                                    action: nil
-                                )
-                            )
-                            return
-                        }
-                        
-                        let symbols = watchlist.stocks.map { $0.symbol }
-                        let uniqueSymbols = Set(symbols)
-                        if symbols.count != uniqueSymbols.count {
-                            SharedAlertManager.shared.show(
-                                SharedAlertData(
-                                    title: "Duplicate Stocks",
-                                    message: "Duplicate stocks found in your watchlist.",
-                                    icon: "arrow.triangle.2.circlepath.circle.fill",
-                                    action: nil
-                                )
-                            )
-                            return
-                        }
-                        
-                        onSave(watchlist)
+                        dismiss()
                     }
                 }
                 
-            }
-        }
-        .sheet(isPresented: $isShowingStockPicker) {
-            StockPickerView(
-                allStocks: MockStockData.allStocks,
-                alreadySelectedStocks: watchlist.stocks,
-                onSelect: { selectedStocks in
-                    selectedStocks.forEach { handleAddStock($0) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        handleSaveTap()
+                    }
                 }
-            )
-            .environmentObject(SharedAlertManager.shared)
+            }
         }
     }
     
     // MARK: - Helper Methods
     
-    private func handleAddStock(_ stock: Stock) {
+    private var hasReachedMaxStockLimit: Bool {
+        watchlist.stocks.count >= maxStockLimit
+    }
+    
+    private func isStockDisabled(_ stock: Stock) -> Bool {
+        if watchlist.stocks.contains(where: { $0.symbol == stock.symbol }) {
+            return false // Allow editing selected stocks
+        }
+        return hasReachedMaxStockLimit
+    }
+    
+    private func isSelectedStock(_ stock: Stock) -> Bool {
+        watchlist.stocks.contains(where: { $0.symbol == stock.symbol })
+    }
+
+    private var filteredStocks: [Stock] {
+        let base = searchText.isEmpty ? MockStockData.allStocks : MockStockData.allStocks.filter {
+            let query = searchText.lowercased()
+            return $0.symbol.lowercased().contains(query) || $0.name.lowercased().contains(query)
+        }
+        return base.sorted(by: { $0.symbol < $1.symbol })
+    }
+    
+    private func handleStockToggle(_ stock: Stock) {
         do {
-            try watchlist.tryAddStock(stock)
+            try toggleStock(stock)
         } catch let error as StockValidationError {
             SharedAlertManager.shared.show(error.alert)
         } catch {
-            // Optional: Log or show generic error
-            print("Unexpected error: \(error.localizedDescription)")
             SharedAlertManager.shared.show(
                 SharedAlertData(
                     title: "Unexpected Error",
@@ -144,26 +145,57 @@ struct EditSingleWatchlistView: View {
         }
     }
 
-    private func deleteStock(at offsets: IndexSet) {
-        for offset in offsets {
-            let stock = watchlist.stocks[offset]
-            do {
-                try watchlist.tryRemoveStock(stock)
-            } catch let error as StockValidationError {
-                SharedAlertManager.shared.show(error.alert)
-            } catch {
-                SharedAlertManager.shared.show(
-                    SharedAlertData(
-                        title: "Unexpected Error",
-                        message: error.localizedDescription,
-                        icon: "exclamationmark.triangle.fill",
-                        action: nil
-                    )
-                )
-            }
+    private func toggleStock(_ stock: Stock) throws {
+        if watchlist.stocks.contains(where: { $0.symbol == stock.symbol }) {
+            try? watchlist.tryRemoveStock(stock)
+        } else if !hasReachedMaxStockLimit {
+            try? watchlist.tryAddStock(stock)
+        } else {
+            throw StockValidationError.limitReached(num: maxStockLimit)
         }
     }
+    
+    private func handleSaveTap(){
+        let trimmedName = watchlist.name.trimmingCharacters(in: .whitespacesAndNewlines)
+           guard !trimmedName.isEmpty else {
+               SharedAlertManager.shared.show(WatchlistValidationError.nameRequired.alert)
+               return
+           }
+           guard !watchlist.isEmpty else {
+               SharedAlertManager.shared.show(WatchlistValidationError.noStocksAdded.alert)
+               return
+           }
+           guard !watchlist.hasDuplicateSymbols else {
+               SharedAlertManager.shared.show(StockValidationError.duplicate.alert)
+               return
+           }
 
-    
-    
+           watchlist.name = trimmedName
+           watchlistDidSave.send(watchlist)
+           dismiss()
+    }
+}
+
+struct StockRowView: View {
+    let stock: Stock
+    let isSelected: Bool
+    let isDisabled: Bool
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(stock.symbol)
+                    .font(.headline)
+                Text(stock.name)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            Image(systemName: isSelected ? "checkmark.square.fill" : "plus.square")
+                .foregroundColor(isSelected ? .green : .blue)
+                .font(.system(size: 22, weight: .medium))
+        }
+        .opacity(isDisabled ? 0.5 : 1.0)
+        .padding(.vertical, 4)
+    }
 }

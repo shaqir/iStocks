@@ -46,6 +46,9 @@ final class WatchlistDIContainer {
     static func makeWatchlistsViewModel(context: ModelContext) -> WatchlistsViewModel {
         let useCase = makeUseCase()
         let persistenceService = makePersistenceService(context: context)
-        return WatchlistsViewModel(useCase: useCase, persistenceService: persistenceService)
+        let vmProvider = WatchlistViewModelProvider()
+        return WatchlistsViewModel(useCase: useCase,
+                                   persistenceService: persistenceService,
+                                   viewModelProvider: vmProvider)
     }
 }

@@ -54,7 +54,7 @@ struct WatchlistLoadedView: View {
             StockPickerView(
                 allStocks: MockStockData.allStocks,
                 alreadySelectedStocks: viewModel.stocks,
-                onSelect: { selectedStocks in
+                onSelectMultiple: { selectedStocks in
                     selectedStocks.forEach { viewModel.addStock($0) }
                 }
             )

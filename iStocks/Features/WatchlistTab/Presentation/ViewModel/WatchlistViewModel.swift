@@ -9,14 +9,14 @@ import Combine
 
 final class WatchlistViewModel: ObservableObject {
     
-    @Published private(set) var watchlist: Watchlist
-    
-    var didUpdateStocks: (([Stock]) -> Void)? // Callback
-    
+    @Published var watchlist: Watchlist
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var searchText: String = ""
     
+    // Combine publisher to notify changes
+    let watchlistDidUpdate = PassthroughSubject<Watchlist, Never>()
+
     private var cancellables = Set<AnyCancellable>()
     
     var stocks: [Stock] {
@@ -28,37 +28,59 @@ final class WatchlistViewModel: ObservableObject {
         setupSearchBinding()
     }
     
-    // MARK: - Computed filteredStocks (returns [Stock])
+    func updateWatchlist(_ newValue: Watchlist) {
+        self.watchlist = newValue
+    }
     var filteredStocks: [Stock] {
         guard !searchText.isEmpty else {
-            return Array(watchlist.stocks).sorted(by: { $0.symbol < $1.symbol })
+            return stocks.sorted { $0.symbol < $1.symbol }
         }
         return stocks
             .filter { $0.symbol.localizedCaseInsensitiveContains(searchText) }
-            .sorted(by: { $0.symbol < $1.symbol })
+            .sorted { $0.symbol < $1.symbol }
     }
     
     private func setupSearchBinding() {
         $searchText
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .removeDuplicates()
-            .sink { _ in
-            }
+            .sink { _ in }
             .store(in: &cancellables)
     }
     
-    func addStock(_ stock: Stock){
-        var updatedWatchlist = watchlist
+    func addStock(_ stock: Stock) {
+        var updated = watchlist
         do {
-            try updatedWatchlist.tryAddStock(stock)
-            watchlist = updatedWatchlist
-            didUpdateStocks?(watchlist.stocks)
-        }
-        catch let error as StockValidationError {
+            try updated.tryAddStock(stock)
+            watchlist = updated             // Triggers $watchlist
+            watchlistDidUpdate.send(updated) //  Notify parent on change: Manually emit
+        } catch let error as StockValidationError {
             SharedAlertManager.shared.show(error.alert)
+        } catch {
+            SharedAlertManager.shared.show(SharedAlertData(
+                title: "Error",
+                message: error.localizedDescription,
+                icon: "exclamationmark.triangle",
+                action: nil
+            ))
         }
-        catch {
-            print("Error adding stock to watchlist: \(error)")
+    }
+
+    func removeStock(_ stock: Stock) {
+        var updated = watchlist
+        do {
+            try updated.tryRemoveStock(stock)
+            watchlist = updated
+            watchlistDidUpdate.send(updated)//Notify parent
+        } catch {
+            SharedAlertManager.shared.show(
+                SharedAlertData(
+                    title: "Error Removing",
+                    message: error.localizedDescription,
+                    icon: "trash",
+                    action: nil
+                )
+            )
         }
     }
 }

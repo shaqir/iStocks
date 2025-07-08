@@ -54,6 +54,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
                 let change = Double.random(in: -2...2)
                 let newPrice = max(stock.price + change, 0)
                 return Stock(
+                    id: stock.id,
                     symbol: stock.symbol,
                     name: stock.name,
                     price: newPrice,

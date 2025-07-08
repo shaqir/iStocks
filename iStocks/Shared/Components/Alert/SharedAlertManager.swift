@@ -12,6 +12,10 @@ import Combine
 final class SharedAlertManager: ObservableObject {
     static let shared = SharedAlertManager()
 
+    let watchlistDidSave = PassthroughSubject<Watchlist, Never>()
+
+    //@Published var alert: SharedAlertData? = nil
+
     func show(_ alert: SharedAlertData, autoDismissAfter seconds: Double? = 2.5) {
         GlobalAlertPresenter.present(alert)
 

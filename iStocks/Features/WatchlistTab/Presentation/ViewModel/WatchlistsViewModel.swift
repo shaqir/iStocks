@@ -4,65 +4,48 @@
 //
 //  Created by Sakir Saiyed on 2025-07-02.
 //
-
 import Foundation
 import Combine
 
 final class WatchlistsViewModel: ObservableObject {
+    @Published var watchlists: [Watchlist] = []
+    @Published var selectedIndex: Int = 0
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
     private let useCase: ObserveStocksUseCase
     private var cancellables = Set<AnyCancellable>()
     
-    // Injected : SwiftData
-    var persistenceService: WatchlistPersistenceService
+    let persistenceService: WatchlistPersistenceService
     
-    @Published var watchlists: [Watchlist] = []
-    @Published var selectedIndex: Int = 0
+    private let viewModelProvider: WatchlistViewModelProvider
     
-    
-    init(useCase: ObserveStocksUseCase, persistenceService: WatchlistPersistenceService){
+    init(useCase: ObserveStocksUseCase,
+         persistenceService: WatchlistPersistenceService,
+         viewModelProvider: WatchlistViewModelProvider) {
         self.useCase = useCase
         self.persistenceService = persistenceService
+        self.viewModelProvider = viewModelProvider
+        
+        viewModelProvider.watchlistDidUpdate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] updated in
+                self?.updateWatchlist(id: updated.id, with: updated)
+            }
+            .store(in: &cancellables)
     }
     
     func loadWatchlists() {
-        
         isLoading = true
         
-        // Load from local storage
         let saved = persistenceService.load()
         if !saved.isEmpty {
             self.watchlists = saved
             self.isLoading = false
-            return
+        } else {
+            loadFromServer()
         }
-        
-        // Fallback to remote (use case)
-        loadFromServer()
-        
     }
-    
-    private func initializeWatchlists(with stocks: [Stock]) {
-        // Group stocks by sector
-        let grouped = Dictionary(grouping: stocks, by: { $0.sector })
-
-        // Limit to 10 sectors
-        let limitedSectors = grouped
-            .sorted(by: { $0.key.count < $1.key.count })
-            .prefix(10)
-
-        // Create watchlists per sector, capping stocks to 50
-        let sectorWatchlists = limitedSectors.map { sector, sectorStocks in
-            let limitedStocks = Array(sectorStocks.prefix(50))
-            return Watchlist(name: sector, stocks: limitedStocks)
-        }
-
-        self.watchlists = Array(sectorWatchlists)
-        persistenceService.saveWatchlists(self.watchlists)
-    }
-
     
     func loadFromServer() {
         useCase.execute()
@@ -70,24 +53,40 @@ final class WatchlistsViewModel: ObservableObject {
             .sink { [weak self] completion in
                 self?.isLoading = false
                 if case .failure(let error) = completion {
-                    let message = (error as? LocalizedError)?.errorDescription ?? "Please try again later."
-                    self?.errorMessage = message
+                    self?.errorMessage = (error as? LocalizedError)?.errorDescription ?? "Something went wrong."
                 }
             } receiveValue: { [weak self] stocks in
                 self?.initializeWatchlists(with: stocks)
-                //only save remote data
                 if WatchlistDIContainer.mode == .live {
-                    self?.persistenceService.saveWatchlists(self?.watchlists ?? [])
+                    self?.saveAllWatchlists()
                 }
             }
             .store(in: &cancellables)
     }
     
-    func saveAllWatchlists() {
-        persistenceService.saveWatchlists(watchlists)
+    private func initializeWatchlists(with stocks: [Stock]) {
+        let grouped = Dictionary(grouping: stocks, by: \.sector)
+        let limitedSectors = grouped.sorted(by: { $0.key.count < $1.key.count }).prefix(20)
+        
+        var final: [Watchlist] = []
+        
+        for (sector, stocks) in limitedSectors {
+            var seen = Set<String>()
+            var unique: [Stock] = []
+            for stock in stocks {
+                if !seen.contains(stock.symbol) {
+                    unique.append(stock)
+                    seen.insert(stock.symbol)
+                }
+                if unique.count == 50 { break }
+            }
+            final.append(Watchlist(id: UUID(), name: sector, stocks: unique))
+        }
+        
+        self.watchlists = final
+        persistenceService.saveWatchlists(final)
     }
     
-    //Update single watchlist
     func updateWatchlist(id: UUID, with updated: Watchlist) {
         if let index = watchlists.firstIndex(where: { $0.id == id }) {
             watchlists[index] = updated
@@ -98,6 +97,10 @@ final class WatchlistsViewModel: ObservableObject {
     func moveWatchlist(from source: IndexSet, to destination: Int) {
         watchlists.move(fromOffsets: source, toOffset: destination)
         saveAllWatchlists()
+    }
+    
+    func saveAllWatchlists() {
+        persistenceService.saveWatchlists(watchlists)
     }
     
 }

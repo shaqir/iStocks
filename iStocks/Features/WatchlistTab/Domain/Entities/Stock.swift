@@ -7,7 +7,7 @@
 import Foundation
 
 struct Stock: Identifiable, Decodable, Equatable {
-    var id = UUID()
+    var id: UUID
     let symbol: String
     let name: String
     let price: Double              // Current market price
