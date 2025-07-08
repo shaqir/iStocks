@@ -12,13 +12,20 @@ struct WatchlistTabView: View {
     @ObservedObject var viewModel: WatchlistsViewModel
     @Namespace private var underlineNamespace
     private let viewModelProvider = WatchlistViewModelProvider()
-    
+
     @State private var scrollOffsets: [UUID: CGFloat] = [:]
     @State private var isEditingAllWatchlists = false
     @State private var watchlistToEdit: Watchlist?
     @State private var isPresentingNewWatchlist = false
-    
+
     @State private var combineCancellables = Set<AnyCancellable>()
+
+    private var selectedTabBinding: Binding<Int> {
+        Binding(
+            get: { viewModel.selectedIndex },
+            set: { viewModel.selectedIndex = $0 }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -64,7 +71,7 @@ struct WatchlistTabView: View {
         .sheet(isPresented: $isPresentingNewWatchlist) {
             let newWatchlist = Watchlist(id: UUID(), name: "", stocks: [])
             let didSave = PassthroughSubject<Watchlist, Never>()
-            
+
             EditSingleWatchlistView(
                 watchlist: newWatchlist,
                 isNewWatchlist: true,
@@ -84,25 +91,28 @@ struct WatchlistTabView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach(viewModel.watchlists.indices, id: \.self) { index in
+                        ForEach(viewModel.watchlists.indices, id: \..self) { index in
                             let isSelected = viewModel.selectedIndex == index
                             Button {
-                                viewModel.selectedIndex = index
-                                withAnimation { proxy.scrollTo(index, anchor: .center) }
+                                withAnimation {
+                                    viewModel.selectedIndex = index
+                                    proxy.scrollTo(index, anchor: .center)
+                                }
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(viewModel.watchlists[index].name)
                                         .font(.watchlistTabCaption)
-                                        .foregroundColor(isSelected ? .blue : .gray)
+                                        .foregroundColor(isSelected ? .blue : .captionGray)
+
                                     if isSelected {
                                         Capsule()
                                             .fill(Color.blue)
                                             .matchedGeometryEffect(id: "underline", in: underlineNamespace)
-                                            .frame(width: 24, height: 2)
+                                            .frame(width: 20, height: 2, alignment: .leading) // approx. 3–4 characters wide
                                     }
                                 }
+                                .padding(.horizontal, 8)
                                 .id(index)
-                                .padding(.horizontal, 6)
                             }
                             .buttonStyle(.plain)
                             .onLongPressGesture {
@@ -112,6 +122,11 @@ struct WatchlistTabView: View {
                         }
                     }
                     .padding(.leading, 16)
+                }
+                .onChange(of: viewModel.selectedIndex) { _, newIndex in
+                    withAnimation {
+                        proxy.scrollTo(newIndex, anchor: .center)
+                    }
                 }
             }
 
@@ -140,27 +155,24 @@ struct WatchlistTabView: View {
 
     // MARK: - Tab Content
     private func tabContentView() -> some View {
-        ZStack {
-            ForEach(viewModel.watchlists.indices, id: \.self) { index in
-                if viewModel.selectedIndex == index {
-                    let watchlist = viewModel.watchlists[index]
-                    let tabViewModel = viewModelProvider.viewModel(for: watchlist)
+        TabView(selection: selectedTabBinding) {
+            ForEach(viewModel.watchlists.indices, id: \..self) { index in
+                let watchlist = viewModel.watchlists[index]
+                let tabViewModel = viewModelProvider.viewModel(for: watchlist)
 
-                    let offsetBinding = Binding<CGFloat>(
-                        get: { scrollOffsets[watchlist.id, default: 0] },
-                        set: { scrollOffsets[watchlist.id] = $0 }
-                    )
+                let offsetBinding = Binding<CGFloat>(
+                    get: { scrollOffsets[watchlist.id, default: 0] },
+                    set: { scrollOffsets[watchlist.id] = $0 }
+                )
 
-                    WatchlistLoadedView(viewModel: tabViewModel, scrollOffset: offsetBinding)
-                        .onLongPressGesture {
-                            self.watchlistToEdit = watchlist
-                        }
-                        .id(watchlist.id)
-                        .transition(.opacity)
-                }
+                WatchlistLoadedView(viewModel: tabViewModel, scrollOffset: offsetBinding)
+                    .tag(index)
+                    .onLongPressGesture {
+                        self.watchlistToEdit = watchlist
+                    }
             }
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
         .animation(.easeInOut(duration: 0.15), value: viewModel.selectedIndex)
     }
 }
-
