@@ -19,9 +19,11 @@ struct Endpoint {
     let queryItems: [URLQueryItem]?
 
     var url: URL? {
-        var components = URLComponents(string: "https://api.twelvedata.com")
+        var components = URLComponents(string: API.baseURL)
         components?.path += path
         components?.queryItems = queryItems
         return components?.url
     }
 }
+
+ 

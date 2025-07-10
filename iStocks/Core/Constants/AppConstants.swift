@@ -9,4 +9,5 @@ import Foundation
 
 enum AppConstants {
     static let maxStocksPerWatchlist = 10
+    static let maxWatchlists = 10
 }
