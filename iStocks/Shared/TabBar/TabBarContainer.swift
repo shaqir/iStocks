@@ -20,8 +20,5 @@ struct TabBarContainer: View {
                 .padding(.bottom, 16)
         }
         .edgesIgnoringSafeArea(.bottom)
-
     }
-
-    
 }

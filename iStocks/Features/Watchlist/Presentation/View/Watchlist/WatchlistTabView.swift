@@ -18,17 +18,17 @@ struct WatchlistTabView: View {
     
     @State private var watchlistToEdit: Watchlist?
     @State private var isPresentingNewWatchlist = false
-    @State private var didSaveSubject = PassthroughSubject<Watchlist, Never>() // 🔸 persistent subject
+    @State private var didSaveSubject = PassthroughSubject<Watchlist, Never>() // persistent subject
 
     @State private var combineCancellables = Set<AnyCancellable>()
-
+    
     private var selectedTabBinding: Binding<Int> {
         Binding(
             get: { viewModel.selectedIndex },
             set: { viewModel.selectedIndex = $0 }
         )
     }
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -37,6 +37,17 @@ struct WatchlistTabView: View {
                     tabBar()
                     tabContentView()
                 }
+                
+                if viewModel.isLoading {
+                    Color.black.opacity(0.2).ignoresSafeArea()
+                    ProgressView("Loading...")
+                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                }
+                
             }
             .onAppear {
                 viewModel.loadWatchlists()

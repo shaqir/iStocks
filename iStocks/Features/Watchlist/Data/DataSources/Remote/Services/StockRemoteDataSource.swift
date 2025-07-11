@@ -11,18 +11,23 @@ import Combine
 
 protocol StockRemoteDataSourceProtocol {
     func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error>
-    func fetchRealtimePricesForTop50() -> AnyPublisher<[Stock], Error>
+    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Never>
 }
 
 import Combine
 
 final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
+    
     private let networkClient: NetworkClient
-   
+    
+    //Stores Combine subscriptions to manage memory and cancel publishers when needed.
+    private var cancellables = Set<AnyCancellable>()
+    
+    
     init(networkClient: NetworkClient) {
         self.networkClient = networkClient
     }
-
+    
     func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error> {
         let endpoint = Endpoint(
             path: "/quote",
@@ -34,25 +39,66 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         )
         
         print(endpoint.url!)
-
+        
         return networkClient.request(endpoint)
             .tryMap { try QuoteResponseMapper.map($0) }
             .mapError { self.handleAndMapToAppError($0) }
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    ///Chunks the top 50 symbols into groups of 8
+    ///Requests them one at a time with a delay
+    ///Uses Combine to merge results and emit alerts if needed
+    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Never> {
+        let batches = NYSETop50Symbols.top50.chunked(into: 8)
+        let subject = PassthroughSubject<[Stock], Never>()
 
-    func fetchRealtimePricesForTop50() -> AnyPublisher<[Stock], Error> {
-        let endpoint = PriceEndpoint.forSymbols(NYSETop50Symbols.top50, apiKey: API.apiKey)
+        fetchSequentially(batches: batches, subject: subject)
+        return subject.eraseToAnyPublisher()
+    }
 
-        print(endpoint.url!)
+    private func fetchSequentially(
+        batches: [[String]],
+        subject: PassthroughSubject<[Stock], Never>,
+        index: Int = 0
+    ) {
+        guard index < batches.count else {
+            subject.send(completion: .finished)
+            return
+        }
+
+        let batch = batches[index]
+        print("Sending batch \(index + 1): \(batch)")
+
+        fetchPrices(for: batch)
+            .catch { [weak self] error -> AnyPublisher<[Stock], Never> in
+                _ = self?.handleAndMapToAppError(error)
+                return Just([]).eraseToAnyPublisher()
+            }
+            .sink(receiveCompletion: { _ in }, receiveValue: { stocks in
+                subject.send(stocks)
+
+                // Delay before next batch
+                DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
+                    self.fetchSequentially(batches: batches, subject: subject, index: index + 1)
+                }
+            })
+            .store(in: &cancellables)
+    }
+    private func fetchPrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
+        let endpoint = PriceEndpoint.forSymbols(symbols, apiKey: API.apiKey)
 
         return networkClient.request(endpoint)
-            .map { PriceResponseMapper.map($0) }
-            .mapError { self.handleAndMapToAppError($0) }
-            .receive(on: DispatchQueue.main)
+            .map { (rawMap: [String: StockPriceDTO]) in
+                rawMap.compactMap { symbol, dto in
+                    dto.toStockPrice(symbol: symbol)
+                }
+            }
+            .mapError(handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
+    
     
     private func handleAndMapToAppError(_ error: Error) -> AppError {
         let appError: AppError
@@ -64,6 +110,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         } else {
             appError = .unknown(error)
         }
+        print(appError)
         return appError
     }
 }

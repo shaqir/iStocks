@@ -12,15 +12,12 @@ struct TabRouterView: View {
     
     let tab: TabViewEnum
     @Environment(\.modelContext) private var context
-    
+
     var body: some View {
         switch tab {
         
         case .watchlist:
-            
-            let vm = WatchlistDIContainer.makeWatchlistsViewModel(context: context)
-            WatchlistTabView(viewModel: vm)
-        
+            WatchlistTabContainerView(context: context)
         case .orders:
             OrderView()
         
@@ -33,5 +30,17 @@ struct TabRouterView: View {
         case .settings:
             SettingsView()
         }
+    }
+}
+
+struct WatchlistTabContainerView: View {
+    @StateObject private var viewModel: WatchlistsViewModel
+
+    init(context: ModelContext) {
+        _viewModel = StateObject(wrappedValue: WatchlistDIContainer.makeWatchlistsViewModel(context: context))
+    }
+
+    var body: some View {
+        WatchlistTabView(viewModel: viewModel)
     }
 }

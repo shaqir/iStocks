@@ -15,7 +15,7 @@ enum WatchlistAppMode {
 
 final class WatchlistDIContainer {
     
-    static let mode: WatchlistAppMode = .restAPI
+    static let mode: WatchlistAppMode = .mock
     
     // MARK: - Repository
     static func makeStockRepository() -> StockRepository {
@@ -35,8 +35,16 @@ final class WatchlistDIContainer {
     }
     
     // MARK: - Use Case
-    static func makeUseCase() -> ObserveStocksUseCase {
-        ObserveStocksUseCaseImpl(repository: makeStockRepository())
+    static func makeMockUseCase() -> ObserveMockStocksUseCase {
+        ObserveMockStocksUseCaseImpl(repository: makeStockRepository())
+    }
+    
+    static func makeTop5UseCase() -> ObserveTop5StocksUseCase {
+        ObserveTop5StocksUseCaseImpl(repository: makeStockRepository())
+    }
+
+    static func makeTop50UseCase() -> ObserveTop50StocksUseCase {
+        ObserveTop50StocksUseCaseImpl(repository: makeStockRepository())
     }
 
     // MARK: - Persistence Service
@@ -46,11 +54,14 @@ final class WatchlistDIContainer {
 
     // MARK: - ViewModel
     static func makeWatchlistsViewModel(context: ModelContext) -> WatchlistsViewModel {
-        let useCase = makeUseCase()
+        let useCaseMock = makeMockUseCase()
+        let useCase50 = makeTop50UseCase()
         let persistenceService = makePersistenceService(context: context)
         let vmProvider = WatchlistViewModelProvider()
-        return WatchlistsViewModel(useCase: useCase,
-                                   persistenceService: persistenceService,
-                                   viewModelProvider: vmProvider)
+        
+        return WatchlistsViewModel(useCaseMock: useCaseMock,
+                                    useCase50: useCase50,
+                                    persistenceService: persistenceService,
+                                    viewModelProvider: vmProvider)
     }
 }

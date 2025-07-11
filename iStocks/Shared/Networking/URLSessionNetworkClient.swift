@@ -16,8 +16,23 @@ final class URLSessionNetworkClient: NetworkClient {
         self.session = session
         self.decoder = decoder
     }
+    
+    // MARK: - Combine Raw Data
+    func request(_ endpoint: Endpoint) -> AnyPublisher<Data, Error> {
+        guard let url = endpoint.url else {
+            return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
+        }
 
-    // MARK: - Combine
+        var request = URLRequest(url: url)
+        request.httpMethod = endpoint.method.rawValue
+
+        return session.dataTaskPublisher(for: request)
+            .tryMap { try self.validate(data: $0.data, response: $0.response) }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    // MARK: - Combine Decodable
     func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error> {
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()

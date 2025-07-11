@@ -62,3 +62,20 @@ extension Stock {
         )
     }
 }
+ 
+
+extension Stock {
+    func updatedPrice(_ newPrice: Double) -> Stock {
+        Stock(
+            id: self.id,
+            symbol: self.symbol,
+            name: self.name,
+            price: newPrice,
+            previousPrice: self.price,
+            isPriceUp: newPrice >= self.price,
+            qty: self.qty,
+            averageBuyPrice: self.averageBuyPrice,
+            sector: self.sector
+        )
+    }
+}

@@ -17,6 +17,7 @@ class StockEntity {
     var isPriceUp: Bool
     var averageBuyPrice: Double
     var qty: Double
+    var sector: String
 
     init(
         id: UUID = UUID(),
@@ -25,7 +26,8 @@ class StockEntity {
         previousPrice: Double,
         isPriceUp: Bool,
         averageBuyPrice: Double,
-        qty: Double
+        qty: Double,
+        sector: String
     ) {
         self.id = id
         self.symbol = symbol
@@ -34,6 +36,7 @@ class StockEntity {
         self.isPriceUp = isPriceUp
         self.averageBuyPrice = averageBuyPrice
         self.qty = qty
+        self.sector = sector
     }
 }
 
@@ -42,13 +45,13 @@ extension StockEntity {
         Stock(
             id: id,
             symbol: symbol,
-            name: "name",
+            name: symbol,
             price: price,
             previousPrice: previousPrice,
             isPriceUp: isPriceUp,
             qty: qty,
             averageBuyPrice: averageBuyPrice,
-            sector: "sector"
+            sector: sector
         )
     }
 
@@ -70,7 +73,8 @@ extension StockEntity {
             previousPrice: stock.previousPrice,
             isPriceUp: stock.isPriceUp,
             averageBuyPrice: stock.averageBuyPrice,
-            qty: stock.qty
+            qty: stock.qty,
+            sector: stock.sector
         )
     }
 

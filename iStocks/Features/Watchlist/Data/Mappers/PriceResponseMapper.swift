@@ -7,8 +7,10 @@
 import Foundation
 
 enum PriceResponseMapper {
-    static func map(_ responseDict: [String: StockPriceDTO]) -> [Stock] {
-        return responseDict.compactMap { (symbol, dto) in
+    static func map(data: Data) throws -> [Stock] {
+        let decoded = try JSONDecoder().decode([String: StockPriceDTO].self, from: data)
+
+        return decoded.compactMap { (symbol, dto) in
             dto.toStockPrice(symbol: symbol)
         }
     }

@@ -7,11 +7,11 @@
 import Foundation
 import Combine
 
-protocol ObserveStocksUseCase {
+protocol ObserveTop5StocksUseCase {
     func execute() -> AnyPublisher<[Stock], any Error>
 }
 
-final class ObserveStocksUseCaseImpl: ObserveStocksUseCase{
+final class ObserveTop5StocksUseCaseImpl: ObserveTop5StocksUseCase{
     private let repository: StockRepository
     
     init(repository: StockRepository) {
@@ -19,6 +19,6 @@ final class ObserveStocksUseCaseImpl: ObserveStocksUseCase{
     }
     
     func execute() -> AnyPublisher<[Stock], Error> {
-        repository.observeStocks()
+        repository.observeTop5Stocks()
     }
 }

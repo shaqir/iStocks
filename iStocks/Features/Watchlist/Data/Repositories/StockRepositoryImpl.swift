@@ -10,15 +10,21 @@ import Combine
 final class StockRepositoryImpl: StockRepository {
     
     private let remoteDataSource: StockRemoteDataSourceProtocol
-    
+
     init(service: StockRemoteDataSourceProtocol) {
-           self.remoteDataSource = service
+        self.remoteDataSource = service
     }
 
-    func observeStocks() -> AnyPublisher<[Stock], any Error> {
-        // from a real-time API
-        //remoteDataSource.fetchWatchlistStocks()
-        remoteDataSource.fetchRealtimePricesForTop50()
+    func observeTop5Stocks() -> AnyPublisher<[Stock], Error> {
+        remoteDataSource.fetchRealtimePricesForTop5()
     }
-    
+
+    func observeTop50Stocks() -> AnyPublisher<[Stock], Never> {
+        remoteDataSource.fetchRealtimePricesForTop50InBatches()
+    }
+
+    func observeStocks() -> AnyPublisher<[Stock], Error> {
+        // Fallback: Top 5 for example
+        remoteDataSource.fetchRealtimePricesForTop5()
+    }
 }
