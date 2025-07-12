@@ -5,6 +5,7 @@
 //  Created by Sakir Saiyed on 2025-07-01.
 
 import SwiftUI
+import Combine
 
 struct WatchlistLoadedView: View {
     @ObservedObject var viewModel: WatchlistViewModel
@@ -12,7 +13,10 @@ struct WatchlistLoadedView: View {
     
     @State private var isShowingStockPicker = false
     @State private var pausedLiveUpdates: Bool = false
-
+    
+    //Stores Combine subscriptions to manage memory and cancel publishers when needed.
+    @State private var cancellables = Set<AnyCancellable>()
+    
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading {
@@ -40,6 +44,19 @@ struct WatchlistLoadedView: View {
             if !pausedLiveUpdates {
                 viewModel.observeLiveUpdates()
             }
+            
+            // Subscribe to price-only updates
+            viewModel.priceUpdate
+                .sink { updatedStocks in
+                    // Set animated symbols for visual feedback
+                    viewModel.animatedSymbols = Set(updatedStocks.map(\.symbol))
+                    
+                    // Optional: Clear animation after short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        viewModel.animatedSymbols.removeAll()
+                    }
+                }
+                .store(in: &cancellables)
         }
         .sheet(isPresented: $isShowingStockPicker, onDismiss: {
             resumeLiveUpdates()
@@ -49,17 +66,17 @@ struct WatchlistLoadedView: View {
                 availableStocks: MockStockData.allStocks
             )
             StockPickerView(viewModel: editViewModel,
-                            onSave: viewModel.watchlistDidUpdate)
+                            onSave: viewModel.watchlistStructuralUpdate)
         }
     }
-
+    
     // MARK: - Pause/Resume Live Updates
-
+    
     private func pauseLiveUpdates() {
         pausedLiveUpdates = true
         viewModel.cancelLiveUpdates()
     }
-
+    
     private func resumeLiveUpdates() {
         pausedLiveUpdates = false
         viewModel.observeLiveUpdates()
@@ -70,7 +87,7 @@ struct WatchlistLoadedView: View {
 
 struct WatchlistStockListView: View {
     @ObservedObject var viewModel: WatchlistViewModel
-
+    
     var body: some View {
         LazyVStack(spacing: 8) {
             ForEach(viewModel.filteredStocks.indices, id: \.self) { index in
@@ -89,18 +106,14 @@ struct WatchlistStockListView: View {
 struct WatchlistRowView: View {
     let stock: Stock
     let isAnimated: Bool
-
+    
     var body: some View {
-        WatchlistRow(stock: stock)
+        WatchlistRow(stock: stock, isAnimated: isAnimated)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white)
                     .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
             )
-            .scaleEffect(isAnimated ? 1.05 : 1.0)
-            .opacity(isAnimated ? 0 : 1)
-            .animation(.easeOut(duration: 0.5), value: isAnimated)
-            .transition(.scale.combined(with: .opacity))
     }
 }
 
@@ -127,11 +140,11 @@ struct WatchlistScrollContainer<Content: View>: View {
                 
                 LazyVStack(pinnedViews: [.sectionHeaders]) {
                     Section(header:
-                        WatchlistStickySearchBar(
-                            searchText: searchText,
-                            isAddButtonVisible: isAddButtonVisible,
-                            onAddTapped: onAddTapped
-                        )
+                                WatchlistStickySearchBar(
+                                    searchText: searchText,
+                                    isAddButtonVisible: isAddButtonVisible,
+                                    onAddTapped: onAddTapped
+                                )
                     ) {
                         content()
                             .padding(.horizontal, 16)
@@ -155,18 +168,18 @@ struct WatchlistStickySearchBar: View {
     @Binding var searchText: String
     var isAddButtonVisible: Bool
     var onAddTapped: () -> Void
-
+    
     var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-
+                
                 TextField("Search stocks", text: $searchText)
                     .font(.system(size: 14))
                     .disableAutocorrection(true)
                     .frame(maxWidth: .infinity)
-
+                
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -183,7 +196,7 @@ struct WatchlistStickySearchBar: View {
                     .fill(Color.white)
                     .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             )
-
+            
             if isAddButtonVisible {
                 Button(action: onAddTapped) {
                     Text("Add Stocks")

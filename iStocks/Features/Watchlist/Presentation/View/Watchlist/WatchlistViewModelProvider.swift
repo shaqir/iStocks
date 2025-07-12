@@ -9,16 +9,19 @@ import Foundation
 import Combine
 
 final class WatchlistViewModelProvider {
+    
     private var cache: [UUID: WatchlistViewModel] = [:]
     private var cancellables: [UUID: AnyCancellable] = [:]
     
-    var watchlistDidUpdate = PassthroughSubject<Watchlist, Never>() // Relay downstream
+    // Relay downstream
+    var watchlistDidUpdate = PassthroughSubject<Watchlist, Never>()
     
     private let observeUseCase: any ObserveWatchlistStocksUseCase
     
     init(observeUseCase: any ObserveWatchlistStocksUseCase) {
         self.observeUseCase = observeUseCase
     }
+    
     func viewModel(for watchlist: Watchlist) -> WatchlistViewModel {
         if let existing = cache[watchlist.id] {
             // Update the ViewModel's internal watchlist if the input differs
@@ -28,17 +31,29 @@ final class WatchlistViewModelProvider {
             return existing
         }
         
-        let vm = WatchlistViewModel(watchlist: watchlist, observeUseCase: observeUseCase)
-        
-        // Combine both publishers: $watchlist (structural changes), and watchlistDidUpdate (semantic changes)
-        let publisher = Publishers.Merge(
-            vm.$watchlist.dropFirst(),
-            vm.watchlistDidUpdate
+        let vm = WatchlistViewModel(
+            watchlist: watchlist,
+            observeUseCase: observeUseCase
         )
         
-        cancellables[watchlist.id] = publisher
+        // Combine both publishers: structural (@Published) and semantic (Passthrough)
+        let structuralChanges = vm.$watchlist
+            .filter { _ in !vm.isPriceOnlyUpdate } //  block price-only updates
+            .eraseToAnyPublisher()
+        
+        let semanticChanges = vm.watchlistStructuralUpdate
+            .eraseToAnyPublisher()
+        
+        let merged = Publishers.Merge(structuralChanges, semanticChanges)
+            .handleEvents(receiveOutput: { updated in
+                print("Structural change received for \(updated.name)")
+            })
+        
+        cancellables[watchlist.id] = merged
             .sink { [weak self] updated in
-                self?.watchlistDidUpdate.send(updated)
+                DispatchQueue.main.async {
+                            self?.watchlistDidUpdate.send(updated)
+                        }
             }
         
         cache[watchlist.id] = vm

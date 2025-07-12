@@ -53,7 +53,9 @@ struct StockPickerView: View {
                     Button("Done") {
                         do {
                             let validated = try viewModel.validateAndReturnWatchlist()
-                            onSave.send(validated)
+                            DispatchQueue.main.async {
+                                onSave.send(validated)
+                            }
                             dismiss()
                         } catch {
                             if let err = error as? LocalizedAlertConvertible {

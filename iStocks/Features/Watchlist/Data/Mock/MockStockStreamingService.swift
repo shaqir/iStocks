@@ -32,7 +32,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
     }
     
     //Initializes the timer to fire every 1.5 seconds (or custom interval).
-    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 1.5) {
+    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 2.5) {
         self.timer = Timer.publish(every: interval, on: .main, in: .common)
         self.stocks = stocks
         subject.send(stocks) // Send initial snapshot
@@ -51,7 +51,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
     
     private func simulatePriceChange() {
         stocks = stocks.map { stock in
-            let change = Double.random(in: -2...2)
+            let change = Double.random(in: -2...1)
             let newPrice = max(stock.price + change, 0)
             return stock.updatedPrice(newPrice)
         }

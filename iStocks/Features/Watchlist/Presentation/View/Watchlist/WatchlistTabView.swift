@@ -69,7 +69,6 @@ struct WatchlistTabView: View {
                                  isNewWatchlist: false)
                 .onReceive(didSaveSubject) { updated in
                     viewModel.updateWatchlist(id: updated.id, with: updated)
-                    viewModel.saveAllWatchlists()
                     watchlistToEdit = nil
                 }
         }
@@ -81,7 +80,6 @@ struct WatchlistTabView: View {
             )
             .onReceive(didSaveSubject) { saved in
                 viewModel.addWatchlist(id: saved.id, with: saved)
-                viewModel.saveAllWatchlists()
                 self.newWatchlist = nil
             }
         }

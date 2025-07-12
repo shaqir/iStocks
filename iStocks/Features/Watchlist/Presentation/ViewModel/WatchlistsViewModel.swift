@@ -8,24 +8,22 @@ import Foundation
 import Combine
 
 final class WatchlistsViewModel: ObservableObject {
+    
     @Published var watchlists: [Watchlist] = []
     @Published var selectedIndex: Int = 0
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
-    @Published var isFirstBatchReceived: Bool = false
+    @Published var isFirstBatchReceived: Bool = false//only 8 stock symbol per minute
     
     private let useCaseMock: ObserveMockStocksUseCase
     private let useCase50: ObserveTop50StocksUseCase
-    
+    private let watchlistUseCase: ObserveWatchlistStocksUseCase
+
     private var cancellables = Set<AnyCancellable>()
-    
     let persistenceService: WatchlistPersistenceService
-    
     private let viewModelProvider: WatchlistViewModelProvider
     
-    @Published private(set) var stocks: [Stock] = [] // for the top 50 live updates
-    
-    private let watchlistUseCase: ObserveWatchlistStocksUseCase
+    @Published private(set) var stocks: [Stock] = []
     
     //MARK: Init
     init(useCaseMock: ObserveMockStocksUseCase,
@@ -44,24 +42,23 @@ final class WatchlistsViewModel: ObservableObject {
                     self?.updateWatchlist(id: updated.id, with: updated)
             }
             .store(in: &cancellables)
+        
+         
+        
+        
     }
     
     //MARK: Load watchlists
-    
     func loadWatchlists() {
         isLoading = true
-        
         let saved = persistenceService.load()
         if !saved.isEmpty {
             self.watchlists = saved
             self.stocks = saved.flatMap { $0.stocks }
             if watchlists.isEmpty {
-                self.rebuildWatchlistsFromMasterStocks() // only once at start
+                self.rebuildWatchlistsFromMasterStocks()
             }
             self.isLoading = false
-            if WatchlistDIContainer.mode == .mock {
-                ///observeMockLiveUpdates() //Begin simulation after loading persisted stocks
-            }
         } else {
             if WatchlistDIContainer.mode == .mock {
                 loadMockData()
@@ -73,11 +70,10 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     //MARK: Mock Methods
-    
     private func loadMockData() {
         self.stocks = MockStockData.allStocks
         self.rebuildWatchlistsFromMasterStocks() // Just once on first load
-        //self.observeMockLiveUpdates()            // Price simulation only
+        //self.observeMockLiveUpdates()          // Price simulation only
     }
     
     private func observeMockLiveUpdates() {
@@ -101,7 +97,6 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     //MARK: REST API Methods
-    
     func loadTop50StockPricesFromServer() {
         isLoading = true
         isFirstBatchReceived = false
