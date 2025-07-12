@@ -4,111 +4,117 @@
 //
 //  Created by Sakir Saiyed on 2025-07-04.
 //
-import Foundation
 import SwiftUI
-import Combine 
+import Combine
 
 struct StockPickerView: View {
-    var allStocks: [Stock]
-    @ObservedObject var selectionManager: StockSelectionManager
+    @ObservedObject var viewModel: EditWatchlistViewModel
+    @Environment(\.dismiss) private var dismiss
+    let onSave: PassthroughSubject<Watchlist, Never>
 
-    @Environment(\.dismiss) var dismiss
-    @State private var searchText: String = ""
-
-    private var filteredStocks: [Stock] {
-        let base = searchText.isEmpty ? allStocks : allStocks.filter {
-            $0.symbol.localizedCaseInsensitiveContains(searchText) ||
-            $0.name.localizedCaseInsensitiveContains(searchText)
-        }
-        return base.sorted { $0.symbol < $1.symbol }
-    }
-
+    private let maxSelectable = AppConstants.maxStocksPerWatchlist
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // 🔍 Search Bar
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.blue)
-                    }
-                    TextField("Search stocks", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                    if !searchText.isEmpty {
-                        Button("Clear") {
-                            searchText = ""
-                        }
-                        .foregroundColor(.blue)
-                    }
-                }
-                .padding()
-
-                // Count
-                Text("\(selectionManager.selectedStocks.count) / \(AppConstants.maxStocksPerWatchlist) stocks added")
-                    .font(.caption)
-                    .foregroundColor(selectionManager.hasReachedLimit() ? .red : .gray)
-                    .padding(.horizontal)
-                    .padding(.top, 4)
-
-                // Stock List
+                searchBar
+                infoBanner
+                
                 List {
-                    ForEach(filteredStocks) { stock in
-                        stockRow(stock)
+                    ForEach(viewModel.filteredStocks) { stock in
+                        let isSelected = viewModel.selectedStocks.contains(where: { $0.symbol == stock.symbol })
+                        let isDisabled = !isSelected && viewModel.selectedStocks.count >= maxSelectable
+                        
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(stock.symbol).font(.headline)
+                                Text(stock.name).font(.subheadline).foregroundColor(.gray)
+                            }
+                            Spacer()
+                            Image(systemName: isSelected ? "checkmark.square.fill" : "plus.square")
+                                .foregroundColor(isSelected ? .green : .blue)
+                                .font(.system(size: 22, weight: .medium))
+                        }
+                        .opacity(isDisabled ? 0.4 : 1.0)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            handleToggle(stock, isSelected: isSelected, isDisabled: isDisabled)
+                        }
                     }
                 }
                 .listStyle(.plain)
-
-                // Bottom Buttons
-                HStack {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    Spacer()
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .disabled(selectionManager.selectedStocks.isEmpty)
+            }
+            .navigationTitle("Add Stocks")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
                 }
-                .padding()
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        do {
+                            let validated = try viewModel.validateAndReturnWatchlist()
+                            onSave.send(validated)
+                            dismiss()
+                        } catch {
+                            if let err = error as? LocalizedAlertConvertible {
+                                SharedAlertManager.shared.show(err.alert)
+                            } else {
+                                SharedAlertManager.shared.show(StockValidationError.failedToAdd.alert)
+                            }
+                        }
+                    }
+                    .disabled(viewModel.selectedStocks.isEmpty)
+                }
             }
         }
     }
-
-    // MARK: - Stock Row
-
-    private func stockRow(_ stock: Stock) -> some View {
-        let isSelected = selectionManager.isSelected(stock)
-        let isDisabled = !isSelected && selectionManager.hasReachedLimit()
-
-        return HStack {
-            VStack(alignment: .leading) {
-                Text(stock.symbol)
-                    .font(.headline)
-                Text(stock.name)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
+    
+    // MARK: - Search Bar
+    
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+            TextField("Search stocks", text: $viewModel.searchText)
+            if !viewModel.searchText.isEmpty {
+                Button(action: { viewModel.searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                }
             }
-            Spacer()
-            Image(systemName: isSelected ? "checkmark.square.fill" : "plus.square")
-                .foregroundColor(isSelected ? .green : .blue)
-                .font(.system(size: 22, weight: .medium))
         }
-        .opacity(isDisabled ? 0.4 : 1.0)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            handleToggle(stock, isSelected: isSelected, isDisabled: isDisabled)
-        }
+        .padding(10)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+        .padding(.horizontal)
     }
-
+    
+    // MARK: - Banner
+    
+    private var infoBanner: some View {
+        Text("\(viewModel.selectedStocks.count)/\(maxSelectable) stocks added")
+            .font(.caption)
+            .foregroundColor(viewModel.selectedStocks.count >= maxSelectable ? .red : .gray)
+            .padding(.horizontal)
+            .padding(.top, 8)
+    }
+    
     // MARK: - Toggle Logic
-
+    
     private func handleToggle(_ stock: Stock, isSelected: Bool, isDisabled: Bool) {
-        guard !isDisabled || isSelected else {
+        if isDisabled && !isSelected {
             SharedAlertManager.shared.show(
-                StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist).alert
+                StockValidationError.limitReached(num: maxSelectable).alert
             )
             return
         }
-        selectionManager.toggleSelection(for: stock)
+        
+        if isSelected {
+            if viewModel.selectedStocks.count == 1 {
+                SharedAlertManager.shared.show(StockValidationError.mustHaveAtLeastOne.alert)
+                return
+            }
+            viewModel.removeStock(stock)
+        } else {
+            viewModel.addStock(stock)
+        }
     }
 }

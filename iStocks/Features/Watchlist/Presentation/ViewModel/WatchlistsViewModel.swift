@@ -25,26 +25,29 @@ final class WatchlistsViewModel: ObservableObject {
     
     @Published private(set) var stocks: [Stock] = [] // for the top 50 live updates
     
+    private let watchlistUseCase: ObserveWatchlistStocksUseCase
+    
     //MARK: Init
-    init(useCaseMock: ObserveMockStocksUseCase,useCase50: ObserveTop50StocksUseCase,
+    init(useCaseMock: ObserveMockStocksUseCase,
+         useCase50: ObserveTop50StocksUseCase,
+         watchlistUseCase: ObserveWatchlistStocksUseCase,
          persistenceService: WatchlistPersistenceService,
          viewModelProvider: WatchlistViewModelProvider) {
         self.useCaseMock = useCaseMock
         self.useCase50 = useCase50
+        self.watchlistUseCase = watchlistUseCase
         self.persistenceService = persistenceService
         self.viewModelProvider = viewModelProvider
         
         viewModelProvider.watchlistDidUpdate
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] updated in
-                DispatchQueue.main.async {
                     self?.updateWatchlist(id: updated.id, with: updated)
-                }
             }
             .store(in: &cancellables)
     }
     
     //MARK: Load watchlists
+    
     func loadWatchlists() {
         isLoading = true
         
@@ -57,7 +60,7 @@ final class WatchlistsViewModel: ObservableObject {
             }
             self.isLoading = false
             if WatchlistDIContainer.mode == .mock {
-                observeMockLiveUpdates() //Begin simulation after loading persisted stocks
+                ///observeMockLiveUpdates() //Begin simulation after loading persisted stocks
             }
         } else {
             if WatchlistDIContainer.mode == .mock {
@@ -70,15 +73,15 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     //MARK: Mock Methods
+    
     private func loadMockData() {
         self.stocks = MockStockData.allStocks
         self.rebuildWatchlistsFromMasterStocks() // Just once on first load
-        self.observeMockLiveUpdates()            // Price simulation only
+        //self.observeMockLiveUpdates()            // Price simulation only
     }
     
     private func observeMockLiveUpdates() {
         useCaseMock.observe()
-            .receive(on: DispatchQueue.main)
             .sink { completion in
                 if case .failure(let error) = completion {
                     print("Live mock update failed: \(error)")
@@ -118,7 +121,9 @@ final class WatchlistsViewModel: ObservableObject {
                     self.isFirstBatchReceived = true
                 }
                 self.appendToOrUpdateWatchlist(with: stocks)
-                self.rebuildWatchlistsFromMasterStocks()
+                if watchlists.isEmpty {
+                    self.rebuildWatchlistsFromMasterStocks()
+                }
                 self.saveAllWatchlists()
             }
             .store(in: &cancellables)
@@ -135,7 +140,7 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     private func rebuildWatchlistsFromMasterStocks() {
-        let grouped = Dictionary(grouping: stocks, by: \.sector)
+        let grouped = Dictionary(grouping: stocks.filter { !$0.sector.isEmpty }, by: \.sector)
         let sorted = grouped.sorted(by: { $0.key.count < $1.key.count }).prefix(10)
         let updatedWatchlists = sorted.map { (sector, stocks) -> Watchlist in
             return Watchlist(id: UUID(), name: sector, stocks: Array(stocks))
@@ -144,17 +149,16 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     //MARK: Helper ViewModel Methods
+    func addWatchlist(id: UUID, with newWatchlist: Watchlist) {
+        watchlists.append(newWatchlist)
+        saveAllWatchlists()
+    }
     
     func updateWatchlist(id: UUID, with updated: Watchlist) {
         if let index = watchlists.firstIndex(where: { $0.id == id }) {
             watchlists[index] = updated
             persistenceService.updateWatchlist(updated)
         }
-    }
-    
-    private func moveWatchlist(from source: IndexSet, to destination: Int) {
-        watchlists.move(fromOffsets: source, toOffset: destination)
-        saveAllWatchlists()
     }
     
     func saveAllWatchlists() {

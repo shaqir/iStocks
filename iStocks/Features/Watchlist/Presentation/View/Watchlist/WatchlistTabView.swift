@@ -11,46 +11,41 @@ import SwiftUI
 struct WatchlistTabView: View {
     @ObservedObject var viewModel: WatchlistsViewModel
     @Namespace private var underlineNamespace
-    private let viewModelProvider = WatchlistViewModelProvider()
+    let viewModelProvider: WatchlistViewModelProvider
 
     @State private var scrollOffsets: [UUID: CGFloat] = [:]
     @State private var isEditingAllWatchlists = false
-    
-    @State private var watchlistToEdit: Watchlist?
-    @State private var isPresentingNewWatchlist = false
-    @State private var didSaveSubject = PassthroughSubject<Watchlist, Never>() // persistent subject
-
+    @State private var didSaveSubject = PassthroughSubject<Watchlist, Never>()
     @State private var combineCancellables = Set<AnyCancellable>()
-    
-    private var selectedTabBinding: Binding<Int> {
-        Binding(
-            get: { viewModel.selectedIndex },
-            set: { viewModel.selectedIndex = $0 }
-        )
-    }
+    @State private var watchlistToEdit: Watchlist? = nil
+    @State private var newWatchlist: Watchlist? = nil
+
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(.systemGray6).ignoresSafeArea()
+
                 VStack(spacing: 0) {
-                    tabBar()
-                    tabContentView()
+                    WatchlistTabBar(
+                        viewModel: viewModel,
+                        underlineNamespace: underlineNamespace,
+                        isEditingAllWatchlists: $isEditingAllWatchlists,
+                        newWatchlist: $newWatchlist
+                    )
+                    WatchlistTabContent(
+                        viewModel: viewModel,
+                        viewModelProvider: viewModelProvider,
+                        scrollOffsets: $scrollOffsets,
+                        watchlistToEdit: $watchlistToEdit
+                    )
                 }
-                
+
                 if viewModel.isLoading {
-                    Color.black.opacity(0.2).ignoresSafeArea()
-                    ProgressView("Loading...")
-                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
+                    LoadingOverlay()
                 }
-                
             }
             .onAppear {
-                viewModel.loadWatchlists()
                 viewModelProvider.watchlistDidUpdate
                     .receive(on: DispatchQueue.main)
                     .sink { updated in
@@ -69,34 +64,51 @@ struct WatchlistTabView: View {
             )
         }
         .sheet(item: $watchlistToEdit) { watchlist in
-            let vm = EditWatchlistViewModel(watchlist: watchlist)
-            EditSingleWatchlistView(
-                viewModel: vm,
-                watchlistDidSave: didSaveSubject
-            )
-            .onReceive(didSaveSubject) { updated in
-                viewModel.updateWatchlist(id: updated.id, with: updated)
-                viewModel.saveAllWatchlists()
-                watchlistToEdit = nil
-            }
+            EditWatchlistWrapper(watchlist: watchlist,
+                                 didSaveSubject: didSaveSubject,
+                                 isNewWatchlist: false)
+                .onReceive(didSaveSubject) { updated in
+                    viewModel.updateWatchlist(id: updated.id, with: updated)
+                    viewModel.saveAllWatchlists()
+                    watchlistToEdit = nil
+                }
         }
-        .sheet(isPresented: $isPresentingNewWatchlist) {
-            let newWatchlist = Watchlist(id: UUID(), name: "", stocks: [])
-            let vm = EditWatchlistViewModel(watchlist: newWatchlist, isNewWatchlist: true)
-            EditSingleWatchlistView(
-                viewModel: vm,
-                watchlistDidSave: didSaveSubject
+        .sheet(item: $newWatchlist) { newWatchlist in
+            EditWatchlistWrapper(
+                watchlist: newWatchlist,
+                didSaveSubject: didSaveSubject,
+                isNewWatchlist: true
             )
             .onReceive(didSaveSubject) { saved in
-                viewModel.watchlists.append(saved)
+                viewModel.addWatchlist(id: saved.id, with: saved)
                 viewModel.saveAllWatchlists()
-                isPresentingNewWatchlist = false
+                self.newWatchlist = nil
             }
         }
     }
+    }
 
-    // MARK: - Tab Bar
-    private func tabBar() -> some View {
+// MARK: - Subviews
+
+struct LoadingOverlay: View {
+    var body: some View {
+        Color.black.opacity(0.2).ignoresSafeArea()
+        ProgressView("Loading...")
+            .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(10)
+            .shadow(radius: 5)
+    }
+}
+
+struct WatchlistTabBar: View {
+    @ObservedObject var viewModel: WatchlistsViewModel
+    var underlineNamespace: Namespace.ID
+    @Binding var isEditingAllWatchlists: Bool
+    @Binding var newWatchlist: Watchlist?
+
+    var body: some View {
         HStack(spacing: 8) {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -118,17 +130,19 @@ struct WatchlistTabView: View {
                                         Capsule()
                                             .fill(Color.blue)
                                             .matchedGeometryEffect(id: "underline", in: underlineNamespace)
-                                            .frame(width: 20, height: 2, alignment: .leading) // approx. 3–4 characters wide
+                                            .frame(width: 20, height: 2, alignment: .leading)
                                     }
                                 }
                                 .padding(.horizontal, 8)
                                 .id(index)
                             }
                             .buttonStyle(.plain)
-                            .onLongPressGesture {
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                isEditingAllWatchlists = true
-                            }
+                            .simultaneousGesture(
+                                LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    isEditingAllWatchlists = true
+                                }
+                            )
                         }
                     }
                     .padding(.leading, 16)
@@ -142,11 +156,10 @@ struct WatchlistTabView: View {
 
             Button {
                 if viewModel.watchlists.count >= AppConstants.maxWatchlists {
-                    SharedAlertManager.shared.show(
-                        WatchlistValidationError.tooManyWatchlists.alert
-                    )
+                    SharedAlertManager.shared.show(WatchlistValidationError.tooManyWatchlists.alert)
                 } else {
-                    isPresentingNewWatchlist = true
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    newWatchlist = Watchlist.empty()
                 }
             } label: {
                 Image(systemName: "plus.circle.fill")
@@ -159,9 +172,19 @@ struct WatchlistTabView: View {
         .background(.ultraThinMaterial)
         .overlay(Rectangle().fill(Color.gray.opacity(0.15)).frame(height: 0.5), alignment: .bottom)
     }
+}
 
-    // MARK: - Tab Content
-    private func tabContentView() -> some View {
+struct WatchlistTabContent: View {
+    @ObservedObject var viewModel: WatchlistsViewModel
+    var viewModelProvider: WatchlistViewModelProvider
+    @Binding var scrollOffsets: [UUID: CGFloat]
+    @Binding var watchlistToEdit: Watchlist?
+
+    private var selectedTabBinding: Binding<Int> {
+        Binding(get: { viewModel.selectedIndex }, set: { viewModel.selectedIndex = $0 })
+    }
+
+    var body: some View {
         TabView(selection: selectedTabBinding) {
             ForEach(viewModel.watchlists.indices, id: \..self) { index in
                 let watchlist = viewModel.watchlists[index]
@@ -173,6 +196,7 @@ struct WatchlistTabView: View {
                 )
 
                 WatchlistLoadedView(viewModel: tabViewModel, scrollOffset: offsetBinding)
+                    .id(watchlist.id)
                     .tag(index)
                     .onLongPressGesture {
                         self.watchlistToEdit = watchlist
@@ -181,5 +205,22 @@ struct WatchlistTabView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .animation(.easeInOut(duration: 0.15), value: viewModel.selectedIndex)
+    }
+}
+
+
+struct EditWatchlistWrapper: View {
+    let watchlist: Watchlist
+    let didSaveSubject: PassthroughSubject<Watchlist, Never>
+    let isNewWatchlist: Bool
+
+    var body: some View {
+        let viewModel = EditWatchlistViewModel(
+            watchlist: watchlist,
+            availableStocks: MockStockData.allStocks,
+            isNewWatchlist: isNewWatchlist
+        )
+
+        EditSingleWatchlistView(viewModel: viewModel, watchlistDidSave: didSaveSubject)
     }
 }

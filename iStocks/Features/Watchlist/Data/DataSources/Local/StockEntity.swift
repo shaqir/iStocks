@@ -65,7 +65,7 @@ extension StockEntity {
             return nil
         }
         
-        print("Creating StockEntity from:", stock)
+        //print("Creating StockEntity from:", stock)
         return StockEntity(
             id: stock.id,
             symbol: stock.symbol,

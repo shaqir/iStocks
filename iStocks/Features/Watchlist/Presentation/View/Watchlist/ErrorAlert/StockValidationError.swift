@@ -14,6 +14,7 @@ enum StockValidationError: Error {
     case notFound
     case failedToAdd
     case failedToDelete(String)
+    case mustHaveAtLeastOne
 
     var alert: SharedAlertData {
         switch self {
@@ -59,6 +60,16 @@ enum StockValidationError: Error {
                 icon: "trash",
                 action: nil
             )
+        case .mustHaveAtLeastOne:
+            return SharedAlertData(
+                title: "Cannot Remove All",
+                message: "You must have at least one stock in your watchlist.",
+                icon: "exclamationmark.triangle.fill",
+                action: nil
+            )
         }
     }
 }
+
+
+

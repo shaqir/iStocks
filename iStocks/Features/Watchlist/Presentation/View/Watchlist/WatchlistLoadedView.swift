@@ -7,75 +7,104 @@
 import SwiftUI
 
 struct WatchlistLoadedView: View {
-    
     @ObservedObject var viewModel: WatchlistViewModel
-    var scrollOffset: Binding<CGFloat> = .constant(0) // Optional fallback for standalone use
+    var scrollOffset: Binding<CGFloat> = .constant(0)
     
     @State private var isShowingStockPicker = false
-    
+    @State private var pausedLiveUpdates: Bool = false
+
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading {
                 ProgressView("Fetching Stocks…")
-            }
-            else if let error = viewModel.errorMessage {
+            } else if let error = viewModel.errorMessage {
                 WatchlistErrorView(error: error) {
                     //viewModel.refresh()
                 }
             } else {
                 WatchlistScrollContainer(
                     searchText: $viewModel.searchText,
-                    isAddButtonVisible: viewModel.stocks.count < 20,
+                    isAddButtonVisible: viewModel.selectedStocks.count < AppConstants.maxStocksPerWatchlist,
                     onAddTapped: {
+                        pauseLiveUpdates()
                         isShowingStockPicker = true
                     },
                     content: {
-                        LazyVStack(spacing: 8) {
-                            ForEach(viewModel.filteredStocks.indices, id: \.self) { index in
-                                let stock = viewModel.filteredStocks[index]
-                                VStack(spacing: 0) {
-                                    WatchlistRow(stock: stock)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(.white)
-                                                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
-                                        )
-                                        .scaleEffect(viewModel.animatedSymbols.contains(stock.symbol) ? 1.05 : 1.0)
-                                        .opacity(viewModel.animatedSymbols.contains(stock.symbol) ? 0 : 1)
-                                        .animation(.easeOut(duration: 0.5), value: viewModel.animatedSymbols)
-                                        .transition(.scale.combined(with: .opacity))
-                                 }
-                                .padding(.top, index == 0 ? 4 : 0)
-                            }
-                        }
+                        WatchlistStockListView(viewModel: viewModel)
                     },
                     scrollOffset: scrollOffset
                 )
             }
         }
-        .sheet(isPresented: $isShowingStockPicker) {
-            let selectionManager = StockSelectionManager(initialSelected: viewModel.watchlist.stocks)
-            StockPickerView(
-                allStocks: MockStockData.allStocks,
-                selectionManager: selectionManager,
-            )
-            .onDisappear {
-                viewModel.updateStocks(from: selectionManager)
+        .onAppear {
+            if !pausedLiveUpdates {
+                viewModel.observeLiveUpdates()
             }
-            .environmentObject(SharedAlertManager.shared)
         }
-        
+        .sheet(isPresented: $isShowingStockPicker, onDismiss: {
+            resumeLiveUpdates()
+        }) {
+            let editViewModel = EditWatchlistViewModel(
+                watchlist: viewModel.watchlist,
+                availableStocks: MockStockData.allStocks
+            )
+            StockPickerView(viewModel: editViewModel,
+                            onSave: viewModel.watchlistDidUpdate)
+        }
+    }
+
+    // MARK: - Pause/Resume Live Updates
+
+    private func pauseLiveUpdates() {
+        pausedLiveUpdates = true
+        viewModel.cancelLiveUpdates()
+    }
+
+    private func resumeLiveUpdates() {
+        pausedLiveUpdates = false
+        viewModel.observeLiveUpdates()
     }
 }
 
+// MARK: - Stock List
 
-private struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+struct WatchlistStockListView: View {
+    @ObservedObject var viewModel: WatchlistViewModel
+
+    var body: some View {
+        LazyVStack(spacing: 8) {
+            ForEach(viewModel.filteredStocks.indices, id: \.self) { index in
+                let stock = viewModel.filteredStocks[index]
+                VStack(spacing: 0) {
+                    WatchlistRowView(stock: stock, isAnimated: viewModel.animatedSymbols.contains(stock.symbol))
+                }
+                .padding(.top, index == 0 ? 4 : 0)
+            }
+        }
     }
 }
+
+// MARK: - Row View
+
+struct WatchlistRowView: View {
+    let stock: Stock
+    let isAnimated: Bool
+
+    var body: some View {
+        WatchlistRow(stock: stock)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+            )
+            .scaleEffect(isAnimated ? 1.05 : 1.0)
+            .opacity(isAnimated ? 0 : 1)
+            .animation(.easeOut(duration: 0.5), value: isAnimated)
+            .transition(.scale.combined(with: .opacity))
+    }
+}
+
+// MARK: - Scroll Container
 
 struct WatchlistScrollContainer<Content: View>: View {
     let searchText: Binding<String>
@@ -97,8 +126,13 @@ struct WatchlistScrollContainer<Content: View>: View {
                 .frame(height: 0)
                 
                 LazyVStack(pinnedViews: [.sectionHeaders]) {
-                    // Sticky search bar
-                    Section(header: stickySearchBar) {
+                    Section(header:
+                        WatchlistStickySearchBar(
+                            searchText: searchText,
+                            isAddButtonVisible: isAddButtonVisible,
+                            onAddTapped: onAddTapped
+                        )
+                    ) {
                         content()
                             .padding(.horizontal, 16)
                             .padding(.bottom, 48) // space for TabBar
@@ -113,22 +147,30 @@ struct WatchlistScrollContainer<Content: View>: View {
             .ignoresSafeArea(.keyboard)
         }
     }
-    
-    private var stickySearchBar: some View {
+}
+
+// MARK: - Sticky Search Bar
+
+struct WatchlistStickySearchBar: View {
+    @Binding var searchText: String
+    var isAddButtonVisible: Bool
+    var onAddTapped: () -> Void
+
+    var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-                
-                TextField("Search stocks", text: searchText)
+
+                TextField("Search stocks", text: $searchText)
                     .font(.system(size: 14))
                     .disableAutocorrection(true)
                     .frame(maxWidth: .infinity)
-                
-                if !searchText.wrappedValue.isEmpty {
-                    Button(action: {
-                        searchText.wrappedValue = ""
-                    }) {
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.gray.opacity(0.6))
                     }
@@ -141,21 +183,19 @@ struct WatchlistScrollContainer<Content: View>: View {
                     .fill(Color.white)
                     .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             )
-            
+
             if isAddButtonVisible {
                 Button(action: onAddTapped) {
-                    HStack(spacing: 6) {
-                        Text("Add Stocks")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 14)
-                    .background(
-                        Capsule()
-                            .fill(Color.blue)
-                            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                    )
+                    Text("Add Stocks")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
+                        .background(
+                            Capsule()
+                                .fill(Color.blue)
+                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        )
                 }
                 .frame(height: 44)
                 .transition(.opacity)
@@ -164,6 +204,16 @@ struct WatchlistScrollContainer<Content: View>: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial) // So it looks good while scrolling
+        .background(.ultraThinMaterial)
+    }
+}
+
+// MARK: - Scroll Offset Preference
+
+private struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }

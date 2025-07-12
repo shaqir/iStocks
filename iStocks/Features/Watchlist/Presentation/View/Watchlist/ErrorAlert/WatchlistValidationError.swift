@@ -13,6 +13,7 @@ enum WatchlistValidationError: Error {
     case unexpectedError(String)
     case tooManyWatchlists
     case atLeastOneStockRequired
+    case emptyName
     
     var alert: SharedAlertData {
         switch self {
@@ -47,6 +48,12 @@ enum WatchlistValidationError: Error {
                 title: "At Least One Stock Required",
                 message: "Add at least one stock before saving.",
                 icon: "chart.line.uptrend.xyaxis", action: nil
+            )
+        case .emptyName:
+            return SharedAlertData(
+                title: "Empty Name",
+                message: "Watchlist name cannot be empty.",
+                icon: "exclamationmark.triangle.fill", action: nil
             )
         }
     }

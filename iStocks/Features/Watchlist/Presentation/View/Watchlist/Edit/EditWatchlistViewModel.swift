@@ -6,68 +6,64 @@
 //
 
 import Foundation
-import Combine 
+import Combine
+
+import Foundation
+import Combine
 
 final class EditWatchlistViewModel: ObservableObject {
-    // MARK: - Inputs
+    @Published var name: String
+    @Published var selectedStocks: [Stock]
     @Published var searchText: String = ""
-    @Published private(set) var filteredStocks: [Stock] = []
 
-    let selectionManager: StockSelectionManager
+    let availableStocks: [Stock]
     let isNewWatchlist: Bool
+    private let originalWatchlistID: UUID
 
-    private var cancellables = Set<AnyCancellable>()
-    private let originalWatchlist: Watchlist  // Keep original
+    /// Emits validated Watchlist when saved
+    let onSave = PassthroughSubject<Watchlist, Never>()
 
-    // MARK: - Init
-    init(watchlist: Watchlist, isNewWatchlist: Bool = false) {
-        self.originalWatchlist = watchlist
-        self.selectionManager = StockSelectionManager(
-            initialSelected: watchlist.stocks,
-            maxSelectable: AppConstants.maxStocksPerWatchlist
-        )
+    init(watchlist: Watchlist, availableStocks: [Stock], isNewWatchlist: Bool = false) {
+        self.name = watchlist.name
+        self.selectedStocks = watchlist.stocks
+        self.availableStocks = availableStocks
+        self.originalWatchlistID = watchlist.id
         self.isNewWatchlist = isNewWatchlist
-        setupBindings()
     }
 
-    var initialName: String {
-        originalWatchlist.name
+    // MARK: - Filtered Stocks
+    var filteredStocks: [Stock] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return availableStocks }
+
+        return availableStocks.filter {
+            $0.symbol.localizedCaseInsensitiveContains(trimmed) ||
+            $0.name.localizedCaseInsensitiveContains(trimmed)
+        }
     }
 
-    // MARK: - Search Filtering
-    private func setupBindings() {
-        $searchText
-            .removeDuplicates()
-            .map { query -> [Stock] in
-                guard !query.isEmpty else { return MockStockData.allStocks }
-                let lowercaseQuery = query.lowercased()
-                return MockStockData.allStocks.filter {
-                    $0.symbol.lowercased().contains(lowercaseQuery) ||
-                    $0.name.lowercased().contains(lowercaseQuery)
-                }
-            }
-            .map { $0.sorted { $0.symbol < $1.symbol } }
-            .assign(to: &$filteredStocks)
+    // MARK: - Stock Actions
+    func addStock(_ stock: Stock) {
+        guard !selectedStocks.contains(where: { $0.symbol == stock.symbol }),
+              selectedStocks.count < AppConstants.maxStocksPerWatchlist else { return }
+        selectedStocks.append(stock)
     }
 
-    // MARK: - Validation
-    func validateAndReturnWatchlist(named name: String) throws -> Watchlist {
+    func removeStock(_ stock: Stock) {
+        guard selectedStocks.count > 1 else { return }
+        selectedStocks.removeAll { $0.symbol == stock.symbol }
+    }
+
+    // MARK: - Save
+    func validateAndReturnWatchlist() throws -> Watchlist {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            throw WatchlistValidationError.nameRequired
+            throw WatchlistValidationError.emptyName
         }
-        let stocks = selectionManager.selectedStocks
-        guard !stocks.isEmpty else {
-            throw WatchlistValidationError.noStocksAdded
+        guard !selectedStocks.isEmpty else {
+            throw StockValidationError.mustHaveAtLeastOne
         }
-        guard Set(stocks.map { $0.symbol }).count == stocks.count else {
-            throw StockValidationError.duplicate
-        }
-
-        return Watchlist(
-            id: originalWatchlist.id, // preserve original ID
-            name: trimmed,
-            stocks: stocks
-        )
+        return Watchlist(id: originalWatchlistID, name: trimmed, stocks: selectedStocks)
     }
+
 }

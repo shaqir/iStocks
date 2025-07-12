@@ -30,7 +30,9 @@ struct EditAllWatchlistsView: View {
             List {
                 ForEach(watchlists) { watchlist in
                     HStack {
-                        TextField("Watchlist name", text: binding(for: watchlist))
+                        TextField("Watchlist name", text: editName(for: watchlist))
+                            .submitLabel(.done)
+                            .accessibilityLabel("Watchlist name")
                             .font(.body)
                             .padding(8)
                             .background(Color(.systemGray6))
@@ -50,25 +52,24 @@ struct EditAllWatchlistsView: View {
                     }
                     .padding(.vertical, 6)
                 }
-                .onMove(perform: moveWatchlists)
+                .onMove(perform: moveWatchlist)
             }
             .environment(\.editMode, $editMode)
             .listStyle(.insetGrouped)
             .navigationTitle("Edit Watchlists")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
+                        let trimmedNames = watchlists.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+                        if trimmedNames.contains(where: { $0.isEmpty }) {
+                            SharedAlertManager.shared.show(
+                                WatchlistValidationError.emptyName.alert
+                            )
+                            return
+                        }
                         onSave()
                         dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        addNewWatchlist()
-                    } label: {
-                        Label("Add", systemImage: "plus")
                     }
                 }
             }
@@ -78,25 +79,29 @@ struct EditAllWatchlistsView: View {
     // MARK: - Helpers
 
     private func addNewWatchlist() {
-        let newWatchlist = Watchlist(id: UUID(), name: "New Watchlist", stocks: [])
+        guard watchlists.count < AppConstants.maxWatchlists else {
+            SharedAlertManager.shared.show(WatchlistValidationError.tooManyWatchlists.alert)
+            return
+        }
+        let newWatchlist = Watchlist.empty()
         watchlists.append(newWatchlist)
     }
 
-    private func remove(_ watchlist: Watchlist) {
-        if let index = watchlists.firstIndex(of: watchlist) {
-            watchlists.remove(at: index)
-        }
-    }
-
-    private func moveWatchlists(from source: IndexSet, to destination: Int) {
-        watchlists.move(fromOffsets: source, toOffset: destination)
-        persistenceService.saveWatchlists(watchlists)// to update order while saving.
-    }
-
-    private func binding(for watchlist: Watchlist) -> Binding<String> {
+    private func editName(for watchlist: Watchlist) -> Binding<String> {
         guard let index = watchlists.firstIndex(of: watchlist) else {
             return .constant("")
         }
         return $watchlists[index].name
     }
+    
+    private func remove(_ watchlist: Watchlist) {
+        if let index = watchlists.firstIndex(of: watchlist) {
+            watchlists.remove(at: index)
+        }
+    }
+    
+    private func moveWatchlist(from source: IndexSet, to destination: Int) {
+        watchlists.move(fromOffsets: source, toOffset: destination)
+    }
+    
 }

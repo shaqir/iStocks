@@ -1,0 +1,35 @@
+//
+//  ObserveWatchlistStocksUseCaseImpl.swift
+//  iStocks
+//
+//  Created by Sakir Saiyed on 2025-07-11.
+//
+
+import Foundation
+import Combine
+
+///
+protocol ObserveWatchlistStocksUseCase {
+    func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never>
+}
+ 
+
+final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
+    private let repository: StockRepository
+
+    init(repository: StockRepository) {
+        self.repository = repository
+    }
+
+    func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
+        repository
+            .observeStocks()
+            .map { allStocks in
+                allStocks.filter { stock in
+                    watchlist.stocks.contains(where: { $0.symbol == stock.symbol })
+                }
+            }
+            .replaceError(with: watchlist.stocks) // fallback to last known if error occurs
+            .eraseToAnyPublisher()
+    }
+}

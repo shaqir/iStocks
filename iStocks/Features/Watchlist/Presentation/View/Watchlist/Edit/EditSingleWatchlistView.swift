@@ -5,65 +5,42 @@
 //  Created by Sakir Saiyed on 2025-07-03.
 //
 import SwiftUI
-import Combine
+import Combine 
 
 struct EditSingleWatchlistView: View {
-    
     @Environment(\.dismiss) private var dismiss
-    @StateObject var viewModel: EditWatchlistViewModel
+
     var watchlistDidSave: PassthroughSubject<Watchlist, Never>
-    @State private var watchlistName: String
-    
-    @ObservedObject private var selectionManager: StockSelectionManager
-    
+
+    @StateObject var viewModel: EditWatchlistViewModel
+
     init(viewModel: EditWatchlistViewModel, watchlistDidSave: PassthroughSubject<Watchlist, Never>) {
-           _viewModel = StateObject(wrappedValue: viewModel)
-           _watchlistName = State(initialValue: viewModel.initialName) // Expose from VM
-           self.watchlistDidSave = watchlistDidSave
-           self.selectionManager = viewModel.selectionManager
-       }
+        _viewModel = StateObject(wrappedValue: viewModel)
+        self.watchlistDidSave = watchlistDidSave
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 nameField
                 searchField
-                banner
+                infoBanner
+
                 List {
                     ForEach(viewModel.filteredStocks) { stock in
-                        let isSelected = selectionManager.isSelected(stock)
-                        let isDisabled = !isSelected && selectionManager.hasReachedLimit()
-
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(stock.symbol).font(.headline)
-                                Text(stock.name).font(.subheadline).foregroundColor(.gray)
-                            }
-                            Spacer()
-                            Image(systemName: isSelected ? "checkmark.square.fill" : "plus.square")
-                                .foregroundColor(isSelected ? .green : .blue)
-                                .font(.system(size: 22, weight: .medium))
-                        }
-                        .opacity(isDisabled ? 0.4 : 1.0)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            guard !isDisabled || isSelected else {
-                                SharedAlertManager.shared.show(StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist).alert)
-                                return
-                            }
-                            selectionManager.toggleSelection(for: stock)
-                        }
+                        stockRow(stock)
                     }
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle(viewModel.isNewWatchlist ? "Add Watchlist" : watchlistName)
+            .navigationTitle(viewModel.isNewWatchlist ? "Add Watchlist" : "Edit Watchlist")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { handleSave() }
+                        .disabled(viewModel.selectedStocks.isEmpty || viewModel.name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }
@@ -76,7 +53,7 @@ struct EditSingleWatchlistView: View {
             Text("Watchlist Name")
                 .font(.footnote)
                 .foregroundColor(.gray)
-            TextField("New Watchlist", text: $watchlistName)
+            TextField("New Watchlist", text: $viewModel.name)
                 .textFieldStyle(.roundedBorder)
         }
         .padding()
@@ -89,6 +66,7 @@ struct EditSingleWatchlistView: View {
             if !viewModel.searchText.isEmpty {
                 Button(action: { viewModel.searchText = "" }) {
                     Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
                 }
             }
         }
@@ -98,42 +76,75 @@ struct EditSingleWatchlistView: View {
         .padding(.horizontal)
     }
 
-    private var banner: some View {
-        Text("\(selectionManager.selectedStocks.count)/\(AppConstants.maxStocksPerWatchlist) stocks added")
+    private var infoBanner: some View {
+        Text("\(viewModel.selectedStocks.count)/\(AppConstants.maxStocksPerWatchlist) stocks added")
             .font(.caption)
-            .foregroundColor(selectionManager.hasReachedLimit() ? .red : .gray)
+            .foregroundColor(viewModel.selectedStocks.count >= AppConstants.maxStocksPerWatchlist ? .red : .gray)
             .padding(.horizontal)
             .padding(.top, 8)
     }
 
-    // MARK: - Actions
+    private func stockRow(_ stock: Stock) -> some View {
+        let isSelected = viewModel.selectedStocks.contains(where: { $0.symbol == stock.symbol })
+        let isDisabled = !isSelected && viewModel.selectedStocks.count >= AppConstants.maxStocksPerWatchlist
 
-    private func handleTap(_ stock: Stock, isSelected: Bool, isDisabled: Bool) {
-        guard !isDisabled || isSelected else {
-            SharedAlertManager.shared.show(StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist).alert)
+        return HStack {
+            VStack(alignment: .leading) {
+                Text(stock.symbol).font(.headline)
+                Text(stock.name).font(.subheadline).foregroundColor(.gray)
+            }
+            Spacer()
+            Image(systemName: isSelected ? "checkmark.square.fill" : "plus.square")
+                .foregroundColor(isSelected ? .green : .blue)
+                .font(.system(size: 22, weight: .medium))
+        }
+        .opacity(isDisabled ? 0.4 : 1.0)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            handleToggle(stock, isSelected: isSelected, isDisabled: isDisabled)
+        }
+    }
+
+    private func handleToggle(_ stock: Stock, isSelected: Bool, isDisabled: Bool) {
+        if isDisabled && !isSelected {
+            SharedAlertManager.shared.show(
+                StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist).alert
+            )
             return
         }
-        selectionManager.toggleSelection(for: stock)
+
+        if isSelected {
+            if viewModel.selectedStocks.count == 1 {
+                SharedAlertManager.shared.show(StockValidationError.mustHaveAtLeastOne.alert)
+                return
+            }
+            viewModel.removeStock(stock)
+        } else {
+            viewModel.addStock(stock)
+        }
     }
+
+    // MARK: - Save
 
     private func handleSave() {
         do {
-            let updatedWatchlist = try viewModel.validateAndReturnWatchlist(named: watchlistName)
+            let updatedWatchlist = try viewModel.validateAndReturnWatchlist()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             watchlistDidSave.send(updatedWatchlist)
             dismiss()
-        }catch let e as StockValidationError {
+        } catch let e as StockValidationError {
             SharedAlertManager.shared.show(e.alert)
-        }
-        catch let e as WatchlistValidationError {
+        } catch let e as WatchlistValidationError {
             SharedAlertManager.shared.show(e.alert)
-        }
-        catch {
-            SharedAlertManager.shared.show(SharedAlertData(
-                title: "Unexpected Error",
-                message: error.localizedDescription,
-                icon: "exclamationmark.triangle.fill",
-                action: nil
-            ))
+        } catch {
+            SharedAlertManager.shared.show(
+                SharedAlertData(
+                    title: "Unexpected Error",
+                    message: error.localizedDescription,
+                    icon: "exclamationmark.triangle.fill",
+                    action: nil
+                )
+            )
         }
     }
 }

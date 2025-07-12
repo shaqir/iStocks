@@ -20,7 +20,7 @@ final class WatchlistPersistenceService {
         clearAll() // prevent duplicates
 
         for (index, watchlist) in watchlists.enumerated() {
-            print("Saving watchlist:", watchlist)
+            print("Saving watchlist:")
             let validStocks = watchlist.stocks.compactMap { StockEntity.from($0) }
 
             guard !validStocks.isEmpty else {

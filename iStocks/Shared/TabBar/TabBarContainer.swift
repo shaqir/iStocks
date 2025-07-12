@@ -13,10 +13,10 @@ struct TabBarContainer: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
-                TabRouterView(tab: selectedTab)
+                TabRouterView(tab: selectedTab)// View
                 Spacer(minLength: 0)
             }
-            CustomTabBar(selectedTab: $selectedTab)
+            CustomTabBar(selectedTab: $selectedTab) // Bottom Tab
                 .padding(.bottom, 16)
         }
         .edgesIgnoringSafeArea(.bottom)

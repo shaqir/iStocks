@@ -18,15 +18,41 @@ struct Watchlist: Identifiable, Equatable {
         self.stocks = stocks
     }
 }
-
+//Watchlist (Domain Layer): Pure data model with validation logic.
 extension Watchlist {
     
     var hasDuplicateSymbols: Bool {
         Set(stocks.map { $0.symbol }).count != stocks.count
     }
-
+    
     var isEmpty: Bool {
         stocks.isEmpty
+    }
+    
+    mutating func replaceAllStocks(_ newStocks: [Stock]) throws {
+        if newStocks.count > AppConstants.maxStocksPerWatchlist {
+            throw StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist)
+        }
+        let unique = Set(newStocks.map { $0.symbol })
+        if unique.count != newStocks.count {
+            throw StockValidationError.duplicate
+        }
+        self.stocks = newStocks
+    }
+    
+    mutating func replacePrices(from updatedStocks: [Stock]) {
+        let priceMap = Dictionary(uniqueKeysWithValues: updatedStocks.map { ($0.symbol, $0.price) })
+
+        guard !priceMap.isEmpty else {
+            print("No prices to update")
+            return
+        }
+
+        for i in stocks.indices {
+            if let newPrice = priceMap[stocks[i].symbol] {
+                stocks[i].price = newPrice
+            }
+        }
     }
     
     mutating func tryAddStock(_ stock: Stock) throws {
@@ -50,6 +76,10 @@ extension Watchlist {
         }
         stocks.remove(at: index)
     }
-    
 }
- 
+
+extension Watchlist {
+    static func empty() -> Watchlist {
+        Watchlist(id: UUID(), name: "", stocks: [])
+    }
+}
