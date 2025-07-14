@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Watchlist: Identifiable, Equatable {
+struct Watchlist: Identifiable {
     let id: UUID
     var name: String
     var stocks: [Stock]
@@ -18,6 +18,15 @@ struct Watchlist: Identifiable, Equatable {
         self.stocks = stocks
     }
 }
+
+extension Watchlist: Equatable {
+    static func == (lhs: Watchlist, rhs: Watchlist) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.name == rhs.name &&
+        lhs.stocks.map(\.symbol).sorted() == rhs.stocks.map(\.symbol).sorted()
+    }
+}
+
 //Watchlist (Domain Layer): Pure data model with validation logic.
 extension Watchlist {
     

@@ -9,17 +9,17 @@ import Foundation
 import Combine
 
 protocol ObserveTop50StocksUseCase {
-    func execute() -> AnyPublisher<[Stock], Never>
+    func execute() -> AnyPublisher<[Stock], Error>
 }
 
 final class ObserveTop50StocksUseCaseImpl: ObserveTop50StocksUseCase {
-    private let repository: StockRepository
+    private let repository: WatchlistRepository
 
-    init(repository: StockRepository) {
+    init(repository: WatchlistRepository) {
         self.repository = repository
     }
 
-    func execute() -> AnyPublisher<[Stock], Never> {
+    func execute() -> AnyPublisher<[Stock], Error> {
         repository.observeTop50Stocks()
     }
 }

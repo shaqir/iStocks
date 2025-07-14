@@ -32,7 +32,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
     }
     
     //Initializes the timer to fire every 1.5 seconds (or custom interval).
-    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 2.5) {
+    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 3.5) {
         self.timer = Timer.publish(every: interval, on: .main, in: .common)
         self.stocks = stocks
         subject.send(stocks) // Send initial snapshot

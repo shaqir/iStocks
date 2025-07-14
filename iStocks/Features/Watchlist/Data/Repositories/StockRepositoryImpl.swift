@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-final class StockRepositoryImpl: StockRepository {
+final class StockRepositoryImpl: WatchlistRepository {
     
     private let remoteDataSource: StockRemoteDataSourceProtocol
 
@@ -19,12 +19,13 @@ final class StockRepositoryImpl: StockRepository {
         remoteDataSource.fetchRealtimePricesForTop5()
     }
 
-    func observeTop50Stocks() -> AnyPublisher<[Stock], Never> {
+    func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         remoteDataSource.fetchRealtimePricesForTop50InBatches()
     }
 
     func observeStocks() -> AnyPublisher<[Stock], Error> {
         // Fallback: Top 5 for example
         remoteDataSource.fetchRealtimePricesForTop5()
+        //remoteDataSource.fetchRealtimePricesForTop50InBatches()
     }
 }

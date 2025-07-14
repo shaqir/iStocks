@@ -12,9 +12,9 @@ protocol ObserveTop5StocksUseCase {
 }
 
 final class ObserveTop5StocksUseCaseImpl: ObserveTop5StocksUseCase{
-    private let repository: StockRepository
+    private let repository: WatchlistRepository
     
-    init(repository: StockRepository) {
+    init(repository: WatchlistRepository) {
         self.repository = repository
     }
     

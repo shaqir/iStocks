@@ -38,7 +38,6 @@ struct StockDTO: Decodable {
             : price * Double.random(in: 1.01...1.2)
         
         return Stock(
-            id: UUID(),//Should map to JSON model from server, later on.
             symbol: symbol,
             name: "name",
             price: price,

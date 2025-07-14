@@ -13,11 +13,10 @@ protocol ObserveWatchlistStocksUseCase {
     func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never>
 }
  
-
 final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
-    private let repository: StockRepository
+    private let repository: WatchlistRepository
 
-    init(repository: StockRepository) {
+    init(repository: WatchlistRepository) {
         self.repository = repository
     }
 

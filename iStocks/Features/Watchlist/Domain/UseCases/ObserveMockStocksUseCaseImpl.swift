@@ -13,9 +13,9 @@ protocol ObserveMockStocksUseCase {
 }
 
 final class ObserveMockStocksUseCaseImpl: ObserveMockStocksUseCase {
-    private let repository: StockRepository
+    private let repository: WatchlistRepository
     
-    init(repository: StockRepository) {
+    init(repository: WatchlistRepository) {
         self.repository = repository
     }
     

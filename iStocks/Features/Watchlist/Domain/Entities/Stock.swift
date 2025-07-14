@@ -7,7 +7,7 @@
 import Foundation
 
 struct Stock: Identifiable, Decodable, Equatable {
-    var id: UUID
+    var id: String { symbol } // Stable ID : // derive ID from symbol for uniqueness
     let symbol: String
     let name: String
     var price: Double              // Current market price
@@ -50,7 +50,6 @@ extension Stock {
 extension Stock {
     static func dummy() -> Stock {
         Stock(
-            id: UUID(),
             symbol: "AAPL",
             name: "Technology",
             price: 123.45,
@@ -67,7 +66,6 @@ extension Stock {
 extension Stock {
     func updatedPrice(_ newPrice: Double) -> Stock {
         Stock(
-            id: self.id,
             symbol: self.symbol,
             name: self.name,
             price: newPrice,

@@ -17,7 +17,7 @@ final class WatchlistDIContainer {
     static let mode: WatchlistAppMode = .mock
     
     // MARK: - Repository
-    static func makeStockRepository() -> StockRepository {
+    static func makeStockRepository() -> WatchlistRepository {
         switch mode {
         case .mock:
             let mockService = MockStockStreamingService()
@@ -49,15 +49,10 @@ final class WatchlistDIContainer {
     static func makeWatchlistStocksUseCase() -> ObserveWatchlistStocksUseCase {
         ObserveWatchlistStocksUseCaseImpl(repository: makeStockRepository())
     }
-    /*
-    static func makeWatchlistLiveUseCase() -> ObserveWatchlistStocksUseCase {
-        switch mode {
-        case .mock: return ObserveWatchlistStocksUseCaseImpl(repository: makeMockStockRepository())
-        case .webSocket: return WebSocketWatchlistStocksUseCase(repository: makeWebSocketStockRepository())
-        case .restAPI: return PollingWatchlistStocksUseCase(repository: makeRestAPIRepository())
-        }
+    
+    static func makeGlobalPriceUpdateUseCase() -> ObserveGlobalStockPricesUseCase {
+        ObserveGlobalStockPricesUseCaseImpl(repository: makeStockRepository())
     }
-     */
 
     // MARK: - Persistence Service
     static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
@@ -69,6 +64,7 @@ final class WatchlistDIContainer {
         let useCaseMock = makeMockUseCase()
         let useCase50 = makeTop50UseCase()
         let useCaseWatchlist = makeWatchlistStocksUseCase()
+        let useCasePriceUpdate = makeGlobalPriceUpdateUseCase()
         let persistenceService = makePersistenceService(context: context)
         let vmProvider = WatchlistViewModelProvider(observeUseCase: useCaseWatchlist)
         
@@ -76,6 +72,7 @@ final class WatchlistDIContainer {
             useCaseMock: useCaseMock,
             useCase50: useCase50,
             watchlistUseCase: useCaseWatchlist,
+            globalPricesUseCase: useCasePriceUpdate,
             persistenceService: persistenceService,
             viewModelProvider: vmProvider
         )
@@ -88,12 +85,14 @@ final class WatchlistDIContainer {
         let useCaseMock = makeMockUseCase()
         let useCase50 = makeTop50UseCase()
         let useCaseWatchlist = makeWatchlistStocksUseCase()
+        let useCasePriceUpdate = makeGlobalPriceUpdateUseCase()
         let persistenceService = makePersistenceService(context: context)
 
         return WatchlistsViewModel(
             useCaseMock: useCaseMock,
             useCase50: useCase50,
             watchlistUseCase: useCaseWatchlist,
+            globalPricesUseCase: useCasePriceUpdate,
             persistenceService: persistenceService,
             viewModelProvider: viewModelProvider
         )

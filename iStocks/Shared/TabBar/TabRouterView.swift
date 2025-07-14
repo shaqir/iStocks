@@ -54,10 +54,16 @@ struct WatchlistTabContainerView: View {
     var body: some View {
         WatchlistTabView(viewModel: viewModel, viewModelProvider: watchlistVmProvider)
             .onAppear {
+                 
                 if !hasLoaded {
                     viewModel.loadWatchlists()///Load only once
                     hasLoaded = true
                 }
+                
+                // Delay price observation slightly to ensure cache is populated
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        viewModel.observeLiveStockPrices()
+                    }
             }
     }
 }

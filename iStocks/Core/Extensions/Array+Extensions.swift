@@ -18,6 +18,11 @@ extension Array {
             Array(self[$0..<Swift.min($0 + size, count)])
         }
     }
+    
+    func uniqued<T: Hashable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+        var seen = Set<T>()
+        return filter { seen.insert($0[keyPath: keyPath]).inserted }
+    }
 }
 
  

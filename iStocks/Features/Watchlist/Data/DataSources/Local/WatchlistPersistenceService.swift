@@ -20,7 +20,7 @@ final class WatchlistPersistenceService {
         clearAll() // prevent duplicates
 
         for (index, watchlist) in watchlists.enumerated() {
-            print("Saving watchlist:")
+            print("Saving watchlist: \(index + 1)")
             let validStocks = watchlist.stocks.compactMap { StockEntity.from($0) }
 
             guard !validStocks.isEmpty else {
@@ -92,4 +92,50 @@ final class WatchlistPersistenceService {
 
 }
 
- 
+// MARK: - All Stocks Persistence : REST API Stocks
+
+extension WatchlistPersistenceService {
+
+    func saveAllStocks(_ stocks: [Stock]) {
+        // Optional: Clear previous to avoid duplicates
+        clearAllStocks()
+
+        for stock in stocks {
+            if let entity = StockEntity.from(stock) {
+                context.insert(entity)
+            }
+        }
+
+        do {
+            try context.save()
+            print("All stocks saved successfully.")
+        } catch {
+            print("Failed to save all stocks:", error.localizedDescription)
+        }
+    }
+
+    func loadAllStocks() -> [Stock] {
+        let descriptor = FetchDescriptor<StockEntity>()
+        do {
+            let results = try context.fetch(descriptor)
+            return results.map { $0.toDomain() }
+        } catch {
+            print("Failed to load all stocks:", error.localizedDescription)
+            return []
+        }
+    }
+
+    func clearAllStocks() {
+        let descriptor = FetchDescriptor<StockEntity>()
+        do {
+            let results = try context.fetch(descriptor)
+            for stock in results {
+                context.delete(stock)
+            }
+            try context.save()
+        } catch {
+            print("Failed to clear stock entities:", error.localizedDescription)
+        }
+    }
+}
+

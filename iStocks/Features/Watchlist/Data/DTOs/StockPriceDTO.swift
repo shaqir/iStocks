@@ -17,7 +17,6 @@ extension StockPriceDTO {
         let sector = StockMetadata.sectorMap[symbol] ?? "Unknown"
 
         return Stock(
-            id: UUID(),
             symbol: symbol,
             name: symbol,
             price: current,

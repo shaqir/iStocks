@@ -43,7 +43,6 @@ class StockEntity {
 extension StockEntity {
     func toDomain() -> Stock {
         Stock(
-            id: id,
             symbol: symbol,
             name: symbol,
             price: price,
@@ -67,7 +66,6 @@ extension StockEntity {
         
         //print("Creating StockEntity from:", stock)
         return StockEntity(
-            id: stock.id,
             symbol: stock.symbol,
             price: stock.price,
             previousPrice: stock.previousPrice,

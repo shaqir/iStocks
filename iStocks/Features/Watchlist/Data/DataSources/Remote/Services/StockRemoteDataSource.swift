@@ -11,7 +11,7 @@ import Combine
 
 protocol StockRemoteDataSourceProtocol {
     func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error>
-    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Never>
+    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error>
 }
 
 import Combine
@@ -50,9 +50,9 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     ///Chunks the top 50 symbols into groups of 8
     ///Requests them one at a time with a delay
     ///Uses Combine to merge results and emit alerts if needed
-    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Never> {
+    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error> {
         let batches = NYSETop50Symbols.top50.chunked(into: 8)
-        let subject = PassthroughSubject<[Stock], Never>()
+        let subject = PassthroughSubject<[Stock], Error>()
 
         fetchSequentially(batches: batches, subject: subject)
         return subject.eraseToAnyPublisher()
@@ -60,7 +60,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
 
     private func fetchSequentially(
         batches: [[String]],
-        subject: PassthroughSubject<[Stock], Never>,
+        subject: PassthroughSubject<[Stock], Error>,
         index: Int = 0
     ) {
         guard index < batches.count else {
@@ -72,15 +72,15 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         print("Sending batch \(index + 1): \(batch)")
 
         fetchPrices(for: batch)
-            .catch { [weak self] error -> AnyPublisher<[Stock], Never> in
+            .catch { [weak self] error -> AnyPublisher<[Stock], Error> in
                 _ = self?.handleAndMapToAppError(error)
-                return Just([]).eraseToAnyPublisher()
+                return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
             }
             .sink(receiveCompletion: { _ in }, receiveValue: { stocks in
                 subject.send(stocks)
 
                 // Delay before next batch
-                DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 180) {
                     self.fetchSequentially(batches: batches, subject: subject, index: index + 1)
                 }
             })

@@ -8,6 +8,7 @@ import SwiftUI
 import Combine
 
 struct WatchlistLoadedView: View {
+    
     @ObservedObject var viewModel: WatchlistViewModel
     var scrollOffset: Binding<CGFloat> = .constant(0)
     
@@ -19,32 +20,42 @@ struct WatchlistLoadedView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if viewModel.isLoading {
-                ProgressView("Fetching Stocks…")
-            } else if let error = viewModel.errorMessage {
-                WatchlistErrorView(error: error) {
-                    //viewModel.refresh()
-                }
-            } else {
-                WatchlistScrollContainer(
+            
+            WatchlistStickySearchBar(
                     searchText: $viewModel.searchText,
                     isAddButtonVisible: viewModel.selectedStocks.count < AppConstants.maxStocksPerWatchlist,
                     onAddTapped: {
-                        pauseLiveUpdates()
                         isShowingStockPicker = true
-                    },
-                    content: {
-                        WatchlistStockListView(viewModel: viewModel)
-                    },
-                    scrollOffset: scrollOffset
+                    }
                 )
+                .padding(.top, 8)
+            
+            if let error = viewModel.errorMessage {
+                WatchlistErrorView(error: error) {
+                    //viewModel.refresh()
+                }
+            }
+            else if viewModel.filteredStocks.isEmpty {
+                EmptyStateView(
+                    title: "No Stocks Available",
+                    message: "Try adding stocks or refreshing data.",
+                    icon: "chart.line.uptrend.xyaxis",
+                    retryAction: {
+                        viewModel.requestRefresh()
+                    }
+                )
+            }
+            
+            else {
+                WatchlistScrollContainerContentOnly(
+                           content: {
+                               WatchlistStockListView(viewModel: viewModel)
+                           },
+                           scrollOffset: scrollOffset
+                       )
             }
         }
         .onAppear {
-            if !pausedLiveUpdates {
-                viewModel.observeLiveUpdates()
-            }
-            
             // Subscribe to price-only updates
             viewModel.priceUpdate
                 .sink { updatedStocks in
@@ -59,28 +70,16 @@ struct WatchlistLoadedView: View {
                 .store(in: &cancellables)
         }
         .sheet(isPresented: $isShowingStockPicker, onDismiss: {
-            resumeLiveUpdates()
         }) {
             let editViewModel = EditWatchlistViewModel(
                 watchlist: viewModel.watchlist,
-                availableStocks: MockStockData.allStocks
+                availableStocks: viewModel.availableStocks
             )
             StockPickerView(viewModel: editViewModel,
                             onSave: viewModel.watchlistStructuralUpdate)
         }
     }
-    
-    // MARK: - Pause/Resume Live Updates
-    
-    private func pauseLiveUpdates() {
-        pausedLiveUpdates = true
-        viewModel.cancelLiveUpdates()
-    }
-    
-    private func resumeLiveUpdates() {
-        pausedLiveUpdates = false
-        viewModel.observeLiveUpdates()
-    }
+     
 }
 
 // MARK: - Stock List
@@ -98,6 +97,7 @@ struct WatchlistStockListView: View {
                 .padding(.top, index == 0 ? 4 : 0)
             }
         }
+         
     }
 }
 
@@ -118,14 +118,10 @@ struct WatchlistRowView: View {
 }
 
 // MARK: - Scroll Container
-
-struct WatchlistScrollContainer<Content: View>: View {
-    let searchText: Binding<String>
-    let isAddButtonVisible: Bool
-    let onAddTapped: () -> Void
+struct WatchlistScrollContainerContentOnly<Content: View>: View {
     let content: () -> Content
     let scrollOffset: Binding<CGFloat>
-    
+
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView {
@@ -137,19 +133,11 @@ struct WatchlistScrollContainer<Content: View>: View {
                         )
                 }
                 .frame(height: 0)
-                
-                LazyVStack(pinnedViews: [.sectionHeaders]) {
-                    Section(header:
-                                WatchlistStickySearchBar(
-                                    searchText: searchText,
-                                    isAddButtonVisible: isAddButtonVisible,
-                                    onAddTapped: onAddTapped
-                                )
-                    ) {
-                        content()
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 48) // space for TabBar
-                    }
+
+                LazyVStack(spacing: 8) {
+                    content()
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 48) // space for TabBar
                 }
                 .padding(.top, 8)
             }

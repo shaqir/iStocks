@@ -28,7 +28,7 @@ struct WatchlistRow: View {
                 Text(String(format: "%.2f%%", stock.pnlPercentage))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(stock.pnl >= 0 ? .green : .red)
-                    .scaleEffect(isAnimated ? 1.15 : 1.0)
+                    .scaleEffect(isAnimated ? 1.05 : 1.0)
                     .animation(.easeOut(duration: 0.4), value: isAnimated)
             }
 
@@ -43,7 +43,7 @@ struct WatchlistRow: View {
                 Text(stock.pnl.currencyFormatted)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(stock.pnl >= 0 ? .green : .red)
-                    .scaleEffect(isAnimated ? 1.15 : 1.0)
+                    .scaleEffect(isAnimated ? 1.05 : 1.0)
                     .animation(.easeOut(duration: 0.4), value: isAnimated)
             }
 
@@ -58,7 +58,7 @@ struct WatchlistRow: View {
                 Text("LTP \(stock.price.currencyFormatted)")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
-                    .scaleEffect(isAnimated ? 1.15 : 1.0)
+                    .scaleEffect(isAnimated ? 1.05 : 1.0)
                     .animation(.easeOut(duration: 0.4), value: isAnimated)
             }
         }
