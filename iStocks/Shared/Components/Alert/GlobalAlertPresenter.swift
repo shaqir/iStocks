@@ -7,7 +7,6 @@
 import SwiftUI
 import UIKit
  
-
 final class GlobalAlertPresenter {
     private static var window: UIWindow?
 

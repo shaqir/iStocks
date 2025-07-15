@@ -34,12 +34,23 @@ final class EditWatchlistViewModel: ObservableObject {
     // MARK: - Filtered Stocks
     var filteredStocks: [Stock] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return availableStocks }
+        guard !trimmed.isEmpty else {
+            return uniqueStocks(from: availableStocks)
+        }
 
-        return availableStocks.filter {
+        let filtered = availableStocks.filter {
             $0.symbol.localizedCaseInsensitiveContains(trimmed) ||
             $0.name.localizedCaseInsensitiveContains(trimmed)
         }
+        
+        return uniqueStocks(from: filtered)
+    }
+
+    private func uniqueStocks(from stocks: [Stock]) -> [Stock] {
+        Dictionary(grouping: stocks, by: \.symbol)
+            .compactMapValues { $0.first }
+            .values
+            .sorted { $0.symbol < $1.symbol } // consistent order
     }
 
     // MARK: - Stock Actions

@@ -12,6 +12,15 @@ enum WatchlistAppMode {
     case restAPI
     case webSocket
 }
+
+struct WatchlistUseCases {
+    let observeMock: ObserveMockStocksUseCase
+    let observeTop50: ObserveTop50StocksUseCase
+    let observeWatchlist: ObserveWatchlistStocksUseCase
+    let observeGlobalPrices: ObserveGlobalStockPricesUseCase
+    // Future UseCases can be added here (delete, rename, import, etc.)
+}
+
 final class WatchlistDIContainer {
     
     static let mode: WatchlistAppMode = .mock
@@ -32,71 +41,48 @@ final class WatchlistDIContainer {
             return StockRepositoryImpl(service: apiService)
         }
     }
-    
-    // MARK: - Use Cases
-    static func makeMockUseCase() -> ObserveMockStocksUseCase {
-        ObserveMockStocksUseCaseImpl(repository: makeStockRepository())
-    }
-    
-    static func makeTop5UseCase() -> ObserveTop5StocksUseCase {
-        ObserveTop5StocksUseCaseImpl(repository: makeStockRepository())
-    }
-
-    static func makeTop50UseCase() -> ObserveTop50StocksUseCase {
-        ObserveTop50StocksUseCaseImpl(repository: makeStockRepository())
-    }
-    
-    static func makeWatchlistStocksUseCase() -> ObserveWatchlistStocksUseCase {
-        ObserveWatchlistStocksUseCaseImpl(repository: makeStockRepository())
-    }
-    
-    static func makeGlobalPriceUpdateUseCase() -> ObserveGlobalStockPricesUseCase {
-        ObserveGlobalStockPricesUseCaseImpl(repository: makeStockRepository())
-    }
 
     // MARK: - Persistence Service
     static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
         WatchlistPersistenceService(context: context)
     }
-
-    // MARK: - ViewModel
-    static func makeWatchlistsViewModel(context: ModelContext) -> WatchlistsViewModel {
-        let useCaseMock = makeMockUseCase()
-        let useCase50 = makeTop50UseCase()
-        let useCaseWatchlist = makeWatchlistStocksUseCase()
-        let useCasePriceUpdate = makeGlobalPriceUpdateUseCase()
-        let persistenceService = makePersistenceService(context: context)
-        let vmProvider = WatchlistViewModelProvider(observeUseCase: useCaseWatchlist)
-        
-        return WatchlistsViewModel(
-            useCaseMock: useCaseMock,
-            useCase50: useCase50,
-            watchlistUseCase: useCaseWatchlist,
-            globalPricesUseCase: useCasePriceUpdate,
-            persistenceService: persistenceService,
-            viewModelProvider: vmProvider
+     
+}
+ 
+extension WatchlistDIContainer {
+    
+    static func makeWatchlistUseCases() -> WatchlistUseCases {
+        let repository = makeStockRepository()
+        return WatchlistUseCases(
+            observeMock: ObserveMockStocksUseCaseImpl(repository: repository),
+            observeTop50: ObserveTop50StocksUseCaseImpl(repository: repository),
+            observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: repository),
+            observeGlobalPrices: ObserveGlobalStockPricesUseCaseImpl(repository: repository)
         )
     }
-    
-    static func makeWatchlistsViewModel(
-        context: ModelContext,
-        viewModelProvider: WatchlistViewModelProvider
-    ) -> WatchlistsViewModel {
-        let useCaseMock = makeMockUseCase()
-        let useCase50 = makeTop50UseCase()
-        let useCaseWatchlist = makeWatchlistStocksUseCase()
-        let useCasePriceUpdate = makeGlobalPriceUpdateUseCase()
-        let persistenceService = makePersistenceService(context: context)
 
+    static func makeWatchlistsViewModel(context: ModelContext) -> WatchlistsViewModel {
+        let useCases = makeWatchlistUseCases()
+        let persistenceService = makePersistenceService(context: context)
+        let viewModelProvider = WatchlistViewModelProvider(useCases: useCases)
         return WatchlistsViewModel(
-            useCaseMock: useCaseMock,
-            useCase50: useCase50,
-            watchlistUseCase: useCaseWatchlist,
-            globalPricesUseCase: useCasePriceUpdate,
+            useCases: useCases,
             persistenceService: persistenceService,
             viewModelProvider: viewModelProvider
         )
     }
-    
+
+    static func makeWatchlistsViewModel(
+        context: ModelContext,
+        viewModelProvider: WatchlistViewModelProvider
+    ) -> WatchlistsViewModel {
+        let useCases = makeWatchlistUseCases()
+        let persistenceService = makePersistenceService(context: context)
+
+        return WatchlistsViewModel(
+            useCases: useCases,
+            persistenceService: persistenceService,
+            viewModelProvider: viewModelProvider
+        )
+    }
 }
- 

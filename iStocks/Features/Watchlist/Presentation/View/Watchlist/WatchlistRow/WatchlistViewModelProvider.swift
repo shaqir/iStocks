@@ -27,7 +27,7 @@ final class WatchlistViewModelProvider {
     var watchlistDidUpdate = PassthroughSubject<Watchlist, Never>()
     
     /// Use case for observing live updates for an individual watchlist (REST mode)
-    private let observeUseCase: any ObserveWatchlistStocksUseCase
+    private let useCases: WatchlistUseCases
     
     /// Convenience accessor for testing or diagnostics
     var cachedViewModels: [WatchlistViewModel] {
@@ -35,8 +35,8 @@ final class WatchlistViewModelProvider {
     }
     
     /// Dependency Injection of use case
-    init(observeUseCase: any ObserveWatchlistStocksUseCase) {
-        self.observeUseCase = observeUseCase
+    init(useCases: WatchlistUseCases) {
+        self.useCases = useCases
     }
     
     /// Returns a cached WatchlistViewModel or creates a new one if not already cached
@@ -45,23 +45,22 @@ final class WatchlistViewModelProvider {
         if let existing = cache[watchlist.id] {
             // Sync internal watchlist model if changed externally
             //if existing.watchlist != watchlist {
-                existing.updateWatchlist(watchlist)
+            existing.updateWatchlist(watchlist)
             //}
             return existing
         }
-
+        
         // Create an observePublisher based on the app mode
         let observePublisher = makeObservePublisher(for: watchlist)
-
+        
         // Create new WatchlistViewModel with correct observePublisher
         let vm = WatchlistViewModel(
             watchlist: watchlist,
             observePublisher: observePublisher,
             availableStocks: allStocks
         )
-
-        // Setup Combine pipeline for structural updates
         
+        // Setup Combine pipeline for structural updates
         // Published var watchlist (changes to array or name)
         // when watchlist variable is updated
         let structuralChanges = vm.$watchlist
@@ -85,7 +84,7 @@ final class WatchlistViewModelProvider {
                     self?.watchlistDidUpdate.send(updated)
                 }
             }
-
+        
         // Cache and return
         cache[watchlist.id] = vm
         return vm
@@ -101,8 +100,8 @@ final class WatchlistViewModelProvider {
     
     private func makeObservePublisher(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
         if WatchlistDIContainer.mode == .mock {
-            return WatchlistDIContainer
-                .makeGlobalPriceUpdateUseCase()
+            return useCases
+                .observeGlobalPrices
                 .execute()
                 .tryMap { global in
                     guard !watchlist.stocks.isEmpty else { return [] }
@@ -112,7 +111,7 @@ final class WatchlistViewModelProvider {
                 .replaceError(with: watchlist.stocks)
                 .eraseToAnyPublisher()
         } else {
-            return observeUseCase
+            return useCases.observeWatchlist
                 .observeLiveUpdates(for: watchlist)
                 .replaceError(with: watchlist.stocks)
                 .eraseToAnyPublisher()

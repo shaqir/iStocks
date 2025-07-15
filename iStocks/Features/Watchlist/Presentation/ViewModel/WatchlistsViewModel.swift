@@ -25,11 +25,7 @@ final class WatchlistsViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let useCaseMock: ObserveMockStocksUseCase
-    private let useCase50: ObserveTop50StocksUseCase
-    private let watchlistUseCase: ObserveWatchlistStocksUseCase
-    private let globalPricesUseCase: ObserveGlobalStockPricesUseCase
-    
+    let useCases: WatchlistUseCases
     let persistenceService: WatchlistPersistenceService
     private let viewModelProvider: WatchlistViewModelProvider
 
@@ -46,20 +42,13 @@ final class WatchlistsViewModel: ObservableObject {
     // MARK: - Init
 
     init(
-        useCaseMock: ObserveMockStocksUseCase,
-        useCase50: ObserveTop50StocksUseCase,
-        watchlistUseCase: ObserveWatchlistStocksUseCase,
-        globalPricesUseCase: ObserveGlobalStockPricesUseCase,
+        useCases: WatchlistUseCases,
         persistenceService: WatchlistPersistenceService,
         viewModelProvider: WatchlistViewModelProvider
     ) {
-        self.useCaseMock = useCaseMock
-        self.useCase50 = useCase50
-        self.watchlistUseCase = watchlistUseCase
-        self.globalPricesUseCase = globalPricesUseCase
+        self.useCases = useCases
         self.persistenceService = persistenceService
         self.viewModelProvider = viewModelProvider
-
         setupBindings()
     }
 
@@ -79,7 +68,7 @@ final class WatchlistsViewModel: ObservableObject {
         guard WatchlistDIContainer.mode == .mock else { return }
         guard livePriceCancellable == nil else { return }
         
-        livePriceCancellable = globalPricesUseCase.execute()
+        livePriceCancellable = useCases.observeGlobalPrices.execute()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] updatedStocks in
                 print("price updates")
@@ -158,7 +147,7 @@ final class WatchlistsViewModel: ObservableObject {
     // MARK: - REST API Mode
 
     func loadTop50StockPricesFromServer() {
-        print("Initial top 50 fetch")
+        print("Initial top 50 Stocks fetch")
         executeTop50StockLoad(isManualRefresh: false, delay: 3.0)
     }
 
@@ -175,7 +164,7 @@ final class WatchlistsViewModel: ObservableObject {
         errorMessage = nil
         isFirstBatchReceived = false
 
-        useCase50.execute()
+        useCases.observeTop50.execute()
             .retry(isManualRefresh ? 1 : 0)
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { [weak self] completion in

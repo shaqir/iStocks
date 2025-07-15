@@ -50,7 +50,9 @@ extension Watchlist {
     }
     
     mutating func replacePrices(from updatedStocks: [Stock]) {
-        let priceMap = Dictionary(uniqueKeysWithValues: updatedStocks.map { ($0.symbol, $0.price) })
+        // Deduplicate and map symbol → price
+        let priceMap = Dictionary(grouping: updatedStocks, by: \.symbol)
+            .compactMapValues { $0.first?.price }
 
         guard !priceMap.isEmpty else {
             print("No prices to update")

@@ -7,22 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "076463C3-AAD5-4056-A88C-5727BB530EB4"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Shared/TabBar/TabRouterView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "65"
-            endingLineNumber = "65"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "F501C404-A5B2-45AC-A412-3FD1A45208E0"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -46,8 +30,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/EditWatchlistViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
+            startingLineNumber = "60"
+            endingLineNumber = "60"
             landmarkName = "addStock(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -62,8 +46,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/EditWatchlist/StockPickerView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "119"
-            endingLineNumber = "119"
+            startingLineNumber = "123"
+            endingLineNumber = "123"
             landmarkName = "handleToggle(_:isSelected:isDisabled:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -78,8 +62,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/EditWatchlist/StockPickerView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "105"
-            endingLineNumber = "105"
+            startingLineNumber = "109"
+            endingLineNumber = "109"
             landmarkName = "handleToggle(_:isSelected:isDisabled:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -94,25 +78,9 @@
             filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/EditWatchlist/EditSingleWatchlistView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "123"
-            endingLineNumber = "123"
+            startingLineNumber = "124"
+            endingLineNumber = "124"
             landmarkName = "handleToggle(_:isSelected:isDisabled:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "7591C05A-031D-410B-9539-807C7E973DC9"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/WatchlistRow/WatchlistViewModelProvider.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "79"
-            endingLineNumber = "79"
-            landmarkName = "viewModel(for:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -126,8 +94,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/EditWatchlist/StockPickerView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "57"
-            endingLineNumber = "57"
+            startingLineNumber = "60"
+            endingLineNumber = "60"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -142,8 +110,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/EditWatchlistViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "66"
-            endingLineNumber = "66"
+            startingLineNumber = "77"
+            endingLineNumber = "77"
             landmarkName = "validateAndReturnWatchlist()"
             landmarkType = "7">
          </BreakpointContent>
@@ -158,8 +126,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/EditWatchlistViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "53"
-            endingLineNumber = "53"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
             landmarkName = "removeStock(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -167,64 +135,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F6CF2FF0-2036-4F2E-9B80-B210677CFC73"
+            uuid = "DB29C922-931D-415C-A747-2CFEE84D9DA9"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/WatchlistRow/WatchlistViewModelProvider.swift"
+            filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "46"
-            endingLineNumber = "46"
-            landmarkName = "viewModel(for:)"
+            startingLineNumber = "89"
+            endingLineNumber = "89"
+            landmarkName = "updateWatchlist(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "57DBC8CE-CF2B-44D1-81DA-D118EE0EBA25"
+            uuid = "EA288B5E-AC43-4ACE-A554-A385DE6724E6"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/WatchlistRow/WatchlistViewModelProvider.swift"
+            filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "48"
-            endingLineNumber = "48"
-            landmarkName = "viewModel(for:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "E6EF08AE-F73F-49D0-ACAE-6EAA89D15831"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/WatchlistRow/WatchlistViewModelProvider.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "45"
-            endingLineNumber = "45"
-            landmarkName = "viewModel(for:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "AF5CD5F0-9771-45D6-9A7A-C3265DE5DF31"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Presentation/View/Watchlist/WatchlistRow/WatchlistViewModelProvider.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "viewModel(for:)"
+            startingLineNumber = "78"
+            endingLineNumber = "78"
+            landmarkName = "requestRefresh()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -18,6 +18,8 @@ struct WatchlistLoadedView: View {
     //Stores Combine subscriptions to manage memory and cancel publishers when needed.
     @State private var cancellables = Set<AnyCancellable>()
     
+    @State private var editViewModel: EditWatchlistViewModel? = nil
+    
     var body: some View {
         VStack(spacing: 0) {
             
@@ -25,6 +27,10 @@ struct WatchlistLoadedView: View {
                     searchText: $viewModel.searchText,
                     isAddButtonVisible: viewModel.selectedStocks.count < AppConstants.maxStocksPerWatchlist,
                     onAddTapped: {
+                        editViewModel = EditWatchlistViewModel(
+                               watchlist: viewModel.watchlist,
+                               availableStocks: viewModel.availableStocks
+                        )
                         isShowingStockPicker = true
                     }
                 )
@@ -71,12 +77,14 @@ struct WatchlistLoadedView: View {
         }
         .sheet(isPresented: $isShowingStockPicker, onDismiss: {
         }) {
-            let editViewModel = EditWatchlistViewModel(
-                watchlist: viewModel.watchlist,
-                availableStocks: viewModel.availableStocks
-            )
-            StockPickerView(viewModel: editViewModel,
-                            onSave: viewModel.watchlistStructuralUpdate)
+            if let editVM = editViewModel {
+                    StockPickerView(
+                        viewModel: editVM,
+                        onDone: { updatedWatchlist in
+                            viewModel.updateWatchlist(updatedWatchlist)
+                        }
+                    )
+                }
         }
     }
      

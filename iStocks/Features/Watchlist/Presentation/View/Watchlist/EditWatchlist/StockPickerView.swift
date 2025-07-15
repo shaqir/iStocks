@@ -4,23 +4,26 @@
 //
 //  Created by Sakir Saiyed on 2025-07-04.
 //
+
 import SwiftUI
 import Combine
 
 struct StockPickerView: View {
+    
     @ObservedObject var viewModel: EditWatchlistViewModel
     @Environment(\.dismiss) private var dismiss
-    let onSave: PassthroughSubject<Watchlist, Never>
+    let onDone: (Watchlist) -> Void
 
     private let maxSelectable = AppConstants.maxStocksPerWatchlist
     
     var body: some View {
+       
         NavigationStack {
             VStack(spacing: 0) {
                 searchBar
                 infoBanner
-                
                 List {
+                    
                     ForEach(viewModel.filteredStocks) { stock in
                         let isSelected = viewModel.selectedStocks.contains(where: { $0.symbol == stock.symbol })
                         let isDisabled = !isSelected && viewModel.selectedStocks.count >= maxSelectable
@@ -53,9 +56,10 @@ struct StockPickerView: View {
                     Button("Done") {
                         do {
                             let validated = try viewModel.validateAndReturnWatchlist()
-                            DispatchQueue.main.async {
-                                onSave.send(validated)
-                            }
+//                            DispatchQueue.main.async {
+//                                onSave.send(validated)
+//                            }
+                            onDone(validated)
                             dismiss()
                         } catch {
                             if let err = error as? LocalizedAlertConvertible {

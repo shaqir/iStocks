@@ -4,9 +4,9 @@
 //
 //  Created by Sakir Saiyed on 2025-07-02.
 //
-import Foundation
-import Combine
+
 import SwiftUI
+import Combine
 
 struct WatchlistTabView: View {
     
@@ -191,7 +191,7 @@ struct WatchlistTabContent: View {
                     get: { scrollOffsets[watchlist.id, default: 0] },
                     set: { scrollOffsets[watchlist.id] = $0 }
                 )
-                
+                //Represents each watchlist tab
                 WatchlistLoadedView(viewModel: tabViewModel, scrollOffset: offsetBinding)
                     .id(watchlist.id)
                     .tag(index)
