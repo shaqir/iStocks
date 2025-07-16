@@ -22,10 +22,4 @@ final class StockRepositoryImpl: WatchlistRepository {
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         remoteDataSource.fetchRealtimePricesForTop50InBatches()
     }
-
-    func observeStocks() -> AnyPublisher<[Stock], Error> {
-        // Fallback: Top 5 for example
-        remoteDataSource.fetchRealtimePricesForTop5()
-        //remoteDataSource.fetchRealtimePricesForTop50InBatches()
-    }
 }

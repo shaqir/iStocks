@@ -75,7 +75,7 @@ final class WatchlistViewModelProvider {
         // Merge both and send to parent
         let merged = Publishers.Merge(structuralChanges, semanticChanges)
             .handleEvents(receiveOutput: { updated in
-                print("Structural change received for \(updated.name)")
+                Logger.log("Structural change received for \(updated.name)", category: "WatchlistVMProvider")
             })
         
         cancellables[watchlist.id] = merged
@@ -97,24 +97,11 @@ final class WatchlistViewModelProvider {
     }
     
     // MARK: - Helper Methods
-    
     private func makeObservePublisher(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
-        if WatchlistDIContainer.mode == .mock {
-            return useCases
-                .observeGlobalPrices
-                .execute()
-                .tryMap { global in
-                    guard !watchlist.stocks.isEmpty else { return [] }
-                    let symbols = Set(watchlist.stocks.map(\.symbol))
-                    return global.filter { symbols.contains($0.symbol) }
-                }
-                .replaceError(with: watchlist.stocks)
-                .eraseToAnyPublisher()
-        } else {
-            return useCases.observeWatchlist
-                .observeLiveUpdates(for: watchlist)
-                .replaceError(with: watchlist.stocks)
-                .eraseToAnyPublisher()
-        }
+        useCases
+            .observeWatchlist
+            .observeLiveUpdates(for: watchlist)
+            .replaceError(with: watchlist.stocks)
+            .eraseToAnyPublisher()
     }
 }

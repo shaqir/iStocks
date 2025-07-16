@@ -114,7 +114,7 @@ final class URLSessionNetworkClient: NetworkClient {
         if let json = try? JSONSerialization.jsonObject(with: data),
            let prettyData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
            let jsonString = String(data: prettyData, encoding: .utf8) {
-            print("Raw JSON Response:\n\(jsonString)")
+            Logger.log("Raw JSON Response:\n\(jsonString)", category: "URLSession")
         }
     }
 }

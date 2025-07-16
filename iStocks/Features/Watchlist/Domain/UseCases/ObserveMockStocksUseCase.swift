@@ -8,6 +8,8 @@
 import Foundation
 import Combine
 
+/// Use case to observe all mocked stock data from local source.
+/// This is used in `mock` mode to simulate a full stream of stock prices.
 protocol ObserveMockStocksUseCase {
     func observe() -> AnyPublisher<[Stock], Error>
 }

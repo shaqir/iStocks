@@ -4,80 +4,80 @@
 //
 //  Created by Sakir Saiyed on 2025-07-03.
 //
-
 import Foundation
 import SwiftData
 
 final class WatchlistPersistenceService {
     
     let context: ModelContext
-
+    
     init(context: ModelContext) {
         self.context = context
     }
     
-    func saveWatchlists(_ watchlists: [Watchlist]) {
-        clearAll() // prevent duplicates
+}
 
-        for (index, watchlist) in watchlists.enumerated() {
-            print("Saving watchlist: \(index + 1)")
-            let validStocks = watchlist.stocks.compactMap { StockEntity.from($0) }
-
-            guard !validStocks.isEmpty else {
-                print("Skipping empty watchlist:", watchlist.name)
-                continue
-            }
-            let entity = WatchlistEntity(id: watchlist.id, name: watchlist.name, stocks: validStocks, orderIndex: index)
-            context.insert(entity)
-        }
-
-        do {
-            try context.save()
-            print("Watchlists saved successfully.")
-        } catch {
-            print("Failed to save Watchlists:", error.localizedDescription)
-        }
-    }
+extension WatchlistPersistenceService {
     
-    func updateWatchlist(_ updated: Watchlist) {
-        let idToFind = updated.id
-        var descriptor = FetchDescriptor<WatchlistEntity>(
-            predicate: #Predicate { $0.id == idToFind }
-        )
-        descriptor.sortBy = [SortDescriptor(\.orderIndex)]
+    // MARK: - Watchlist Persistence
 
-        if let entity = try? context.fetch(descriptor).first {
-            entity.name = updated.name
-            entity.stocks = updated.stocks.compactMap { StockEntity.from($0) }
-            try? context.save()
-        }
-    }
-
-    func save(_ watchlist: Watchlist) {
-           // Convert and save each stock
-           for stock in watchlist.stocks {
-               print("Saving stock:", stock)
-               if let entity = StockEntity.from(stock){
-                   context.insert(entity)
-               }
-           }
-           try? context.save()
-       }
-
-    func load() -> [Watchlist] {
+    func loadWatchlists() -> [Watchlist] {
         var descriptor = FetchDescriptor<WatchlistEntity>()
         descriptor.sortBy = [SortDescriptor(\.orderIndex)]
         do {
             let results = try context.fetch(descriptor)
-            print("Fetched \(results.count) WatchlistEntities")
             return results.map { $0.toDomain() }
         } catch {
-            print("Failed to fetch: \(error)")
             return []
         }
     }
 
-    func clearAll() {
+    func saveWatchlists(_ watchlists: [Watchlist]) {
+        clearWatchlists()
+        
+        for (index, watchlist) in watchlists.enumerated() {
+            let validStocks = watchlist.stocks.compactMap { StockEntity.from($0) }
+            guard !validStocks.isEmpty else {
+                continue
+            }
+            let entity = WatchlistEntity(
+                id: watchlist.id,
+                name: watchlist.name,
+                stocks: validStocks,
+                orderIndex: index
+            )
+            context.insert(entity)
+        }
+        
+        do {
+            try context.save()
+            Logger.log("Watchlists saved successfully.")
+            
+        } catch {
+            Logger.log("Failed to save Watchlists:\(error.localizedDescription)")
+        }
+    }
+
+    func updateWatchlist(_ updated: Watchlist) {
+        let watchlistID = updated.id
+        
+        let descriptor = FetchDescriptor<WatchlistEntity>(
+            predicate: #Predicate { $0.id == watchlistID },
+            sortBy: [SortDescriptor(\.orderIndex)]
+        )
+        
+        if let entity = try? context.fetch(descriptor).first {
+            entity.name = updated.name
+            entity.stocks = updated.stocks.compactMap { StockEntity.from($0) }
+            do {
+                try context.save()
+            } catch {
+                Logger.log("Failed to save context: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func clearWatchlists() {
         let descriptor = FetchDescriptor<WatchlistEntity>()
         do {
             let results = try context.fetch(descriptor)
@@ -86,10 +86,10 @@ final class WatchlistPersistenceService {
             }
             try context.save()
         } catch {
-            print("Failed to clear Watchlists:", error.localizedDescription)
+            Logger.log("Failed to clear Watchlists: \(error.localizedDescription)")
         }
     }
-
+    
 }
 
 // MARK: - All Stocks Persistence : REST API Stocks
@@ -120,7 +120,7 @@ extension WatchlistPersistenceService {
             let results = try context.fetch(descriptor)
             return results.map { $0.toDomain() }
         } catch {
-            print("Failed to load all stocks:", error.localizedDescription)
+            Logger.log("Failed to load all stocks: \(error.localizedDescription)")
             return []
         }
     }
@@ -134,8 +134,10 @@ extension WatchlistPersistenceService {
             }
             try context.save()
         } catch {
-            print("Failed to clear stock entities:", error.localizedDescription)
+            Logger.log("Failed to clear stock entities: \(error.localizedDescription)")
         }
     }
+    
 }
+ 
 

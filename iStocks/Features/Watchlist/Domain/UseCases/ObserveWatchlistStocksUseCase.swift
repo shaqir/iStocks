@@ -8,7 +8,8 @@
 import Foundation
 import Combine
 
-///
+/// Use case to observe live price updates only for stocks within a specific watchlist.
+/// Filters global updates to only those relevant to the given watchlist.
 protocol ObserveWatchlistStocksUseCase {
     func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never>
 }

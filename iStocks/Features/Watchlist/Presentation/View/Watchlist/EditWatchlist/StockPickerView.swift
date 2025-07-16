@@ -56,9 +56,6 @@ struct StockPickerView: View {
                     Button("Done") {
                         do {
                             let validated = try viewModel.validateAndReturnWatchlist()
-//                            DispatchQueue.main.async {
-//                                onSave.send(validated)
-//                            }
                             onDone(validated)
                             dismiss()
                         } catch {

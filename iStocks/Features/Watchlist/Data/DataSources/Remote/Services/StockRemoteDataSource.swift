@@ -8,7 +8,6 @@
 import Foundation
 import Combine
 
-
 protocol StockRemoteDataSourceProtocol {
     func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error>
     func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error>
@@ -37,9 +36,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                 URLQueryItem(name: "apikey", value: API.apiKey)
             ]
         )
-        
-        print(endpoint.url!)
-        
+        Logger.log("endpoint.url!", category: "StockRemoteDataSource")
         return networkClient.request(endpoint)
             .tryMap { try QuoteResponseMapper.map($0) }
             .mapError { self.handleAndMapToAppError($0) }
@@ -69,8 +66,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         }
 
         let batch = batches[index]
-        print("Sending batch \(index + 1): \(batch)")
-
+        Logger.log("Sending batch \(index + 1): \(batch)", category: "StockRemoteDataSource")
         fetchPrices(for: batch)
             .catch { [weak self] error -> AnyPublisher<[Stock], Error> in
                 _ = self?.handleAndMapToAppError(error)
@@ -80,7 +76,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                 subject.send(stocks)
 
                 // Delay before next batch
-                DispatchQueue.global().asyncAfter(deadline: .now() + 180) {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 65) {
                     self.fetchSequentially(batches: batches, subject: subject, index: index + 1)
                 }
             })
@@ -110,7 +106,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         } else {
             appError = .unknown(error)
         }
-        print(appError)
+        Logger.log("api error: \(appError)", category: "StockRemoteDataSource")
         return appError
     }
 }

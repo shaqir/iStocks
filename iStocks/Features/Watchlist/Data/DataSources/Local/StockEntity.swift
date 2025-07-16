@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 
+///The Persistence Model: represents your SwiftData (or CoreData) model
 @Model
 class StockEntity {
     var id: UUID
@@ -60,11 +61,12 @@ extension StockEntity {
               stock.previousPrice.isFinite,
               stock.qty.isFinite,
               stock.averageBuyPrice.isFinite else {
-            print("Skipping invalid stock:", stock)
+             
+            Logger.log("Skipping invalid stock:: \(stock))", category: "StockEntity")
+            
             return nil
         }
         
-        //print("Creating StockEntity from:", stock)
         return StockEntity(
             symbol: stock.symbol,
             price: stock.price,

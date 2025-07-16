@@ -53,12 +53,9 @@ extension Watchlist {
         // Deduplicate and map symbol → price
         let priceMap = Dictionary(grouping: updatedStocks, by: \.symbol)
             .compactMapValues { $0.first?.price }
-
         guard !priceMap.isEmpty else {
-            print("No prices to update")
             return
         }
-
         for i in stocks.indices {
             if let newPrice = priceMap[stocks[i].symbol] {
                 stocks[i].price = newPrice
@@ -68,7 +65,6 @@ extension Watchlist {
     
     mutating func tryAddStock(_ stock: Stock) throws {
         if stocks.count >= AppConstants.maxStocksPerWatchlist {
-            print("tryAddStock.....limit reached")
             throw StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist)
         }
         if stock.symbol.isEmpty {

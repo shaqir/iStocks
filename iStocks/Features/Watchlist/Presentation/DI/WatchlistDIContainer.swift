@@ -10,20 +10,11 @@ import SwiftData
 enum WatchlistAppMode {
     case mock
     case restAPI
-    case webSocket
-}
-
-struct WatchlistUseCases {
-    let observeMock: ObserveMockStocksUseCase
-    let observeTop50: ObserveTop50StocksUseCase
-    let observeWatchlist: ObserveWatchlistStocksUseCase
-    let observeGlobalPrices: ObserveGlobalStockPricesUseCase
-    // Future UseCases can be added here (delete, rename, import, etc.)
 }
 
 final class WatchlistDIContainer {
     
-    static let mode: WatchlistAppMode = .mock
+    static let mode: WatchlistAppMode = .restAPI
     
     // MARK: - Repository
     static func makeStockRepository() -> WatchlistRepository {
@@ -35,20 +26,16 @@ final class WatchlistDIContainer {
             let client = URLSessionNetworkClient()
             let apiService = StockRemoteDataSource(networkClient: client)
             return StockRepositoryImpl(service: apiService)
-        case .webSocket:
-            let client = URLSessionNetworkClient()
-            let apiService = StockRemoteDataSource(networkClient: client)
-            return StockRepositoryImpl(service: apiService)
         }
     }
-
+    
     // MARK: - Persistence Service
     static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
         WatchlistPersistenceService(context: context)
     }
-     
+    
 }
- 
+
 extension WatchlistDIContainer {
     
     static func makeWatchlistUseCases() -> WatchlistUseCases {
@@ -57,28 +44,19 @@ extension WatchlistDIContainer {
             observeMock: ObserveMockStocksUseCaseImpl(repository: repository),
             observeTop50: ObserveTop50StocksUseCaseImpl(repository: repository),
             observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: repository),
-            observeGlobalPrices: ObserveGlobalStockPricesUseCaseImpl(repository: repository)
+            observeGlobalPrices: ObserveStockPricesUseCaseImpl(repository: repository)
         )
     }
-
-    static func makeWatchlistsViewModel(context: ModelContext) -> WatchlistsViewModel {
-        let useCases = makeWatchlistUseCases()
-        let persistenceService = makePersistenceService(context: context)
-        let viewModelProvider = WatchlistViewModelProvider(useCases: useCases)
-        return WatchlistsViewModel(
-            useCases: useCases,
-            persistenceService: persistenceService,
-            viewModelProvider: viewModelProvider
-        )
-    }
-
+    
     static func makeWatchlistsViewModel(
         context: ModelContext,
         viewModelProvider: WatchlistViewModelProvider
     ) -> WatchlistsViewModel {
         let useCases = makeWatchlistUseCases()
         let persistenceService = makePersistenceService(context: context)
-
+        
+        Logger.log("App started in \(mode) mode", category: "Startup")
+        
         return WatchlistsViewModel(
             useCases: useCases,
             persistenceService: persistenceService,

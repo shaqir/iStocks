@@ -6,6 +6,7 @@
 //
 import Foundation
 
+//The Domain Model: This is the model your app logic and UI should use.
 struct Stock: Identifiable, Decodable, Equatable {
     var id: String { symbol } // Stable ID : // derive ID from symbol for uniqueness
     let symbol: String

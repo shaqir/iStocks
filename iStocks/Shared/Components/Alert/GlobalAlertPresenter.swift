@@ -11,12 +11,13 @@ final class GlobalAlertPresenter {
     private static var window: UIWindow?
 
     static func present(_ data: SharedAlertData) {
-        print("Presenting alert with title: \(data.title)")
+
+        Logger.log("Presenting alert with title:\(data.title)", category: "GlobalAlert")
 
         guard let windowScene = UIApplication.shared
             .connectedScenes
             .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
-            print(" No active window scene found.")
+            Logger.log("No active window scene found.", category: "GlobalAlert")
             return
         }
 

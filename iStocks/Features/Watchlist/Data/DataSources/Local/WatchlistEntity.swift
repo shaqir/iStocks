@@ -4,7 +4,6 @@
 //
 //  Created by Sakir Saiyed on 2025-07-03.
 //
-
 import Foundation
 import SwiftData
 
@@ -32,7 +31,8 @@ extension WatchlistEntity {
         let stockEntities = watchlist.stocks.compactMap { StockEntity.from($0) }
 
         guard !watchlist.name.isEmpty else {
-            print("Skipping watchlist with empty name:", watchlist)
+            Logger.log("Skipping watchlist with empty name: \(watchlist))", category: "StockEntity")
+
             return nil
         }
 

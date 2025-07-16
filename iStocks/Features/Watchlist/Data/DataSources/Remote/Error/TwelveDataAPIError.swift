@@ -74,7 +74,7 @@ enum TwelveDataAPIError: LocalizedError, Decodable {
         case .badRequest(message: let message):
             return SharedAlertData(
                 title: "Bad Request",
-                message: "Bad API Request",
+                message: "Bad API Request: \(message)",
                 icon: "arrow.2.squarepath",
                 action: nil
             )
@@ -100,7 +100,7 @@ enum TwelveDataAPIError: LocalizedError, Decodable {
         case .notFound(message: let message):
             return SharedAlertData(
                 title: "Not Found",
-                message: "The requested resource could not be found.",
+                message: "The requested resource could not be found \(message)",
                 icon: "exclamationmark.triangle.fill",
                 action: nil
             )
@@ -132,16 +132,16 @@ enum TwelveDataAPIError: LocalizedError, Decodable {
             
         case .unknownError(code: let code, message: let message):
             return SharedAlertData(
-                title: "Unknown Error",
-                message: "Something went wrong on our end.",
+                title: "Unknown Error: \(code)",
+                message: "Something went wrong on our end \(message)",
                 icon: "exclamationmark.triangle.fill",
                 action: nil
             )
             
         case .invalidResponse(statusCode: let statusCode, body: let body):
             return SharedAlertData(
-                title: "Invalid Response",
-                message: "Something went wrong on our end.",
+                title: "Invalid Response: \(statusCode)",
+                message: "Something went wrong on our end: \(body)",
                 icon: "exclamationmark.triangle.fill",
                 action: nil
             )
