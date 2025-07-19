@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-final class MockStockRepositoryImpl: WatchlistRepository {
+final class MockStockRepositoryImpl: MockWatchlistRepository {
     
     private let mockService: StockStreamingServiceProtocol
 
@@ -15,19 +15,8 @@ final class MockStockRepositoryImpl: WatchlistRepository {
         self.mockService = service
     }
 
-    func observeTop5Stocks() -> AnyPublisher<[Stock], Error> {
-        ///NotImplementedError
-         Fail(error: RepositoryError.notImplemented)
-              .eraseToAnyPublisher()
-    }
-
-    func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
-       ///NotImplementedError
-        SharedAlertManager.shared.show(SharedAlertData(title: "Not Implemented", message: "Not Implemented", icon: "exclamationmark", action: nil))
-        return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
-    }
-
     func observeStocks() -> AnyPublisher<[Stock], Error> {
         mockService.stockPublisher
     }
+    
 }

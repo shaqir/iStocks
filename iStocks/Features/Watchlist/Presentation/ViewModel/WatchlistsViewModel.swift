@@ -43,47 +43,71 @@ final class WatchlistsViewModel: ObservableObject {
         setupBindings()
     }
     
+    deinit {
+        livePriceCancellable?.cancel()
+    }
+    
     private func setupBindings() {
+        
         viewModelProvider.watchlistDidUpdate
             .sink { [weak self] updated in
                 self?.updateWatchlist(id: updated.id, with: updated)
             }
             .store(in: &cancellables)
-    }
-    func loadWatchlists() {
-        isLoading = true
-
-        let savedWatchlists = persistenceService.loadWatchlists()
-        let savedStocks = persistenceService.loadAllStocks()
-
-        if !savedWatchlists.isEmpty {
-            self.watchlists = savedWatchlists
-            self.allFetchedStocks = savedStocks
-
-            if watchlists.allSatisfy({ $0.stocks.isEmpty }) {
-                rebuildWatchlistsFromMasterStocks()
-            }
-
-            if WatchlistDIContainer.mode == .mock {
-                observeMockGlobalPriceStream()
-            }
-            else{
-                loadTop50StockPricesFromServer(preservingExisting: true)
-            }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.isLoading = false
-            }
-
-        } else {
-            //First time run
-            if WatchlistDIContainer.mode == .mock {
-                loadMockData()
-            } else {
-                loadTop50StockPricesFromServer(preservingExisting: true)
-            }
+        
+        //  WebSocket Mode: Subscribe to current tab symbols only
+        if WatchlistDIContainer.mode == .websocket {
+                 Publishers.CombineLatest($watchlists,  $selectedIndex)
+                    .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+                    .sink { [weak self] watchlists, _ in
+                        guard let self = self, !watchlists.isEmpty else { return }
+                        self.subscribeToCurrentTabSymbols()
+                    }
+                    .store(in: &cancellables)
         }
     }
+
+    func loadWatchlists() {
+    isLoading = true
+    
+    let savedWatchlists = persistenceService.loadWatchlists()
+    let savedStocks = persistenceService.loadAllStocks()
+    
+    if !savedWatchlists.isEmpty {
+        self.watchlists = savedWatchlists
+        self.allFetchedStocks = savedStocks
+        
+        if watchlists.allSatisfy({ $0.stocks.isEmpty }) {
+            rebuildWatchlistsFromMasterStocks()
+        }
+        
+        if WatchlistDIContainer.mode == .mock {
+            observeMockGlobalPriceStream()
+        }
+        else if(WatchlistDIContainer.mode == .restAPI){
+            loadTop50StockPricesFromServer(preservingExisting: true)
+        }
+        else if WatchlistDIContainer.mode == .websocket {
+            Logger.log("WebSocket Mode enabled", category: "WebSocket")
+           // observeWebSocketGlobalPriceStream()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.isLoading = false
+        }
+        
+    } else {
+        //First time run
+        if WatchlistDIContainer.mode == .mock {
+            loadMockData()
+        } else if WatchlistDIContainer.mode == .restAPI {
+            loadTop50StockPricesFromServer(preservingExisting: true)
+        }
+        else if WatchlistDIContainer.mode == .websocket {
+            Logger.log("WebSocket Mode enabled: First Run", category: "WebSocket")
+            loadInitialStocksThenStartWebSocket()
+        }
+    }
+}
 
 }
 
@@ -92,7 +116,7 @@ extension WatchlistsViewModel {
     
     func observeMockGlobalPriceStream() {
         guard livePriceCancellable == nil else { return }
-        livePriceCancellable = useCases.observeGlobalPrices.execute()
+        livePriceCancellable = useCases.observeMock.execute()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] updatedStocks in
@@ -120,7 +144,7 @@ extension WatchlistsViewModel {
 
 ///RestAPI Mode
 extension WatchlistsViewModel {
-
+    
     func loadTop50StockPricesFromServer(preservingExisting: Bool) {
         executeTop50StockLoad(isManualRefresh: false, delay: 1.5) { [weak self] newStocks in
             guard let self else { return }
@@ -132,7 +156,7 @@ extension WatchlistsViewModel {
             }
             
             self.persistenceService.saveAllStocks(self.allFetchedStocks)
- 
+            
             let previousSelectedID = self.watchlists.indices.contains(self.selectedIndex)
             ? self.watchlists[self.selectedIndex].id : nil
             
@@ -184,7 +208,10 @@ extension WatchlistsViewModel {
     
     /// Rebuilds the watchlists grouped by sector from allFetchedStocks
     func rebuildWatchlistsFromMasterStocks() {
-        let grouped = Dictionary(grouping: allFetchedStocks.filter { !$0.sector.isEmpty }, by: \.sector)
+        
+        let grouped = Dictionary(grouping: allFetchedStocks, by: { stock in
+                stock.sector.isEmpty ? "Technology" : stock.sector
+            })
         
         var updated: [Watchlist] = []
         
@@ -224,9 +251,80 @@ extension WatchlistsViewModel {
             persistenceService.updateWatchlist(updated)
         }
     }
-
+    
     /// Save all watchlists to persistent storage
     func saveAllWatchlists() {
         persistenceService.saveWatchlists(watchlists)
     }
+}
+
+// MARK:- WebSocket Mode
+
+extension WatchlistsViewModel {
+    
+    private func loadInitialStocksThenStartWebSocket() {
+        
+        let defaultSymbols: [String] = ["AAPL", "TSLA", "GOOGL", "MSFT", "NVDA"]
+        
+        useCases.fetchQuotesBySymbols.execute(for: defaultSymbols)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                if case .failure(let error) = completion {
+                    self?.errorMessage = error.localizedDescription
+                    self?.isLoading = false
+                }
+            }, receiveValue: { [weak self] stocks in
+                
+                guard let self else { return }
+                
+                self.allFetchedStocks = stocks
+                self.persistenceService.saveAllStocks(stocks)
+                self.rebuildWatchlistsFromMasterStocks()
+                self.saveAllWatchlists()
+                //self.observeWebSocketGlobalPriceStream()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    //self.subscribeToCurrentTabSymbols()
+                }
+                self.isLoading = false
+            })
+            .store(in: &cancellables)
+    }
+    
+    private func observeWebSocketGlobalPriceStream() {
+        useCases.observeLiveWebSocket
+            .execute()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { _ in },
+                  receiveValue: { [weak self] updatedStocks in
+                guard let self else { return }
+                Logger.log("WebSocket updated \(updatedStocks.count) stocks", category: "WebSocket")
+                broadcastPricesToAllWatchlists(updatedStocks)
+                //persistenceService.updatePrices(for: updatedStocks, shouldUpdatePreviousPrice: true)
+            })
+            .store(in: &cancellables)
+    }
+    
+    func subscribeToCurrentTabSymbols() {
+       
+        guard WatchlistDIContainer.mode == .websocket else { return }
+
+        guard watchlists.indices.contains(selectedIndex) else {
+            Logger.log("Invalid selectedIndex: \(selectedIndex). Watchlists count: \(watchlists.count)", category: "WebSocket")
+            return
+        }
+
+        let selectedWatchlist = watchlists[selectedIndex]
+        var symbols = selectedWatchlist.stocks.map(\.symbol)
+        //TESTING
+        symbols.append("BTC/USD")
+
+        guard !symbols.isEmpty else {
+            Logger.log("No symbols in watchlist: \(selectedWatchlist.name) [\(selectedWatchlist.id)]", category: "WebSocket")
+            return
+        }
+
+        Logger.log("Subscribing to \(symbols.count) symbols for tab \(selectedWatchlist.name)", category: "WebSocket")
+        useCases.observeLiveWebSocket.subscribe(to: symbols)
+    }
+    
 }

@@ -51,7 +51,10 @@ extension StockEntity {
             isPriceUp: isPriceUp,
             qty: qty,
             averageBuyPrice: averageBuyPrice,
-            sector: sector
+            sector: sector,
+            currency: "USD",
+            exchange: "NASDAQ",
+            isFavorite: false
         )
     }
 

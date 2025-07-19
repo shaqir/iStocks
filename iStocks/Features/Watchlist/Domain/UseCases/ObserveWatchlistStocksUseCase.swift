@@ -11,7 +11,7 @@ import Combine
 /// Use case to observe live price updates only for stocks within a specific watchlist.
 /// Filters global updates to only those relevant to the given watchlist.
 protocol ObserveWatchlistStocksUseCase {
-    func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never>
+    func execute(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never>
 }
  
 final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
@@ -21,7 +21,7 @@ final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
         self.repository = repository
     }
 
-    func observeLiveUpdates(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
+    func execute(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
         repository
             .observeStocks()
             .map { allStocks in

@@ -11,7 +11,7 @@ import Combine
 /// Use case to observe all mocked stock data from local source.
 /// This is used in `mock` mode to simulate a full stream of stock prices.
 protocol ObserveMockStocksUseCase {
-    func observe() -> AnyPublisher<[Stock], Error>
+    func execute() -> AnyPublisher<[Stock], Error>
 }
 
 final class ObserveMockStocksUseCaseImpl: ObserveMockStocksUseCase {
@@ -21,7 +21,7 @@ final class ObserveMockStocksUseCaseImpl: ObserveMockStocksUseCase {
         self.repository = repository
     }
     
-    func observe() -> AnyPublisher<[Stock], Error> {
+    func execute() -> AnyPublisher<[Stock], Error> {
         repository.observeStocks()
     }
 }

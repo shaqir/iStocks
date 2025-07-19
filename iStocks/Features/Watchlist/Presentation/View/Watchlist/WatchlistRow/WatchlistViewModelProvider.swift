@@ -100,7 +100,7 @@ final class WatchlistViewModelProvider {
     private func makeObservePublisher(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
         useCases
             .observeWatchlist
-            .observeLiveUpdates(for: watchlist)
+            .execute(for: watchlist)
             .replaceError(with: watchlist.stocks)
             .eraseToAnyPublisher()
     }

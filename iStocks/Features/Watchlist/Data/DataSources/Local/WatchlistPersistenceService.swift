@@ -140,4 +140,9 @@ extension WatchlistPersistenceService {
     
 }
  
+// MARK: - WebSocket mode
 
+extension WatchlistPersistenceService{
+    
+    
+}

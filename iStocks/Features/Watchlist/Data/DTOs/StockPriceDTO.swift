@@ -24,7 +24,10 @@ extension StockPriceDTO {
             isPriceUp: Bool.random(),
             qty: Double.random(in: 1...100),
             averageBuyPrice: current * Double.random(in: 0.8...1.2),
-            sector: sector
+            sector: sector,
+            currency: "USD",
+            exchange: "NASDAQ",
+            isFavorite: false
         )
     }
 }

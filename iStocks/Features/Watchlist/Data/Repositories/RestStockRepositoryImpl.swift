@@ -7,19 +7,21 @@
 import Foundation
 import Combine
 
-final class StockRepositoryImpl: WatchlistRepository {
+final class RestStockRepositoryImpl: RestStockRepository {
     
     private let remoteDataSource: StockRemoteDataSourceProtocol
-
+    
     init(service: StockRemoteDataSourceProtocol) {
         self.remoteDataSource = service
     }
-
-    func observeTop5Stocks() -> AnyPublisher<[Stock], Error> {
-        remoteDataSource.fetchRealtimePricesForTop5()
-    }
-
+    
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         remoteDataSource.fetchRealtimePricesForTop50InBatches()
     }
+    
+    func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], any Error> {
+        remoteDataSource.fetchRealtimePrices(for: symbols)
+        
+    }
 }
+

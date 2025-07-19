@@ -10,6 +10,7 @@ import Foundation
 // MARK: - DTO (Response from Twelve Data): mirrors the API response format
 ///   Needs to be mapped to Stock via a mapper (e.g. StockMapper or StockResponseWrapper)
 struct StockDTO: Decodable {
+    let event: String?
     let symbol: String?
     let close: String?
     let previousClose: String?
@@ -17,11 +18,15 @@ struct StockDTO: Decodable {
     let message: String?
     let status: String?
     let currency: String?
+    let exchange: String
+    let type: String
+    let timestamp: Int?
+    let price: Double
     
     var isValid: Bool {
         return status != "error" && symbol != nil && close != nil
     }
-
+    
     func toDomainModel(invested: Double) -> Stock? {
         guard
             let symbol = symbol,
@@ -35,8 +40,8 @@ struct StockDTO: Decodable {
         
         let qty = Double(Int.random(in: 1...100))
         let averageBuyPrice = Bool.random()
-            ? price * Double.random(in: 0.8...0.99)
-            : price * Double.random(in: 1.01...1.2)
+        ? price * Double.random(in: 0.8...0.99)
+        : price * Double.random(in: 1.01...1.2)
         
         return Stock(
             symbol: symbol,
@@ -46,14 +51,19 @@ struct StockDTO: Decodable {
             isPriceUp: price >= previous,
             qty: qty,
             averageBuyPrice: averageBuyPrice,
-            sector: "My Watchlist"
+            sector: "My Watchlist",
+            currency: "USD",
+            exchange: exchange,
+            isFavorite: false
         )
     }
-
+    
     enum CodingKeys: String, CodingKey {
         case symbol, close
         case previousClose
         case code, message, status
         case currency
+        case event, exchange, type, timestamp, price
     }
+   
 }

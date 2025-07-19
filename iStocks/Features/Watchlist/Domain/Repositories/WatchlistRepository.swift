@@ -1,20 +1,43 @@
 import Combine
 
-//Abstracts stock-fetching logic
-protocol WatchlistRepository {
-    func observeTop5Stocks() -> AnyPublisher<[Stock], Error>
-    func observeTop50Stocks() -> AnyPublisher<[Stock], Error>
+import Combine
 
-    // Generic fallback used by mock mode
+// MARK: - Base Protocol
+protocol WatchlistRepository {
     func observeStocks() -> AnyPublisher<[Stock], Error>
+    func observeTop50Stocks() -> AnyPublisher<[Stock], Error>
+    func subscribeToSymbols(_ symbols: [String])
 }
 
-//Default: return empty publisher for non-mock (REST) mode
-//Override it in future when you implement Price Update for REST mode too
+// MARK: - Mock Repository
+/// Mock repo supports both live + rest behavior
+protocol MockWatchlistRepository: StockLiveRepository, RestStockRepository {}
+
+// MARK: - REST Repository
+protocol RestStockRepository: StockLiveRepository {
+    func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], Error>
+}
+
+// MARK: - WebSocket Repository
+protocol StockLiveRepository: WatchlistRepository {}
+
+
+///Default Implementations
 extension WatchlistRepository {
+    
     func observeStocks() -> AnyPublisher<[Stock], Error> {
-        return Empty(completeImmediately: true)
-            .setFailureType(to: Error.self)
-            .eraseToAnyPublisher()
+        Empty().setFailureType(to: Error.self).eraseToAnyPublisher()
+    }
+    
+    func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
+        Empty().setFailureType(to: Error.self).eraseToAnyPublisher()
+    }
+    
+    func subscribeToSymbols(_ symbols: [String]) {}
+    
+    func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], any Error> {
+        
+        Empty().setFailureType(to: Error.self).eraseToAnyPublisher()
+        
     }
 }

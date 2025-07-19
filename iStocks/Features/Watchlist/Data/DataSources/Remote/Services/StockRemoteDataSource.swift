@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 protocol StockRemoteDataSourceProtocol {
-    func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error>
+    func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error>
     func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error>
 }
 
@@ -22,39 +22,36 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     //Stores Combine subscriptions to manage memory and cancel publishers when needed.
     private var cancellables = Set<AnyCancellable>()
     
-    
     init(networkClient: NetworkClient) {
         self.networkClient = networkClient
     }
     
-    func fetchRealtimePricesForTop5() -> AnyPublisher<[Stock], Error> {
-        let endpoint = Endpoint(
-            path: "/quote",
-            method: .get,
-            queryItems: [
-                URLQueryItem(name: "symbol", value: NYSETop50Symbols.top5.joined(separator: ",")),
-                URLQueryItem(name: "apikey", value: API.apiKey)
-            ]
-        )
-        Logger.log("endpoint.url!", category: "StockRemoteDataSource")
+    func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
+        let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
+        
         return networkClient.request(endpoint)
-            .tryMap { try QuoteResponseMapper.map($0) }
-            .mapError { self.handleAndMapToAppError($0) }
-            .receive(on: DispatchQueue.main)
+            .map { (rawMap: [String: StockQuoteDTO]) in
+                print("Raw DTOs: \(rawMap)")
+                let stocks = rawMap.compactMap { _, dto in dto.toStock() }
+                print("Converted Stocks: \(stocks.map(\.symbol))")
+                return stocks
+            }
+            .mapError(handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
-    
+   
     ///Chunks the top 50 symbols into groups of 8
     ///Requests them one at a time with a delay
     ///Uses Combine to merge results and emit alerts if needed
+    
     func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error> {
         let batches = NYSETop50Symbols.top50.chunked(into: 8)
         let subject = PassthroughSubject<[Stock], Error>()
-
+        
         fetchSequentially(batches: batches, subject: subject)
         return subject.eraseToAnyPublisher()
     }
-
+    
     private func fetchSequentially(
         batches: [[String]],
         subject: PassthroughSubject<[Stock], Error>,
@@ -64,7 +61,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
             subject.send(completion: .finished)
             return
         }
-
+        
         let batch = batches[index]
         Logger.log("Sending batch \(index + 1): \(batch)", category: "StockRemoteDataSource")
         fetchPrices(for: batch)
@@ -74,7 +71,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
             }
             .sink(receiveCompletion: { _ in }, receiveValue: { stocks in
                 subject.send(stocks)
-
+                
                 // Delay before next batch
                 DispatchQueue.global().asyncAfter(deadline: .now() + 65) {
                     self.fetchSequentially(batches: batches, subject: subject, index: index + 1)
@@ -82,9 +79,10 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
             })
             .store(in: &cancellables)
     }
+    
     private func fetchPrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = PriceEndpoint.forSymbols(symbols, apiKey: API.apiKey)
-
+        
         return networkClient.request(endpoint)
             .map { (rawMap: [String: StockPriceDTO]) in
                 rawMap.compactMap { symbol, dto in
@@ -94,7 +92,6 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
             .mapError(handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
-    
     
     private func handleAndMapToAppError(_ error: Error) -> AppError {
         let appError: AppError
@@ -109,4 +106,6 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         Logger.log("api error: \(appError)", category: "StockRemoteDataSource")
         return appError
     }
+    
+    
 }

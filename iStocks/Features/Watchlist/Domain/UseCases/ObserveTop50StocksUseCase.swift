@@ -1,10 +1,9 @@
 //
-//  ObserveTop50StocksUseCaseImpl.swift
+//  ObserveTop50StocksUseCase.swift
 //  iStocks
 //
 //  Created by Sakir Saiyed on 2025-07-10.
 //
-
 import Foundation
 import Combine
 
@@ -15,9 +14,9 @@ protocol ObserveTop50StocksUseCase {
 }
 
 final class ObserveTop50StocksUseCaseImpl: ObserveTop50StocksUseCase {
-    private let repository: WatchlistRepository
+    private let repository: RestStockRepository
 
-    init(repository: WatchlistRepository) {
+    init(repository: RestStockRepository) {
         self.repository = repository
     }
 

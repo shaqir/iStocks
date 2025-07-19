@@ -42,16 +42,8 @@ struct WatchlistLoadedView: View {
                 }
             }
             else if viewModel.filteredStocks.isEmpty {
-                EmptyStateView(
-                    title: "No Stocks Available",
-                    message: "Try adding stocks or refreshing data.",
-                    icon: "chart.line.uptrend.xyaxis",
-                    retryAction: {
-                        viewModel.requestRefresh()
-                    }
-                )
+                EmptyWatchlistView()
             }
-            
             else {
                 WatchlistScrollContainerContentOnly(
                            content: {

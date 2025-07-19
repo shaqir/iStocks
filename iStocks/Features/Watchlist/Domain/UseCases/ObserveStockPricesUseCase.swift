@@ -1,5 +1,5 @@
 //
-//  ObserveGlobalStockPricesUseCaseImpl.swift
+//  ObserveGlobalStockPricesUseCase.swift
 //  iStocks
 //
 //  Created by Sakir Saiyed on 2025-07-13.
@@ -11,18 +11,23 @@ import Combine
 /// Emits periodic or real-time updates to sync prices across all watchlists.
 protocol ObserveStockPricesUseCase {
     func execute() -> AnyPublisher<[Stock], Never>
+    func subscribe(to symbols: [String])
 }
 
 final class ObserveStockPricesUseCaseImpl: ObserveStockPricesUseCase {
-    private let repository: WatchlistRepository
-
-    init(repository: WatchlistRepository) {
+    private let repository: StockLiveRepository
+    
+    init(repository: StockLiveRepository) {
         self.repository = repository
     }
-
+    
     func execute() -> AnyPublisher<[Stock], Never> {
         repository.observeStocks()
             .replaceError(with: []) // or log / retry
             .eraseToAnyPublisher()
+    }
+    
+    func subscribe(to symbols: [String]) {
+        repository.subscribeToSymbols(symbols)
     }
 }

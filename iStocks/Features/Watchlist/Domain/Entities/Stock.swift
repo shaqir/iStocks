@@ -19,6 +19,10 @@ struct Stock: Identifiable, Decodable, Equatable {
     let averageBuyPrice: Double    // Weighted average buy price
     let sector: String
 
+    let currency: String
+    let exchange: String
+    let isFavorite: Bool
+   
     var invested: Double {
         qty * averageBuyPrice
     }
@@ -58,7 +62,10 @@ extension Stock {
             isPriceUp: true,
             qty: 10,
             averageBuyPrice: 100.0, 
-            sector: "Technology"
+            sector: "Technology",
+            currency: "$",
+            exchange: "NASDAQ",
+            isFavorite: false
         )
     }
 }
@@ -74,7 +81,11 @@ extension Stock {
             isPriceUp: newPrice >= self.price,
             qty: self.qty,
             averageBuyPrice: self.averageBuyPrice,
-            sector: self.sector
+            sector: self.sector,
+            currency: self.currency,
+            exchange: self.exchange,
+            isFavorite: self.isFavorite
+            
         )
     }
 }
