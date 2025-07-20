@@ -21,11 +21,12 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     }
 
     private func bindWebSocket() {
+        print("Binding stockPublisher...")
         if let webSocketClient = webSocket as? TwelveDataWebSocketClient {
             webSocketClient.stockPublisher
                 .receive(on: RunLoop.main)
                 .sink { [weak self] dto in
-                    print("Received stock: \(dto.symbol ?? "NA") @ \(dto.price)")
+                    print("Received stock DTO: \(dto.symbol ?? "nil") @ \(dto.price ?? -1)")
                     self?.handle(dto)
                 }
                 .store(in: &cancellables)
@@ -45,11 +46,16 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
         webSocket.subscribe(to: symbols)
     }
 
-    private func handle(_ dto: StockDTO) {
+    private func handle(_ dto: StockPriceDTO) {
+        let symbol = dto.symbol ?? "nil"
+        let price = dto.price ?? -1
+        print("Handling DTO: symbol=\(symbol), price=\(price)")
+
         let oldPrice = currentStocks[dto.symbol ?? ""]?.price ?? 0
         if let stock = dto.toDomainModel(invested: oldPrice) {
             currentStocks[dto.symbol ?? ""] = stock
             subject.send(Array(currentStocks.values))
+        } else {
+            print("⚠️ Invalid StockDTO, skipping: \(dto)")
         }
-    }
-}
+    }}

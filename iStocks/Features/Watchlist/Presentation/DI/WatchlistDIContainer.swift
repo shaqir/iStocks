@@ -16,7 +16,7 @@ enum WatchlistAppMode {
 
 // MARK: - DI Container
 final class WatchlistDIContainer {
-    static let mode: WatchlistAppMode = .websocket
+    static let mode: WatchlistAppMode = .mock
     
     // MARK: - Repository Factories
     
@@ -31,7 +31,7 @@ final class WatchlistDIContainer {
     }
 
     private static func makeWebSocketRepository() -> StockLiveRepository {
-        let webSocketClient = TwelveDataWebSocketClient()
+        let webSocketClient = TwelveDataWebSocketClient.shared
         return WebSocketStockRepositoryImpl(webSocket: webSocketClient)
     }
 
