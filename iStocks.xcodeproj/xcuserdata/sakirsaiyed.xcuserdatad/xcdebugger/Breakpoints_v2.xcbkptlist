@@ -7,48 +7,112 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "7EC7BE2B-8803-451A-B0F2-7039C50D62F5"
+            uuid = "DB33282E-FC69-41CC-B6B2-6D0F8D92F57D"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Data/WebSocket/TwelveDataWebSocketClient.swift"
+            filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "348"
-            endingLineNumber = "348"
-            landmarkName = "listen()"
+            startingLineNumber = "149"
+            endingLineNumber = "149"
+            landmarkName = "broadcastPricesToAllWatchlists(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "B7086CF0-8B38-4EDE-978D-A0E76773E919"
+            uuid = "796BBADC-2F39-414F-B444-2545A9E50168"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Data/WebSocket/TwelveDataWebSocketClient.swift"
+            filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "341"
-            endingLineNumber = "341"
-            landmarkName = "listen()"
+            startingLineNumber = "98"
+            endingLineNumber = "98"
+            landmarkName = "loadWatchlists()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "7AEFB9D6-821A-48D1-947A-8D84CC630127"
+            uuid = "6DCC15BC-FBCF-48B3-BE0B-8F8692A02317"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Data/WebSocket/TwelveDataWebSocketClient.swift"
+            filePath = "iStocks/Features/Watchlist/Domain/UseCases/ObserveMockStocksUseCase.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "208"
-            endingLineNumber = "208"
-            landmarkName = "subscribeToPendingSymbolsIfNeeded(triggeredBy:)"
+            startingLineNumber = "25"
+            endingLineNumber = "25"
+            landmarkName = "execute()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "393404E3-2427-422C-B143-04D0761BD24D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "141"
+            endingLineNumber = "141"
+            landmarkName = "loadMockData()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "710FEF7C-DA79-4F0A-AA05-D3CE8D0E3133"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Features/Watchlist/Data/DataSources/Mock/MockStockStreamingService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "75"
+            endingLineNumber = "75"
+            landmarkName = "simulatePriceChange()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E17CA813-C23E-4418-98AF-62E811DF178C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Features/Watchlist/Data/Repositories/MockStockRepositoryImpl.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "20"
+            endingLineNumber = "20"
+            landmarkName = "observeStocks()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DD9995C3-0403-49DD-B506-7DB71A17505C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "iStocks/Features/Watchlist/Data/DataSources/Mock/MockStockStreamingService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "55"
+            endingLineNumber = "55"
+            landmarkName = "start()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

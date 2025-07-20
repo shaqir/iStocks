@@ -22,6 +22,11 @@ final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
     }
 
     func execute(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
+        
+        // No longer needed — keep for fallback or testing
+               Empty().eraseToAnyPublisher()
+        
+        /*
         repository
             .observeStocks()
             .map { allStocks in
@@ -31,5 +36,6 @@ final class ObserveWatchlistStocksUseCaseImpl: ObserveWatchlistStocksUseCase {
             }
             .replaceError(with: watchlist.stocks) // fallback to last known if error occurs
             .eraseToAnyPublisher()
+         */
     }
 }

@@ -9,6 +9,7 @@ import Combine
 
 /// Use case to observe global stock price changes for all fetched stocks.
 /// Emits periodic or real-time updates to sync prices across all watchlists.
+/// Mainly for .webSocket Mode
 protocol ObserveStockPricesUseCase {
     func execute() -> AnyPublisher<[Stock], Never>
     func subscribe(to symbols: [String])

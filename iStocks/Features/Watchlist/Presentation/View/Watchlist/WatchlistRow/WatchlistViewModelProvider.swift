@@ -50,13 +50,9 @@ final class WatchlistViewModelProvider {
             return existing
         }
         
-        // Create an observePublisher based on the app mode
-        let observePublisher = makeObservePublisher(for: watchlist)
-        
         // Create new WatchlistViewModel with correct observePublisher
         let vm = WatchlistViewModel(
             watchlist: watchlist,
-            observePublisher: observePublisher,
             availableStocks: allStocks
         )
         
@@ -95,13 +91,6 @@ final class WatchlistViewModelProvider {
         cancellables[id]?.cancel()
         cancellables[id] = nil
     }
-    
-    // MARK: - Helper Methods
-    private func makeObservePublisher(for watchlist: Watchlist) -> AnyPublisher<[Stock], Never> {
-        useCases
-            .observeWatchlist
-            .execute(for: watchlist)
-            .replaceError(with: watchlist.stocks)
-            .eraseToAnyPublisher()
-    }
+
+   
 }

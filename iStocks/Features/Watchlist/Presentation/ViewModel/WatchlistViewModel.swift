@@ -53,26 +53,25 @@ final class WatchlistViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
+    var isPriceBindingSetup = false
+    
     // MARK: - Init
     
     init(
         watchlist: Watchlist,
-        observePublisher: AnyPublisher<[Stock], Never>,
         availableStocks: [Stock]
     ) {
         self.watchlist = watchlist
         self.availableStocks = availableStocks
-        
-        observePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] updatedStocks in
-                self?.replaceStocks(updatedStocks)
-            }
-            .store(in: &cancellables)
+
+        print("[Init] WatchlistViewModel created for \(watchlist.name)")
         
         setupSearchBinding()
     }
     
+    deinit {
+        Logger.log("DEINIT: WatchlistViewModel for \(watchlist.name)", category: "Watchlist")
+    }
     // MARK: - Public API
     
     func requestRefresh() {
@@ -129,18 +128,19 @@ final class WatchlistViewModel: ObservableObject {
     
     func replaceStocks(_ newStocks: [Stock]) {
         guard !newStocks.isEmpty else { return }
-        
-        let newSymbols = Set(newStocks.map { $0.symbol })
-        let oldSymbols = Set(watchlist.stocks.map { $0.symbol })
-        
-        // Skip if no overlap — avoids unnecessary animation/update
-        guard !newSymbols.isDisjoint(with: oldSymbols) else { return }
-        
+
+        let updated = newStocks.filter { new in
+            guard let old = watchlist.stocks.first(where: { $0.symbol == new.symbol }) else { return true }
+            return old.price != new.price
+        }
+
+        guard !updated.isEmpty else { return }
+
         DispatchQueue.main.async {
             self.isPriceOnlyUpdate = true
-            self.watchlist.replacePrices(from: newStocks)
+            self.watchlist.replacePrices(from: updated)
             self.isPriceOnlyUpdate = false
-            self.priceUpdate.send(self.watchlist.stocks)
+            self.priceUpdate.send(updated)
         }
     }
     

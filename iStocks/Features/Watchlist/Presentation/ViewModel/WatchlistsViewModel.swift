@@ -28,8 +28,9 @@ final class WatchlistsViewModel: ObservableObject {
     // MARK: - Private State
     private var cancellables = Set<AnyCancellable>()
     private var isRefreshing = false
-    private var livePriceCancellable: AnyCancellable?
-    private var liveUpdatesCancellable: AnyCancellable?
+    
+    private var stockLookup: [String: Stock] = [:]
+
     
     // MARK: - Init
     init(
@@ -42,11 +43,7 @@ final class WatchlistsViewModel: ObservableObject {
         self.viewModelProvider = viewModelProvider
         setupBindings()
     }
-    
-    deinit {
-        livePriceCancellable?.cancel()
-    }
-    
+
     private func setupBindings() {
         
         viewModelProvider.watchlistDidUpdate
@@ -82,7 +79,7 @@ final class WatchlistsViewModel: ObservableObject {
         }
         
         if WatchlistDIContainer.mode == .mock {
-            observeMockGlobalPriceStream()
+            //observeMockGlobalPriceStream()
         }
         else if(WatchlistDIContainer.mode == .restAPI){
             loadTop50StockPricesFromServer(preservingExisting: true)
@@ -114,15 +111,28 @@ final class WatchlistsViewModel: ObservableObject {
 ///Mock Mode
 extension WatchlistsViewModel {
     
-    func observeMockGlobalPriceStream() {
-        guard livePriceCancellable == nil else { return }
-        livePriceCancellable = useCases.observeMock.execute()
-            .receive(on: DispatchQueue.main)
+    func startObservingGlobalPriceUpdates() {
+        useCases.observeMock.execute()
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] updatedStocks in
-                guard let self else { return }
-                broadcastPricesToAllWatchlists(updatedStocks)
-            })
+                      self?.stockLookup = Dictionary(uniqueKeysWithValues: updatedStocks.map { ($0.symbol, $0) })
+                      self?.forwardToActiveWatchlists()
+                  })
+            .store(in: &cancellables)
+    }
+    
+    private func forwardToActiveWatchlists() {
+        
+        guard watchlists.indices.contains(selectedIndex) else { return }
+        
+        let selected = watchlists[selectedIndex]
+        let relevantStocks = selected.stocks.compactMap { stockLookup[$0.symbol] }
+        
+        Logger.log("Sent price updates to \(selected.name): \(relevantStocks.map(\.symbol).joined(separator: ", "))", category: "MockUpdate")
+        
+        if let vm = viewModelProvider.cachedViewModels.first(where: { $0.watchlist.id == selected.id }) {
+            vm.replaceStocks(relevantStocks)
+        }
     }
     
     private func loadMockData() {
@@ -210,8 +220,12 @@ extension WatchlistsViewModel {
     func rebuildWatchlistsFromMasterStocks() {
         
         let grouped = Dictionary(grouping: allFetchedStocks, by: { stock in
-                stock.sector.isEmpty ? "Technology" : stock.sector
-            })
+            let sector = stock.sector.isEmpty ? "Technology" : stock.sector
+            if stock.sector.isEmpty {
+                print("[Warning] Stock \(stock.symbol) has empty sector. Defaulting to Technology.")
+            }
+            return sector
+        })
         
         var updated: [Watchlist] = []
         

@@ -55,17 +55,22 @@ struct WatchlistLoadedView: View {
         }
         .onAppear {
             // Subscribe to price-only updates
-            viewModel.priceUpdate
-                .sink { updatedStocks in
-                    // Set animated symbols for visual feedback
-                    viewModel.animatedSymbols = Set(updatedStocks.map(\.symbol))
-                    
-                    // Optional: Clear animation after short delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        viewModel.animatedSymbols.removeAll()
+            ///Prevent .sink from being added repeatedly
+            if !viewModel.isPriceBindingSetup {
+                viewModel.priceUpdate
+                    .sink { updatedStocks in
+                        print("[PriceUpdate] Received in \(viewModel.watchlist.name): \(updatedStocks.map(\.symbol))")
+                        // Set animated symbols for visual feedback
+                        viewModel.animatedSymbols = Set(updatedStocks.map(\.symbol))
+                        // Optional: Clear animation after short delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            viewModel.animatedSymbols.removeAll()
+                        }
                     }
-                }
-                .store(in: &cancellables)
+                    .store(in: &cancellables)
+                viewModel.isPriceBindingSetup = true
+
+            }
         }
         .sheet(isPresented: $isShowingStockPicker, onDismiss: {
         }) {

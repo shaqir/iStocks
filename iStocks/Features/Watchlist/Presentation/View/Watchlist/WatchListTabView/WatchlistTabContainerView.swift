@@ -28,9 +28,9 @@ struct WatchlistTabContainerView: View {
     var body: some View {
         WatchlistTabView(viewModel: viewModel, viewModelProvider: watchlistVmProvider)
             .onAppear {
-                 
                 if !hasLoaded {
-                    viewModel.loadWatchlists()///Load only once & then just observe
+                    viewModel.loadWatchlists() // Load persisted data
+                    viewModel.startObservingGlobalPriceUpdates()//Start price-observation globally
                     hasLoaded = true
                 }
             }

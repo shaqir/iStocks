@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+/// This is for Particular Symbols to fetch from REST API
 protocol FetchStocksBySymbolUseCase {
     func execute(for symbols: [String]) -> AnyPublisher<[Stock], Error>
 }
