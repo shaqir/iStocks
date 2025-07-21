@@ -14,7 +14,8 @@ struct WatchlistTabContainerView: View {
     @State private var hasLoaded = false
 
     init(context: ModelContext) {
-        let useCases = WatchlistDIContainer.makeWatchlistUseCases()
+        Logger.log("WatchlistTabContainerView() called.")
+        let useCases = WatchlistDIContainer.makeWatchlistUseCases(context: context)
         let provider = WatchlistViewModelProvider(useCases: useCases)
         self.watchlistVmProvider = provider
         _viewModel = StateObject(

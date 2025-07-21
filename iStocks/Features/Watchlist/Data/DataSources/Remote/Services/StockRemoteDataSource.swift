@@ -4,28 +4,39 @@
 //
 //  Created by Sakir Saiyed on 2025-06-29.
 //
-
 import Foundation
 import Combine
 
+// MARK: - Protocol
+
 protocol StockRemoteDataSourceProtocol {
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error>
-    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error>
+    func fetchRealtimePricesForTop50InBatches(
+        _ symbols: [String],
+        batchSize: Int,
+        onProgress: BatchProgressHandler?
+    ) -> AnyPublisher<[Stock], Error>
 }
 
-import Combine
+typealias BatchProgressHandler = (_ batchIndex: Int, _ totalBatches: Int, _ retryAttempt: Int, _ success: Bool) -> Void
+
+// MARK: - Implementation
 
 final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     
+    // MARK: - Dependencies
+
     private let networkClient: NetworkClient
-    
-    //Stores Combine subscriptions to manage memory and cancel publishers when needed.
     private var cancellables = Set<AnyCancellable>()
     
+    // MARK: - Init
+
     init(networkClient: NetworkClient) {
         self.networkClient = networkClient
     }
-    
+
+    // MARK: - Public Methods
+
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
         
@@ -36,50 +47,29 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                 print("Converted Stocks: \(stocks.map(\.symbol))")
                 return stocks
             }
-            .mapError(handleAndMapToAppError(_:))
+            .mapError(self.handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
-   
-    ///Chunks the top 50 symbols into groups of 8
-    ///Requests them one at a time with a delay
-    ///Uses Combine to merge results and emit alerts if needed
-    
-    func fetchRealtimePricesForTop50InBatches() -> AnyPublisher<[Stock], Error> {
-        let batches = NYSETop50Symbols.top50.chunked(into: 8)
+
+    func fetchRealtimePricesForTop50InBatches(
+        _ symbols: [String],
+        batchSize: Int,
+        onProgress: BatchProgressHandler? = nil
+    ) -> AnyPublisher<[Stock], Error> {
+        let batches = symbols.chunked(into: batchSize)
         let subject = PassthroughSubject<[Stock], Error>()
-        
-        fetchSequentially(batches: batches, subject: subject)
+
+        fetchSequentiallyWithRetry(
+            batches: batches,
+            subject: subject,
+            onProgress: onProgress
+        )
+
         return subject.eraseToAnyPublisher()
     }
-    
-    private func fetchSequentially(
-        batches: [[String]],
-        subject: PassthroughSubject<[Stock], Error>,
-        index: Int = 0
-    ) {
-        guard index < batches.count else {
-            subject.send(completion: .finished)
-            return
-        }
-        
-        let batch = batches[index]
-        Logger.log("Sending batch \(index + 1): \(batch)", category: "StockRemoteDataSource")
-        fetchPrices(for: batch)
-            .catch { [weak self] error -> AnyPublisher<[Stock], Error> in
-                _ = self?.handleAndMapToAppError(error)
-                return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
-            }
-            .sink(receiveCompletion: { _ in }, receiveValue: { stocks in
-                subject.send(stocks)
-                
-                // Delay before next batch
-                DispatchQueue.global().asyncAfter(deadline: .now() + 65) {
-                    self.fetchSequentially(batches: batches, subject: subject, index: index + 1)
-                }
-            })
-            .store(in: &cancellables)
-    }
-    
+
+    // MARK: - Private Helpers
+
     private func fetchPrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = PriceEndpoint.forSymbols(symbols, apiKey: API.apiKey)
         
@@ -89,10 +79,79 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                     dto.toStockPrice(symbol: symbol)
                 }
             }
-            .mapError(handleAndMapToAppError(_:))
+            .mapError(self.handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
-    
+
+    private func fetchSequentiallyWithRetry(
+        batches: [[String]],
+        subject: PassthroughSubject<[Stock], Error>,
+        index: Int = 0,
+        retryCounts: [Int] = [],
+        onProgress: BatchProgressHandler? = nil
+    ) {
+        guard index < batches.count else {
+            subject.send(completion: .finished)
+            return
+        }
+
+        let batch = batches[index]
+        let totalBatches = batches.count
+        let currentRetry = retryCounts.indices.contains(index) ? retryCounts[index] : 0
+
+        Logger.log("Sending batch \(index + 1)/\(totalBatches): \(batch)", category: "StockRemoteDataSource")
+
+        fetchPrices(for: batch)
+            .sink(receiveCompletion: { [weak self] completion in
+                guard let self else { return }
+
+                switch completion {
+                case .finished:
+                    onProgress?(index + 1, totalBatches, currentRetry, true)
+
+                case .failure:
+                    if currentRetry < 2 {
+                        Logger.log("Retrying batch \(index + 1) in 60s (Attempt \(currentRetry + 2))", category: "Retry")
+                        onProgress?(index + 1, totalBatches, currentRetry + 1, false)
+
+                        var updatedRetryCounts = retryCounts
+                        if updatedRetryCounts.count <= index {
+                            updatedRetryCounts.append(contentsOf: Array(repeating: 0, count: index - updatedRetryCounts.count + 1))
+                        }
+                        updatedRetryCounts[index] += 1
+
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
+                            self.fetchSequentiallyWithRetry(
+                                batches: batches,
+                                subject: subject,
+                                index: index,
+                                retryCounts: updatedRetryCounts,
+                                onProgress: onProgress
+                            )
+                        }
+                        return
+                    } else {
+                        Logger.log("Failed batch \(index + 1) after 3 tries — skipping", category: "Retry")
+                        onProgress?(index + 1, totalBatches, currentRetry, false)
+                    }
+                }
+
+                // Proceed to next batch after delay
+                DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
+                    self.fetchSequentiallyWithRetry(
+                        batches: batches,
+                        subject: subject,
+                        index: index + 1,
+                        retryCounts: retryCounts,
+                        onProgress: onProgress
+                    )
+                }
+            }, receiveValue: { stocks in
+                subject.send(stocks)
+            })
+            .store(in: &cancellables)
+    }
+
     private func handleAndMapToAppError(_ error: Error) -> AppError {
         let appError: AppError
         if let api = error as? TwelveDataAPIError {
@@ -106,6 +165,4 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         Logger.log("api error: \(appError)", category: "StockRemoteDataSource")
         return appError
     }
-    
-    
 }

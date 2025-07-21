@@ -14,8 +14,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "149"
-            endingLineNumber = "149"
+            startingLineNumber = "169"
+            endingLineNumber = "169"
             landmarkName = "broadcastPricesToAllWatchlists(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "98"
-            endingLineNumber = "98"
+            startingLineNumber = "116"
+            endingLineNumber = "116"
             landmarkName = "loadWatchlists()"
             landmarkType = "7">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "iStocks/Features/Watchlist/Presentation/ViewModel/WatchlistsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "141"
-            endingLineNumber = "141"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
             landmarkName = "loadMockData()"
             landmarkType = "7">
          </BreakpointContent>
@@ -97,22 +97,6 @@
             startingLineNumber = "20"
             endingLineNumber = "20"
             landmarkName = "observeStocks()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "DD9995C3-0403-49DD-B506-7DB71A17505C"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "iStocks/Features/Watchlist/Data/DataSources/Mock/MockStockStreamingService.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "55"
-            endingLineNumber = "55"
-            landmarkName = "start()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

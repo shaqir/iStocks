@@ -31,6 +31,8 @@ final class WatchlistsViewModel: ObservableObject {
     
     private var stockLookup: [String: Stock] = [:]
 
+    //MARK: - Only for REST APIs
+    @Published var currentBatchProgress: BatchProgress? = nil
     
     // MARK: - Init
     init(
@@ -62,9 +64,25 @@ final class WatchlistsViewModel: ObservableObject {
                     }
                     .store(in: &cancellables)
         }
+        
+        //  REST API Mode: Subscribe to rest batch call progress
+        if WatchlistDIContainer.mode == .restAPI {
+            if let restUseCase = useCases.observeTop50 as? ObserveTop50StocksUseCaseImpl,
+               let restRepo = restUseCase.repository as? RestStockRepositoryImpl {
+                  restRepo.progressPublisher
+                      .receive(on: DispatchQueue.main)
+                      .sink { [weak self] progress in
+                          self?.currentBatchProgress = progress
+                      }
+                      .store(in: &cancellables)
+              }
+        }
+        
     }
 
     func loadWatchlists() {
+    
+    Logger.log("loadWatchlists() called.")
     isLoading = true
     
     let savedWatchlists = persistenceService.loadWatchlists()
@@ -112,6 +130,8 @@ final class WatchlistsViewModel: ObservableObject {
 extension WatchlistsViewModel {
     
     func startObservingGlobalPriceUpdates() {
+        Logger.log("startObservingGlobalPriceUpdates() called but This will run only for Mock Mode.")
+        guard WatchlistDIContainer.mode == .mock  else { return }
         useCases.observeMock.execute()
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] updatedStocks in
@@ -122,7 +142,7 @@ extension WatchlistsViewModel {
     }
     
     private func forwardToActiveWatchlists() {
-        
+        ///This method passing price updates from parent VM to child VMs
         guard watchlists.indices.contains(selectedIndex) else { return }
         
         let selected = watchlists[selectedIndex]

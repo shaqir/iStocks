@@ -16,27 +16,39 @@ enum WatchlistAppMode {
 
 // MARK: - DI Container
 final class WatchlistDIContainer {
-    static let mode: WatchlistAppMode = .mock
     
+    static let mode: WatchlistAppMode = .restAPI
+
     // MARK: - Repository Factories
     
     private static func makeMockRepository() -> MockWatchlistRepository {
-        MockStockRepositoryImpl(service: MockStockStreamingService())
+        Logger.log("makeMockRepository() called.")
+        return MockStockRepositoryImpl(service: MockStockStreamingService())
     }
 
-    private static func makeRestRepository() -> RestStockRepository {
+    private static func makeRestRepository(context: ModelContext) -> RestStockRepository {
+        Logger.log("makeRestRepository() called.")
+
         let client = URLSessionNetworkClient()
         let apiService = StockRemoteDataSource(networkClient: client)
-        return RestStockRepositoryImpl(service: apiService)
+        let persistence = WatchlistPersistenceService(context: context)
+        return RestStockRepositoryImpl(service: apiService, persistenceService: persistence)
     }
 
     private static func makeWebSocketRepository() -> StockLiveRepository {
+        Logger.log("makeWebSocketRepository() called.")
         let webSocketClient = TwelveDataWebSocketClient.shared
         return WebSocketStockRepositoryImpl(webSocket: webSocketClient)
     }
 
+    private static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
+        WatchlistPersistenceService(context: context)
+    }
+
     // MARK: - Use Case Assembly
-    static func makeWatchlistUseCases() -> WatchlistUseCases {
+    static func makeWatchlistUseCases(context: ModelContext) -> WatchlistUseCases {
+        Logger.log("makeWatchlistUseCases() called.")
+        
         switch mode {
         case .mock:
             let mockRepo = makeMockRepository()
@@ -47,23 +59,23 @@ final class WatchlistDIContainer {
                 observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: mockRepo),
                 fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo)
             )
-
+            
         case .restAPI:
-            let restRepo = makeRestRepository()
+            let restRepo = makeRestRepository(context: context)
             return WatchlistUseCases(
-                observeMock: ObserveMockStocksUseCaseImpl(repository: restRepo), // fallback
+                observeMock: ObserveMockStocksUseCaseImpl(repository: restRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
-                observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: restRepo), // fallback
+                observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: restRepo),
                 observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: restRepo),
                 fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo)
             )
-
+            
         case .websocket:
             let liveRepo = makeWebSocketRepository()
-            let restRepo = makeRestRepository()
+            let restRepo = makeRestRepository(context: context)
             return WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: liveRepo),
-                observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo), // separated
+                observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: liveRepo),
                 observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: liveRepo),
                 fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo)
@@ -71,20 +83,16 @@ final class WatchlistDIContainer {
         }
     }
 
-    // MARK: - Persistence
-    static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
-        WatchlistPersistenceService(context: context)
-    }
-
     // MARK: - ViewModel Factory
     static func makeWatchlistsViewModel(
         context: ModelContext,
         viewModelProvider: WatchlistViewModelProvider
     ) -> WatchlistsViewModel {
-        let useCases = makeWatchlistUseCases()
+        let useCases = makeWatchlistUseCases(context: context)
         let persistence = makePersistenceService(context: context)
         
         Logger.log("App started in \(mode) mode", category: "Startup")
+        Logger.log("makeWatchlistsViewModel Factory callled.")
         
         return WatchlistsViewModel(
             useCases: useCases,

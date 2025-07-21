@@ -35,6 +35,17 @@ struct WatchlistTabView: View {
                         isEditingAllWatchlists: $isEditingAllWatchlists,
                         newWatchlist: $newWatchlist
                     )
+                    
+                    if let progress = viewModel.currentBatchProgress, !progress.isComplete {
+                        BatchProgressView(
+                            current: progress.current,
+                            total: progress.total,
+                            retryCount: progress.retryCount,
+                            success: progress.success,
+                            isComplete: progress.isComplete
+                        )
+                    }
+                    
                     WatchlistTabContent(
                         viewModel: viewModel,
                         viewModelProvider: viewModelProvider,
@@ -52,13 +63,14 @@ struct WatchlistTabView: View {
             .animation(.easeInOut(duration: 0.3), value: viewModel.isLoading)
              
             .onAppear {
+                Logger.log("WatchlistTabView() just loaded.")
                 viewModelProvider.watchlistDidUpdate
                     .receive(on: DispatchQueue.main)
                     .sink { updated in
+                        Logger.log("watchlistDidUpdate received for: \(updated.name).", category: "WatchlistTabView")
                         viewModel.updateWatchlist(id: updated.id, with: updated)
                     }
                     .store(in: &combineCancellables)
-                
             }
         }
         .sheet(isPresented: $isEditingAllWatchlists) {
@@ -210,7 +222,6 @@ struct WatchlistTabContent: View {
     
 }
 
-
 struct EditWatchlistWrapper: View {
     let watchlist: Watchlist
     let didSaveSubject: PassthroughSubject<Watchlist, Never>
@@ -227,3 +238,5 @@ struct EditWatchlistWrapper: View {
         EditSingleWatchlistView(viewModel: viewModel, watchlistDidSave: didSaveSubject)
     }
 }
+
+

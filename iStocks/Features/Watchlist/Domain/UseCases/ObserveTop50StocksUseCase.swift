@@ -14,7 +14,7 @@ protocol ObserveTop50StocksUseCase {
 }
 
 final class ObserveTop50StocksUseCaseImpl: ObserveTop50StocksUseCase {
-    private let repository: RestStockRepository
+    let repository: RestStockRepository
 
     init(repository: RestStockRepository) {
         self.repository = repository
