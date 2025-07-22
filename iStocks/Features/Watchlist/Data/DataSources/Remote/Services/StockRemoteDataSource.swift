@@ -41,12 +41,16 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
         
         return networkClient.request(endpoint)
-            .map { (rawMap: [String: StockQuoteDTO]) in
-                print("Raw DTOs:")
-                let stocks = rawMap.compactMap { _, dto in dto.toStock() }
-                print("Converted Stocks: \(stocks.map(\.symbol))")
-                return stocks
-            }
+            .tryMap { (response: StockQuoteDynamicResponse) in
+                        switch response {
+                        case .dictionary(let map):
+                            Logger.log("Dictionary-response", category: "StockQuoteDynamicResponse")
+                            return try QuoteResponseMapper.map(map)
+                        case .single(let wrapper):
+                            Logger.log("single-response", category: "StockQuoteDynamicResponse")
+                            return try QuoteResponseMapper.map(["SINGLE": wrapper])
+                        }
+                    }
             .mapError(self.handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }

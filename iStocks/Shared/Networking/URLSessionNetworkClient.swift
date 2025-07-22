@@ -19,6 +19,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Raw Data
     func request(_ endpoint: Endpoint) -> AnyPublisher<Data, Error> {
+        Logger.log("request - Combine Raw Data: \(endpoint)", category: "URLSessionNetworkClient")
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -34,6 +35,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Decodable
     func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error> {
+        Logger.log("request - Combine Decodable: \(endpoint)", category: "URLSessionNetworkClient")
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -50,6 +52,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Closure
     func request<T: Decodable>(_ endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
+        Logger.log("request - Closure Decodable: \(endpoint)", category: "URLSessionNetworkClient")
         guard let url = endpoint.url else {
             completion(.failure(NetworkError.invalidURL))
             return
@@ -77,6 +80,8 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Async/Await
     func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
+        Logger.log("request - Async/Await Decodable: \(endpoint)", category: "URLSessionNetworkClient")
+
         guard let url = endpoint.url else {
             throw NetworkError.invalidURL
         }
@@ -91,6 +96,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Shared Validation
     private func validate(data: Data?, response: URLResponse?) throws -> Data {
+        Logger.log("validate data: \(String(data: data ?? Data(), encoding: .utf8) ?? "nil")")
         guard let data = data else { throw NetworkError.noData }
         guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
             throw NetworkError.invalidResponse

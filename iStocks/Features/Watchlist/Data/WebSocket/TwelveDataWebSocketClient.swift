@@ -5,6 +5,32 @@
 //  Created by Sakir Saiyed on 2025-07-17.
 //
 
+//  Summary:
+//  This WebSocket client handles real-time price streaming from Twelve Data WebSocket API.
+//
+//   Features:
+//  - Connects to wss://ws.twelvedata.com/v1/quotes/price
+//  - Manages connection lifecycle: connect, disconnect, reconnect
+//  - Supports subscription queue and pending retry mechanism
+//  - Sends heartbeat every 10s and handles heartbeat events
+//  - Decodes price updates, heartbeat, and subscribe-status messages
+//  - Uses Combine's `stockPublisher` for downstream updates
+//
+//   Limitations with Free (Basic) Tier:
+//  - Only **1 active WebSocket connection** is allowed
+//  - Only up to **8 symbols per connection** (must be **trial-enabled** symbols)
+//  - Most equity symbols (e.g., AAPL, TSLA) are NOT available for WebSocket in Basic plan
+//  - Use trial symbols like: `BTC/USD`, `ETH/USD`, `EUR/USD`, `USD/JPY`, `AAPL:US` (if enabled)
+//    → See: https://twelvedata.com/exchanges?level=basic
+//  - If non-trial symbols are used, no `price` events will be sent (silent failure)
+//  - Requires proper `"subscribe"` message format with `action` and `params.symbols`
+//
+//  Debugging Tips:
+//  - Always check if `.subscribe-status` is received (success/fail reason)
+//  - Manually test symbols in: https://twelvedata.com/documentation#websocket
+//  - Consider mocking or REST fallback if WebSocket is inactive or rate-limited
+//
+
 import Foundation
 import Combine
 
@@ -149,7 +175,9 @@ final class TwelveDataWebSocketClient: NSObject, WebSocketClient {
 
         Logger.log("[WebSocket] WebSocket task resumed.", category: "WebSocket")
         print("[WebSocket] after resume: \(String(describing: webSocketTask))")
-
+        
+        self.listen()
+        
         startHeartbeat()
         sendJSON(["action": "ping"])
 
@@ -263,6 +291,14 @@ final class TwelveDataWebSocketClient: NSObject, WebSocketClient {
         
         webSocketTask.receive { [weak self] result in
             guard let self else { return }
+            
+            defer {
+                        // ALWAYS listen again
+                        if self.connectionState == .connected {
+                            self.listen()
+                        }
+                    }
+            
             switch result {
             case .success(let message):
                 Logger.log("[WebSocket] Received message type: \(message)", category: "WebSocket")
@@ -311,13 +347,12 @@ extension TwelveDataWebSocketClient: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         Logger.log("[WebSocket] didOpenWithProtocol called", category: "WebSocket")
         connectionState = .connected
+        self.isReadyToSubscribe = true
         reconnectManager.reset()
-        flushMessageQueue()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self else { return }
-            self.isReadyToSubscribe = true
             Logger.log("[WebSocket] Ready to subscribe. Listening and retrying symbols...", category: "WebSocket")
-            self.listen()
+            flushMessageQueue()
             self.subscribeToPendingSymbolsIfNeeded(triggeredBy: "didOpenWithProtocol")
             self.retryPendingSymbolsRecursive()
         }

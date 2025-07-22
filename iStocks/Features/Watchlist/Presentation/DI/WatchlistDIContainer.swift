@@ -18,7 +18,7 @@ enum WatchlistAppMode {
 // MARK: - DI Container
 final class WatchlistDIContainer {
     
-    static let mode: WatchlistAppMode = .websocket
+    static let mode: WatchlistAppMode = .mock
 
     // MARK: - Repository Factories
     

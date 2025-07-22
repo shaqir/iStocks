@@ -298,7 +298,7 @@ extension WatchlistsViewModel {
     
     private func loadInitialStocksThenStartWebSocket() {
         
-        let defaultSymbols: [String] = ["AAPL", "TSLA", "GOOGL", "MSFT", "NVDA"]
+        let defaultSymbols: [String] = ["AAPL"]
         
         useCases.fetchQuotesBySymbols.execute(for: defaultSymbols)
             .receive(on: DispatchQueue.main)
@@ -351,8 +351,10 @@ extension WatchlistsViewModel {
         var symbols = selectedWatchlist.stocks.map(\.symbol)
 
         //TESTING...
-        symbols = MarketHoursHelper.isUSMarketOpen() ? symbols : ["BTC/USD"]
-         
+        symbols = MarketHoursHelper.isUSMarketOpen() ? symbols : ["BTC/USD", "ETH/USD", "EUR/USD"]
+        
+        symbols = ["BTC/USD", "ETH/USD", "EUR/USD"]
+        
         guard !symbols.isEmpty else {
             Logger.log("No symbols in watchlist: \(selectedWatchlist.name) [\(selectedWatchlist.id)]", category: "WebSocket")
             return
