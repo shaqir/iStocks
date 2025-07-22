@@ -351,7 +351,7 @@ extension WatchlistsViewModel {
         var symbols = selectedWatchlist.stocks.map(\.symbol)
 
         //TESTING...
-        symbols = MarketHoursHelper.isUSMarketOpen() ? symbols : ["AAPL", "EUR/USD", "BTC/USD", "ETH/USD", "QQQ", "TRP"]
+        symbols = MarketHoursHelper.isUSMarketOpen() ? symbols : ["BTC/USD"]
          
         guard !symbols.isEmpty else {
             Logger.log("No symbols in watchlist: \(selectedWatchlist.name) [\(selectedWatchlist.id)]", category: "WebSocket")

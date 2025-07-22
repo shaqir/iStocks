@@ -12,12 +12,13 @@ enum WatchlistAppMode {
     case mock
     case restAPI
     case websocket
+    //case graphQL // Coming Soon
 }
 
 // MARK: - DI Container
 final class WatchlistDIContainer {
     
-    static let mode: WatchlistAppMode = .restAPI
+    static let mode: WatchlistAppMode = .websocket
 
     // MARK: - Repository Factories
     

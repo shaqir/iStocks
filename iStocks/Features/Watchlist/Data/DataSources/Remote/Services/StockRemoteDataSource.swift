@@ -42,7 +42,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         
         return networkClient.request(endpoint)
             .map { (rawMap: [String: StockQuoteDTO]) in
-                print("Raw DTOs: \(rawMap)")
+                print("Raw DTOs:")
                 let stocks = rawMap.compactMap { _, dto in dto.toStock() }
                 print("Converted Stocks: \(stocks.map(\.symbol))")
                 return stocks
@@ -120,8 +120,8 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                         }
                         updatedRetryCounts[index] += 1
 
-                        DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
-                            self.fetchSequentiallyWithRetry(
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 60) { [weak self] in
+                            self?.fetchSequentiallyWithRetry(
                                 batches: batches,
                                 subject: subject,
                                 index: index,
@@ -137,8 +137,8 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                 }
 
                 // Proceed to next batch after delay
-                DispatchQueue.global().asyncAfter(deadline: .now() + 60) {
-                    self.fetchSequentiallyWithRetry(
+                DispatchQueue.global().asyncAfter(deadline: .now() + 60) { [weak self] in
+                    self?.fetchSequentiallyWithRetry(
                         batches: batches,
                         subject: subject,
                         index: index + 1,
@@ -146,8 +146,9 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                         onProgress: onProgress
                     )
                 }
-            }, receiveValue: { stocks in
-                subject.send(stocks)
+            },
+                  receiveValue: { stocks in
+                  subject.send(stocks)
             })
             .store(in: &cancellables)
     }
