@@ -8,7 +8,6 @@ import Foundation
 
 struct MockStockData {
     
-    
     static let allStocks: [Stock] = {
         let rawStocks: [Stock] = [
             Stock(symbol: "AAPL", name: "Apple Inc.", price: 151.30, previousPrice: 149.99, isPriceUp: true, qty: 100, averageBuyPrice: 145, sector: "IT", currency: "USD", exchange: "NASDAQ", isFavorite: false),
@@ -45,6 +44,8 @@ struct MockStockData {
     static var sectors: [String] {
         Set(allStocks.map { $0.sector }).sorted()
     }
+    
+    
 }
 
 

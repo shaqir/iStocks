@@ -30,13 +30,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DF05449E2E1204CE00C7CF1A /* Exceptions for "iStocksTests" folder in "iStocksUITests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Publisher.swift,
-			);
-			target = DF4A64E12DF49CF700F2F879 /* iStocksUITests */;
-		};
 		DF3105DB2E107935000F970D /* Exceptions for "iStocks" folder in "iStocks" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -57,9 +50,6 @@
 		};
 		DF4A64DB2DF49CF700F2F879 /* iStocksTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DF05449E2E1204CE00C7CF1A /* Exceptions for "iStocksTests" folder in "iStocksUITests" target */,
-			);
 			path = iStocksTests;
 			sourceTree = "<group>";
 		};
@@ -329,6 +319,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -393,6 +384,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;

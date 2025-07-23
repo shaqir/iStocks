@@ -13,11 +13,11 @@ struct StockPickerView: View {
     @ObservedObject var viewModel: EditWatchlistViewModel
     @Environment(\.dismiss) private var dismiss
     let onDone: (Watchlist) -> Void
-
+    
     private let maxSelectable = AppConstants.maxStocksPerWatchlist
     
     var body: some View {
-       
+        
         NavigationStack {
             VStack(spacing: 0) {
                 searchBar

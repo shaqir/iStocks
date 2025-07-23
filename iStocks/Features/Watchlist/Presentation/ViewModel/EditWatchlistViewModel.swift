@@ -18,6 +18,10 @@ final class EditWatchlistViewModel: ObservableObject {
 
     /// Emits validated Watchlist when saved
     let onSave = PassthroughSubject<Watchlist, Never>()
+        
+    //test
+    var existingNames: [String] = []
+
 
     init(watchlist: Watchlist, availableStocks: [Stock], isNewWatchlist: Bool = false) {
         self.name = watchlist.name
@@ -62,14 +66,26 @@ final class EditWatchlistViewModel: ObservableObject {
     }
 
     // MARK: - Save
+    
     func validateAndReturnWatchlist() throws -> Watchlist {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
         guard !trimmed.isEmpty else {
             throw WatchlistValidationError.emptyName
         }
+
         guard !selectedStocks.isEmpty else {
             throw StockValidationError.mustHaveAtLeastOne
         }
+
+        guard selectedStocks.count <= AppConstants.maxStocksPerWatchlist else {
+            throw StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist)
+        }
+
+        if existingNames.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) {
+            throw WatchlistValidationError.duplicateName
+        }
+
         return Watchlist(id: originalWatchlistID, name: trimmed, stocks: selectedStocks)
     }
 

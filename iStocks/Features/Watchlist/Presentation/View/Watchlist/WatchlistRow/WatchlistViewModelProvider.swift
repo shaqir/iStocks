@@ -8,13 +8,28 @@
 import Foundation
 import Combine
 
+//main codebase
+protocol WatchlistViewModelProvider {
+    func makeWatchlistViewModel(for watchlist: Watchlist) -> WatchlistViewModel
+    func viewModel(for watchlist: Watchlist) -> WatchlistViewModel
+
+    /// Cache of WatchlistViewModels by their Watchlist ID (UUID)
+    var cache: [UUID: WatchlistViewModel] { get set }
+    
+    /// All available stocks (used for creating ViewModels)
+    var allStocks: [Stock] { get set }
+
+    /// Publishes structural updates to watchlists
+    var watchlistDidUpdate: PassthroughSubject<Watchlist, Never> { get }
+
+    /// Optional diagnostic accessor for all ViewModels
+    var cachedViewModels: [WatchlistViewModel] { get }
+}
 /// Provides cached WatchlistViewModels for each Watchlist.
 /// Manages structural change subscriptions and exposes updates downstream.
-final class WatchlistViewModelProvider {
-    
-    // Cache of WatchlistViewModels by their Watchlist ID (UUID)
-    private var cache: [UUID: WatchlistViewModel] = [:]
-    
+
+final class DefaultWatchlistViewModelProvider: WatchlistViewModelProvider {
+   
     // Keeps references to Combine subscriptions for each ViewModel
     private var cancellables: [UUID: AnyCancellable] = [:]
     
@@ -27,16 +42,19 @@ final class WatchlistViewModelProvider {
     var watchlistDidUpdate = PassthroughSubject<Watchlist, Never>()
     
     /// Use case for observing live updates for an individual watchlist (REST mode)
-    private let useCases: WatchlistUseCases
+    let useCases: WatchlistUseCases
     
     /// Convenience accessor for testing or diagnostics
+    var cache: [UUID : WatchlistViewModel]
+    
     var cachedViewModels: [WatchlistViewModel] {
-        cache.values.map { $0 }
+        Array(cache.values)
     }
     
     /// Dependency Injection of use case
     init(useCases: WatchlistUseCases) {
         self.useCases = useCases
+        self.cache = [:]
     }
     
     /// Returns a cached WatchlistViewModel or creates a new one if not already cached
@@ -92,5 +110,10 @@ final class WatchlistViewModelProvider {
         cancellables[id] = nil
     }
 
+    func makeWatchlistViewModel(for watchlist: Watchlist) -> WatchlistViewModel {
+        let vm = WatchlistViewModel(watchlist: watchlist, availableStocks: allStocks)
+        cache[watchlist.id] = vm
+        return vm
+    }
    
 }

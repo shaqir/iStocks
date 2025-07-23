@@ -86,6 +86,7 @@ final class WatchlistDIContainer {
 
     // MARK: - ViewModel Factory
     static func makeWatchlistsViewModel(
+        mode: WatchlistAppMode,
         context: ModelContext,
         viewModelProvider: WatchlistViewModelProvider
     ) -> WatchlistsViewModel {

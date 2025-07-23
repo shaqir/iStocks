@@ -68,7 +68,7 @@ struct WatchlistTabView: View {
                     .receive(on: DispatchQueue.main)
                     .sink { updated in
                         Logger.log("watchlistDidUpdate received for: \(updated.name).", category: "WatchlistTabView")
-                        viewModel.updateWatchlist(id: updated.id, with: updated)
+                        viewModel.updateWatchlist(updated)
                     }
                     .store(in: &combineCancellables)
             }
@@ -87,7 +87,7 @@ struct WatchlistTabView: View {
                                  didSaveSubject: didSaveSubject,
                                  isNewWatchlist: false, availableStocks: viewModel.allFetchedStocks)
             .onReceive(didSaveSubject) { updated in
-                viewModel.updateWatchlist(id: updated.id, with: updated)
+                viewModel.updateWatchlist(updated)
                 watchlistToEdit = nil
             }
         }
@@ -99,8 +99,7 @@ struct WatchlistTabView: View {
                 availableStocks: viewModel.allFetchedStocks
             )
             .onReceive(didSaveSubject) { saved in
-                viewModel.addWatchlist(id: saved.id, with: saved)
-                self.newWatchlist = nil
+                viewModel.addWatchlist(saved)
             }
         }
     }
@@ -160,10 +159,9 @@ struct WatchlistTabBar: View {
                     }
                 }
             }
-            
             Button {
                 if viewModel.watchlists.count >= AppConstants.maxWatchlists {
-                    SharedAlertManager.shared.show(WatchlistValidationError.tooManyWatchlists.alert)
+                    SharedAlertManager.shared.show(WatchlistValidationError.limitReached.alert)
                 } else {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     newWatchlist = Watchlist.empty()
@@ -197,7 +195,7 @@ struct WatchlistTabContent: View {
         TabView(selection: selectedTabBinding) {
             ForEach(Array(viewModel.watchlists.enumerated()), id: \.element.id) { index, watchlist in
                
-                let tabViewModel = viewModelProvider.viewModel(for: watchlist)
+                let tabViewModel = viewModelProvider.makeWatchlistViewModel(for: watchlist)
                 
                 let offsetBinding = Binding<CGFloat>(
                     get: { scrollOffsets[watchlist.id, default: 0] },

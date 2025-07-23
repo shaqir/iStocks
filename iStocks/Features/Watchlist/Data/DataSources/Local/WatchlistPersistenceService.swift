@@ -8,13 +8,8 @@ import Foundation
 import SwiftData
 
 final class WatchlistPersistenceService {
-    
     let context: ModelContext
-    
-    init(context: ModelContext) {
-        self.context = context
-    }
-    
+    init(context: ModelContext) { self.context = context }
 }
 
 extension WatchlistPersistenceService {

@@ -80,7 +80,7 @@ struct EditAllWatchlistsView: View {
 
     private func addNewWatchlist() {
         guard watchlists.count < AppConstants.maxWatchlists else {
-            SharedAlertManager.shared.show(WatchlistValidationError.tooManyWatchlists.alert)
+            SharedAlertManager.shared.show(WatchlistValidationError.limitReached.alert)
             return
         }
         let newWatchlist = Watchlist.empty()

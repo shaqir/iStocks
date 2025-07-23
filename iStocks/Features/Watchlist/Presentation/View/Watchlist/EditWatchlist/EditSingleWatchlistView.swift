@@ -10,23 +10,23 @@ import Combine
 
 struct EditSingleWatchlistView: View {
     @Environment(\.dismiss) private var dismiss
-
+    
     var watchlistDidSave: PassthroughSubject<Watchlist, Never>
-
+    
     @StateObject var viewModel: EditWatchlistViewModel
-
+    
     init(viewModel: EditWatchlistViewModel, watchlistDidSave: PassthroughSubject<Watchlist, Never>) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.watchlistDidSave = watchlistDidSave
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 nameField
                 searchField
                 infoBanner
-
+                
                 List {
                     ForEach(viewModel.filteredStocks) { stock in
                         stockRow(stock)
@@ -46,9 +46,9 @@ struct EditSingleWatchlistView: View {
             }
         }
     }
-
+    
     // MARK: - UI Components
-
+    
     private var nameField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Watchlist Name")
@@ -59,7 +59,7 @@ struct EditSingleWatchlistView: View {
         }
         .padding()
     }
-
+    
     private var searchField: some View {
         HStack {
             Image(systemName: "magnifyingglass")
@@ -76,7 +76,7 @@ struct EditSingleWatchlistView: View {
         .cornerRadius(10)
         .padding(.horizontal)
     }
-
+    
     private var infoBanner: some View {
         Text("\(viewModel.selectedStocks.count)/\(AppConstants.maxStocksPerWatchlist) stocks added")
             .font(.caption)
@@ -84,11 +84,11 @@ struct EditSingleWatchlistView: View {
             .padding(.horizontal)
             .padding(.top, 8)
     }
-
+    
     private func stockRow(_ stock: Stock) -> some View {
         let isSelected = viewModel.selectedStocks.contains(where: { $0.symbol == stock.symbol })
         let isDisabled = !isSelected && viewModel.selectedStocks.count >= AppConstants.maxStocksPerWatchlist
-
+        
         return HStack {
             VStack(alignment: .leading) {
                 Text(stock.symbol).font(.headline)
@@ -105,7 +105,7 @@ struct EditSingleWatchlistView: View {
             handleToggle(stock, isSelected: isSelected, isDisabled: isDisabled)
         }
     }
-
+    
     private func handleToggle(_ stock: Stock, isSelected: Bool, isDisabled: Bool) {
         if isDisabled && !isSelected {
             SharedAlertManager.shared.show(
@@ -113,7 +113,7 @@ struct EditSingleWatchlistView: View {
             )
             return
         }
-
+        
         if isSelected {
             if viewModel.selectedStocks.count == 1 {
                 SharedAlertManager.shared.show(StockValidationError.mustHaveAtLeastOne.alert)
@@ -124,9 +124,8 @@ struct EditSingleWatchlistView: View {
             viewModel.addStock(stock)
         }
     }
-
+    
     // MARK: - Save
-
     private func handleSave() {
         do {
             let updatedWatchlist = try viewModel.validateAndReturnWatchlist()
@@ -135,19 +134,21 @@ struct EditSingleWatchlistView: View {
                 watchlistDidSave.send(updatedWatchlist)
             }
             dismiss()
-        } catch let e as StockValidationError {
-            SharedAlertManager.shared.show(e.alert)
-        } catch let e as WatchlistValidationError {
-            SharedAlertManager.shared.show(e.alert)
         } catch {
-            SharedAlertManager.shared.show(
-                SharedAlertData(
-                    title: "Unexpected Error",
-                    message: error.localizedDescription,
-                    icon: "exclamationmark.triangle.fill",
-                    action: nil
+            if let stockError = error as? StockValidationError {
+                SharedAlertManager.shared.show(stockError.alert)
+            } else if let nameError = error as? WatchlistValidationError {
+                SharedAlertManager.shared.show(nameError.alert)
+            } else {
+                SharedAlertManager.shared.show(
+                    SharedAlertData(
+                        title: "Unexpected Error",
+                        message: error.localizedDescription,
+                        icon: "exclamationmark.triangle.fill",
+                        action: nil
+                    )
                 )
-            )
+            }
         }
     }
 }

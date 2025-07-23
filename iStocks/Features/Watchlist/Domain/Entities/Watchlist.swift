@@ -90,3 +90,19 @@ extension Watchlist {
         Watchlist(id: UUID(), name: "", stocks: [])
     }
 }
+
+
+extension Watchlist {
+    func copyWith(
+        id: UUID? = nil,
+        name: String? = nil,
+        stocks: [Stock]? = nil
+    ) -> Watchlist {
+        return Watchlist(
+            id: id ?? self.id,
+            name: name ?? self.name,
+            stocks: stocks ?? self.stocks
+        )
+    }
+}
+

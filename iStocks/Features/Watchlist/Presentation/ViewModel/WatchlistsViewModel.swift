@@ -23,7 +23,7 @@ final class WatchlistsViewModel: ObservableObject {
     // MARK: - Dependencies
     let useCases: WatchlistUseCases
     let persistenceService: WatchlistPersistenceService
-    private let viewModelProvider: WatchlistViewModelProvider
+    private var viewModelProvider: WatchlistViewModelProvider
     
     // MARK: - Private State
     private var cancellables = Set<AnyCancellable>()
@@ -33,6 +33,10 @@ final class WatchlistsViewModel: ObservableObject {
 
     //MARK: - Only for REST APIs
     @Published var currentBatchProgress: BatchProgress? = nil
+    
+    /// Emits structural changes to individual watchlists
+    let watchlistDidChange = PassthroughSubject<Watchlist, Never>()
+
     
     // MARK: - Init
     init(
@@ -50,7 +54,7 @@ final class WatchlistsViewModel: ObservableObject {
         
         viewModelProvider.watchlistDidUpdate
             .sink { [weak self] updated in
-                self?.updateWatchlist(id: updated.id, with: updated)
+                self?.updateWatchlist(updated)
             }
             .store(in: &cancellables)
         
@@ -272,24 +276,68 @@ extension WatchlistsViewModel {
 // MARK: - Watchlist Modifiers & Persistence Methods
 
 extension WatchlistsViewModel {
-    
-    func addWatchlist(id: UUID, with newWatchlist: Watchlist) {
-        watchlists.append(newWatchlist)
+   
+    func addWatchlist(_ watchlist: Watchlist) {
+        guard watchlists.count < AppConstants.maxWatchlists else {
+            SharedAlertManager.shared.show(WatchlistValidationError.limitReached.alert)
+            return
+        }
+        watchlists.append(watchlist)
         saveAllWatchlists()
     }
     
     /// Update an existing watchlist and persist changes
-    func updateWatchlist(id: UUID, with updated: Watchlist) {
-        if let index = watchlists.firstIndex(where: { $0.id == id }) {
+    func updateWatchlist(_ updated: Watchlist) {
+        if let index = watchlists.firstIndex(where: { $0.id == updated.id }) {
             watchlists[index] = updated
-            persistenceService.updateWatchlist(updated)
+            saveAllWatchlists()
+            watchlistDidChange.send(updated) //emit
         }
     }
     
     /// Save all watchlists to persistent storage
+    
     func saveAllWatchlists() {
         persistenceService.saveWatchlists(watchlists)
     }
+    
+    // MARK: - Internal test hook: do not use in production
+    func test_removeWatchlist(_ watchlist: Watchlist) {
+        watchlists.removeAll { $0.id == watchlist.id }
+        saveAllWatchlists()
+    }
+    
+    // MARK: - Internal test hook: do not use in production
+    func test_updateStockPrices(_ updated: [Stock]) {
+        let priceMap = Dictionary(uniqueKeysWithValues: updated.map { ($0.symbol, $0.price) })
+        
+        for index in watchlists.indices {
+            let watchlist = watchlists[index]
+            let updatedStocks = watchlist.stocks.map { stock -> Stock in
+                if let newPrice = priceMap[stock.symbol] {
+                    return stock.copyWith(price: newPrice)
+                }
+                return stock
+            }
+            watchlists[index] = watchlist.copyWith(stocks: updatedStocks)
+        }
+    }
+    
+    // MARK: - Internal test hook: do not use in production
+    func test_replacePrices(_ updatedStocks: [Stock]) {
+        let priceMap = Dictionary(uniqueKeysWithValues: updatedStocks.map { ($0.symbol, $0.price) })
+
+        watchlists = watchlists.map { oldWatchlist in
+            let updatedStocks = oldWatchlist.stocks.map { stock -> Stock in
+                guard let newPrice = priceMap[stock.symbol] else { return stock }
+                return stock.copyWith(price: newPrice)
+            }
+            return oldWatchlist.copyWith(stocks: updatedStocks)
+        }
+
+        Logger.log("[MockUpdate] Sent price updates to all watchlists.", category: "WatchlistsVM")
+    }
+
 }
 
 // MARK:- WebSocket Mode

@@ -7,13 +7,14 @@
 
 import Foundation
 
-enum WatchlistValidationError: Error {
+enum WatchlistValidationError: Error, Equatable {
     case nameRequired
     case noStocksAdded
     case unexpectedError(String)
-    case tooManyWatchlists
+    case limitReached
     case atLeastOneStockRequired
     case emptyName
+    case duplicateName
     
     var alert: SharedAlertData {
         switch self {
@@ -36,7 +37,7 @@ enum WatchlistValidationError: Error {
                 icon: "exclamationmark.triangle.fill",
                 action: nil
             )
-        case .tooManyWatchlists:
+        case .limitReached:
             return SharedAlertData(
                 title: "Maximum Watchlists Reached.",
                 message: "You can create a maximum of \(AppConstants.maxWatchlists) watchlists.",
@@ -53,6 +54,12 @@ enum WatchlistValidationError: Error {
             return SharedAlertData(
                 title: "Empty Name",
                 message: "Watchlist name cannot be empty.",
+                icon: "exclamationmark.triangle.fill", action: nil
+            )
+        case .duplicateName:
+            return SharedAlertData(
+                title: "Duplicate Name",
+                message: "A watchlist with this name already exists.",
                 icon: "exclamationmark.triangle.fill", action: nil
             )
         }
