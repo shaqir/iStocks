@@ -12,7 +12,20 @@ final class WatchlistPersistenceService {
     init(context: ModelContext) { self.context = context }
 }
 
-extension WatchlistPersistenceService {
+protocol WatchlistPersistenceProtocol {
+    func loadWatchlists() -> [Watchlist]
+    func saveWatchlists(_ watchlists: [Watchlist])
+    func saveWatchlist(_ watchlist: Watchlist)
+    func deleteWatchlist(_ watchlist: Watchlist)
+    func clearWatchlists()
+    
+    // Add these for REST repo
+    func loadAllStocks() -> [Stock]
+    func saveAllStocks(_ stocks: [Stock])
+    func clearAllStocks()
+}
+
+extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
     
     // MARK: - Watchlist Persistence
 
@@ -53,22 +66,39 @@ extension WatchlistPersistenceService {
         }
     }
 
-    func updateWatchlist(_ updated: Watchlist) {
-        let watchlistID = updated.id
-        
-        let descriptor = FetchDescriptor<WatchlistEntity>(
-            predicate: #Predicate { $0.id == watchlistID },
-            sortBy: [SortDescriptor(\.orderIndex)]
+    func saveWatchlist(_ watchlist: Watchlist) {
+        guard !watchlist.stocks.isEmpty else { return }
+
+        let entity = WatchlistEntity(
+            id: watchlist.id,
+            name: watchlist.name,
+            stocks: watchlist.stocks.compactMap { StockEntity.from($0) },
+            orderIndex: 0
         )
-        
-        if let entity = try? context.fetch(descriptor).first {
-            entity.name = updated.name
-            entity.stocks = updated.stocks.compactMap { StockEntity.from($0) }
-            do {
+        context.insert(entity)
+        do {
+            try context.save()
+        } catch {
+            Logger.log("Failed to save single watchlist: \(error.localizedDescription)")
+        }
+    }
+
+    func replaceAll(with newWatchlists: [Watchlist]) {
+        saveWatchlists(newWatchlists)
+    }
+    
+    func updateWatchlist(_ updated: Watchlist) {
+        let id = updated.id
+        let descriptor = FetchDescriptor<WatchlistEntity>(predicate: #Predicate { $0.id == id })
+
+        do {
+            if let existing = try context.fetch(descriptor).first {
+                existing.name = updated.name
+                existing.stocks = updated.stocks.compactMap { StockEntity.from($0) }
                 try context.save()
-            } catch {
-                Logger.log("Failed to save context: \(error.localizedDescription)")
             }
+        } catch {
+            Logger.log("Failed to update watchlist: \(error.localizedDescription)")
         }
     }
 
@@ -82,6 +112,21 @@ extension WatchlistPersistenceService {
             try context.save()
         } catch {
             Logger.log("Failed to clear Watchlists: \(error.localizedDescription)")
+        }
+    }
+    
+    func deleteWatchlist(_ watchlist: Watchlist) {
+        let idToDelete = watchlist.id
+        let descriptor = FetchDescriptor<WatchlistEntity>(
+            predicate: #Predicate { $0.id == idToDelete }
+        )
+        do {
+            if let entity = try context.fetch(descriptor).first {
+                context.delete(entity)
+                try context.save()
+            }
+        } catch {
+            Logger.log("Failed to delete watchlist: \(error.localizedDescription)")
         }
     }
     
@@ -134,10 +179,4 @@ extension WatchlistPersistenceService {
     }
     
 }
- 
-// MARK: - WebSocket mode
-
-extension WatchlistPersistenceService{
-    
-    
-}
+  

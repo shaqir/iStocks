@@ -28,29 +28,55 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
 
     private let networkClient: NetworkClient
     private var cancellables = Set<AnyCancellable>()
+    private let batchDelay: TimeInterval
     
     // MARK: - Init
 
-    init(networkClient: NetworkClient) {
-        self.networkClient = networkClient
-    }
+    init(networkClient: NetworkClient, batchDelay: TimeInterval = 60) {
+            self.networkClient = networkClient
+            self.batchDelay = batchDelay
+        }
 
     // MARK: - Public Methods
 
+    func fetchRealtimePricesAsync(for symbols: [String]) async throws -> [Stock] {
+        try await withCheckedThrowingContinuation { continuation in
+            self.fetchRealtimePrices(for: symbols)
+                .sink(receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        continuation.resume(throwing: error)
+                    }
+                }, receiveValue: { stocks in
+                    continuation.resume(returning: stocks)
+                })
+                .store(in: &self.cancellables)
+        }
+    }
+    
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
-        
+        print("Calling fetchRealtimePrices with symbols:", symbols)
         return networkClient.request(endpoint)
             .tryMap { (response: StockQuoteDynamicResponse) in
-                        switch response {
-                        case .dictionary(let map):
-                            Logger.log("Dictionary-response", category: "StockQuoteDynamicResponse")
-                            return try QuoteResponseMapper.map(map)
-                        case .single(let wrapper):
-                            Logger.log("single-response", category: "StockQuoteDynamicResponse")
-                            return try QuoteResponseMapper.map(["SINGLE": wrapper])
-                        }
+                print("Response received for symbols:", symbols)
+                switch response {
+                case .dictionary(let map):
+                    Logger.log("Dictionary-response: \(map)", category: "StockQuoteDynamicResponse")
+                    let stocks = try QuoteResponseMapper.map(map)
+                    guard !stocks.isEmpty else {
+                        throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
                     }
+                    return stocks
+
+                case .single(let wrapper):
+                    Logger.log("single-response \(wrapper)", category: "StockQuoteDynamicResponse")
+                    let stocks = try QuoteResponseMapper.map(["SINGLE": wrapper])
+                    guard !stocks.isEmpty else {
+                        throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
+                    }
+                    return stocks
+                }
+            }
             .mapError(self.handleAndMapToAppError(_:))
             .eraseToAnyPublisher()
     }
@@ -124,7 +150,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                         }
                         updatedRetryCounts[index] += 1
 
-                        DispatchQueue.global().asyncAfter(deadline: .now() + 60) { [weak self] in
+                        DispatchQueue.global().asyncAfter(deadline: .now() + self.batchDelay) { [weak self] in
                             self?.fetchSequentiallyWithRetry(
                                 batches: batches,
                                 subject: subject,
@@ -171,3 +197,4 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         return appError
     }
 }
+

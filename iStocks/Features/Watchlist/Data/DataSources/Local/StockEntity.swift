@@ -19,6 +19,8 @@ class StockEntity {
     var averageBuyPrice: Double
     var qty: Double
     var sector: String
+    
+    @Relationship var watchlist: WatchlistEntity?  // inverse relationship here
 
     init(
         id: UUID = UUID(),
@@ -28,7 +30,8 @@ class StockEntity {
         isPriceUp: Bool,
         averageBuyPrice: Double,
         qty: Double,
-        sector: String
+        sector: String,
+        watchlist: WatchlistEntity? = nil
     ) {
         self.id = id
         self.symbol = symbol
@@ -38,6 +41,7 @@ class StockEntity {
         self.averageBuyPrice = averageBuyPrice
         self.qty = qty
         self.sector = sector
+        self.watchlist = watchlist
     }
 }
 
@@ -58,7 +62,7 @@ extension StockEntity {
         )
     }
 
-    static func from(_ stock: Stock) -> StockEntity? {
+    static func from(_ stock: Stock, watchlist: WatchlistEntity? = nil) -> StockEntity? {
         guard !stock.symbol.isEmpty,
               stock.price.isFinite,
               stock.previousPrice.isFinite,
@@ -77,7 +81,8 @@ extension StockEntity {
             isPriceUp: stock.isPriceUp,
             averageBuyPrice: stock.averageBuyPrice,
             qty: stock.qty,
-            sector: stock.sector
+            sector: stock.sector,
+            watchlist: watchlist
         )
     }
 

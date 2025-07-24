@@ -49,10 +49,11 @@ final class URLSessionNetworkClient: NetworkClient {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
-
+    /*
     // MARK: - Closure
     func request<T: Decodable>(_ endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
         Logger.log("request - Closure Decodable: \(endpoint)", category: "URLSessionNetworkClient")
+        
         guard let url = endpoint.url else {
             completion(.failure(NetworkError.invalidURL))
             return
@@ -61,15 +62,16 @@ final class URLSessionNetworkClient: NetworkClient {
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
 
-        session.dataTask(with: request) { data, response, error in
+        session.dataTask(with: request) { [decoder = self.decoder] data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    return completion(.failure(error))
+                    completion(.failure(error))
+                    return
                 }
 
                 do {
                     let validData = try self.validate(data: data, response: response)
-                    let decoded = try self.decoder.decode(T.self, from: validData)
+                    let decoded = try decoder.decode(T.self, from: validData)
                     completion(.success(decoded))
                 } catch {
                     completion(.failure(error))
@@ -77,6 +79,7 @@ final class URLSessionNetworkClient: NetworkClient {
             }
         }.resume()
     }
+    */
 
     // MARK: - Async/Await
     func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {

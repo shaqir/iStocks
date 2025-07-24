@@ -8,6 +8,7 @@ import Foundation
 
 //The Domain Model: This is the model your app logic and UI should use.
 struct Stock: Identifiable, Decodable, Equatable {
+    
     var id: String { symbol } // Stable ID : // derive ID from symbol for uniqueness
     let symbol: String
     let name: String
@@ -46,13 +47,12 @@ struct Stock: Identifiable, Decodable, Equatable {
 }
 
 extension Stock {
+    
     var priceChangeText: String {
         let diff = price - previousPrice
         return String(format: "%@%.2f", diff >= 0 ? "+" : "", diff)
     }
-}
-
-extension Stock {
+    
     static func dummy() -> Stock {
         Stock(
             symbol: "AAPL",
@@ -61,17 +61,14 @@ extension Stock {
             previousPrice: 120.0,
             isPriceUp: true,
             qty: 10,
-            averageBuyPrice: 100.0, 
+            averageBuyPrice: 100.0,
             sector: "Technology",
             currency: "$",
             exchange: "NASDAQ",
             isFavorite: false
         )
     }
-}
- 
-
-extension Stock {
+    
     func updatedPrice(_ newPrice: Double) -> Stock {
         Stock(
             symbol: self.symbol,
@@ -88,9 +85,7 @@ extension Stock {
             
         )
     }
-}
-
-extension Stock {
+    
     func copyWith(
         symbol: String? = nil,
         name: String? = nil,
@@ -118,4 +113,21 @@ extension Stock {
             isFavorite: isFavorite ?? self.isFavorite
         )
     }
+    
+    static func mock(symbol: String = "MOCK") -> Stock {
+        Stock(
+            symbol: symbol,
+            name: symbol,
+            price: 100,
+            previousPrice: 90,
+            isPriceUp: true,
+            qty: 0,
+            averageBuyPrice: 0,
+            sector: "Tech",
+            currency: "USD",
+            exchange: "NASDAQ",
+            isFavorite: false
+        )
+    }
 }
+ 

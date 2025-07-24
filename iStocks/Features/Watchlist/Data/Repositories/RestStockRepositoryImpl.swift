@@ -10,7 +10,7 @@ import Combine
 final class RestStockRepositoryImpl: RestStockRepository {
     
     private let remoteDataSource: StockRemoteDataSourceProtocol
-    private let persistenceService: WatchlistPersistenceService
+    private let persistenceService: WatchlistPersistenceProtocol
 
     @Published var batchProgress: BatchProgress? = nil
 
@@ -20,7 +20,7 @@ final class RestStockRepositoryImpl: RestStockRepository {
                 .eraseToAnyPublisher()
         }
     
-    init(service: StockRemoteDataSourceProtocol, persistenceService: WatchlistPersistenceService) {
+    init(service: StockRemoteDataSourceProtocol, persistenceService: WatchlistPersistenceProtocol) {
            self.remoteDataSource = service
            self.persistenceService = persistenceService
     }

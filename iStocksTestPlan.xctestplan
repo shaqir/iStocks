@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "BD8169B6-5E6A-45DC-AB07-42011CE2C443",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:iStocks.xcodeproj",
+          "identifier" : "DF4A64C82DF49CF600F2F879",
+          "name" : "iStocks"
+        }
+      ]
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:iStocks.xcodeproj",
+        "identifier" : "DF6EEF832E31B44400459154",
+        "name" : "iStocksIntegrationTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:iStocks.xcodeproj",
+        "identifier" : "DF4A64D72DF49CF700F2F879",
+        "name" : "iStocksTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -26,7 +26,9 @@ enum NYSETop50Symbols {
         // Communication
         "VZ", "T", "TMUS", "DIS", "CMCSA",
         // Materials
-        "LIN", "SHW", "ECL", "DOW", "NEM"
+        "LIN", "SHW", "ECL", "DOW", "NEM",
+        
+        "TSLA", "AMZN", "NVDA", "META", "ADBE"
     ]
     
     static let top5 = ["AAPL", "MSFT", "TSLA", "GOOGL", "AMZN", "NVDA"]

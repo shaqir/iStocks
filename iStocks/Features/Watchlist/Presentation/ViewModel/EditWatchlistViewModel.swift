@@ -22,7 +22,6 @@ final class EditWatchlistViewModel: ObservableObject {
     //test
     var existingNames: [String] = []
 
-
     init(watchlist: Watchlist, availableStocks: [Stock], isNewWatchlist: Bool = false) {
         self.name = watchlist.name
         self.selectedStocks = watchlist.stocks
@@ -46,7 +45,7 @@ final class EditWatchlistViewModel: ObservableObject {
         return uniqueStocks(from: filtered)
     }
 
-    private func uniqueStocks(from stocks: [Stock]) -> [Stock] {
+    func uniqueStocks(from stocks: [Stock]) -> [Stock] {
         Dictionary(grouping: stocks, by: \.symbol)
             .compactMapValues { $0.first }
             .values
@@ -82,11 +81,29 @@ final class EditWatchlistViewModel: ObservableObject {
             throw StockValidationError.limitReached(num: AppConstants.maxStocksPerWatchlist)
         }
 
-        if existingNames.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) {
+        if existingNames.contains(where: {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(trimmed) == .orderedSame
+        }) {
             throw WatchlistValidationError.duplicateName
         }
 
         return Watchlist(id: originalWatchlistID, name: trimmed, stocks: selectedStocks)
     }
 
+    
+    //MARK: - Test Purpose
+    
+    func toggleStock(_ stock: Stock) {
+        if isSelected(stock) {
+            selectedStocks.removeAll(where: { $0.symbol == stock.symbol })
+        } else if selectedStocks.count < AppConstants.maxStocksPerWatchlist {
+            selectedStocks.append(stock)
+        }
+    }
+    
+    func isSelected(_ stock: Stock) -> Bool {
+        selectedStocks.contains(where: { $0.symbol == stock.symbol })
+    }
+    
 }
