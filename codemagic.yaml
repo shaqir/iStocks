@@ -4,12 +4,32 @@ workflows:
     environment:
       xcode: 15.2
     scripts:
-      - name: Install dependencies
+      - name: Resolve Swift Package dependencies
         script: |
-          brew install xcodegen
-          xcodegen
-      - name: Run tests
+          xcodebuild -resolvePackageDependencies \
+            -project iStocks.xcodeproj \
+            -scheme iStocks
+
+      - name: Clean Build
         script: |
-          xcodebuild test -workspace iStocks.xcworkspace -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+          xcodebuild clean \
+            -project iStocks.xcodeproj \
+            -scheme iStocks
+
+      - name: Run Unit Tests
+        script: |
+          xcodebuild test \
+            -project iStocks.xcodeproj \
+            -scheme iStocks \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+          
     artifacts:
       - build/ios/ipa/*.ipa
+
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
