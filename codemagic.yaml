@@ -1,0 +1,15 @@
+workflows:
+  ios-workflow:
+    name: iStocks iOS Build
+    environment:
+      xcode: 15.2
+    scripts:
+      - name: Install dependencies
+        script: |
+          brew install xcodegen
+          xcodegen
+      - name: Run tests
+        script: |
+          xcodebuild test -workspace iStocks.xcworkspace -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+    artifacts:
+      - build/ios/ipa/*.ipa
