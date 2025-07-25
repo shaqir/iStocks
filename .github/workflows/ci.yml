@@ -1,0 +1,35 @@
+name: iStocks iOS Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Clean Build
+      run: |
+        xcodebuild clean \
+        -project iStocks.xcodeproj \
+        -scheme iStocks
+
+    - name: Resolve Swift Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+        -project iStocks.xcodeproj \
+        -scheme iStocks
+
+    - name: Build
+      run: |
+        xcodebuild build \
+        -project iStocks.xcodeproj \
+        -scheme iStocks \
+        -destination 'platform=iOS Simulator,name=iPhone 14' \
+        CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
