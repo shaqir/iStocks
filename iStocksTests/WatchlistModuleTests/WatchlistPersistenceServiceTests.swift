@@ -112,4 +112,44 @@ final class WatchlistPersistenceServiceTests: XCTestCase {
         XCTAssertTrue(all.contains { $0.name == "Delta" })
     }
     
+    func test_clearWatchlists_shouldRemoveAll() throws {
+        let service = try makeService()
+        service.saveWatchlists([
+            mockWatchlist(name: "One"),
+            mockWatchlist(name: "Two")
+        ])
+        service.clearWatchlists()
+
+        let all = service.loadWatchlists()
+        XCTAssertEqual(all.count, 0)
+    }
+
+    func test_saveAllStocks_shouldPersistSuccessfully() throws {
+        let service = try makeService()
+        let stocks = MockStockData.allStocks.prefix(3).map { $0 }
+        service.saveAllStocks(stocks)
+
+        let loaded = service.loadAllStocks()
+        XCTAssertEqual(loaded.count, 3)
+    }
+
+    func test_loadAllStocks_shouldReturnPersistedStocks() throws {
+        let service = try makeService()
+        let stocks = MockStockData.allStocks.prefix(2).map { $0 }
+        service.saveAllStocks(stocks)
+
+        let loaded = service.loadAllStocks()
+        let loadedSymbols = Set(loaded.map { $0.symbol })
+        let originalSymbols = Set(stocks.map { $0.symbol })
+        XCTAssertEqual(loadedSymbols, originalSymbols)
+    }
+
+    func test_clearAllStocks_shouldDeleteAllPersistedStocks() throws {
+        let service = try makeService()
+        service.saveAllStocks(MockStockData.allStocks.prefix(5).map { $0 })
+        service.clearAllStocks()
+
+        let loaded = service.loadAllStocks()
+        XCTAssertEqual(loaded.count, 0)
+    }
 }

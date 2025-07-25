@@ -53,7 +53,6 @@ final class RestStockRepositoryImpl: RestStockRepository {
     }
     
     func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], any Error> {
-        remoteDataSource.fetchRealtimePrices(for: symbols)
-        
+        return remoteDataSource.fetchRealtimePrices(for: symbols)
     }
 }

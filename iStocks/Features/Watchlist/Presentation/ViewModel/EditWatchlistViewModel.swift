@@ -12,7 +12,7 @@ final class EditWatchlistViewModel: ObservableObject {
     @Published var selectedStocks: [Stock]
     @Published var searchText: String = ""
 
-    let availableStocks: [Stock]
+    var availableStocks: [Stock]
     let isNewWatchlist: Bool
     private let originalWatchlistID: UUID
 

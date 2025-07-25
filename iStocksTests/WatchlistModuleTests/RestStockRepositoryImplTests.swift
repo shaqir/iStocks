@@ -1,5 +1,5 @@
 //
-//  RestStockRepositoryTests.swift
+//  RestStockRepositoryImplTests.swift
 //  iStocksTests
 //
 //  Created by Sakir Saiyed on 2025-07-23.
@@ -10,7 +10,7 @@ import XCTest
 import Combine
 @testable import iStocks
 
-final class RestStockRepositoryTests: XCTestCase {
+final class RestStockRepositoryImplTests: XCTestCase {
     
     var sut: RestStockRepositoryImpl!
     var mockRemote: MockRemoteDataSource!

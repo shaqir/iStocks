@@ -23,6 +23,11 @@ enum QuoteResponseMapper {
             }
         }
 
+        if validStocks.isEmpty && !errorMessages.isEmpty {
+            Logger.log("Valid Stocks empty and errorMessages not empty")
+            throw TwelveDataAPIError.invalidSymbols(errorMessages)
+        }
+        
         if !errorMessages.isEmpty {
             Logger.log("errorMessages not empty \(errorMessages)")
             Logger.log("Quote mapping errors: \(errorMessages.joined(separator: ", "))", category: "REST")
@@ -32,11 +37,6 @@ enum QuoteResponseMapper {
         if validStocks.isEmpty {
             Logger.log("Valid Stocks Empty")
             throw AppError.api(message: "Invalid or empty response for symbols.")
-        }
-        
-        if validStocks.isEmpty && !errorMessages.isEmpty {
-            Logger.log("Valid Stocks empty and errorMessages not empty")
-            throw TwelveDataAPIError.invalidSymbols(errorMessages)
         }
         
         Logger.log("Valid Stocks")

@@ -38,21 +38,6 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         }
 
     // MARK: - Public Methods
-
-    func fetchRealtimePricesAsync(for symbols: [String]) async throws -> [Stock] {
-        try await withCheckedThrowingContinuation { continuation in
-            self.fetchRealtimePrices(for: symbols)
-                .sink(receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        continuation.resume(throwing: error)
-                    }
-                }, receiveValue: { stocks in
-                    continuation.resume(returning: stocks)
-                })
-                .store(in: &self.cancellables)
-        }
-    }
-    
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
         print("Calling fetchRealtimePrices with symbols:", symbols)
@@ -198,3 +183,22 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     }
 }
 
+
+//MARK : Only For Testing
+extension StockRemoteDataSource{
+    
+    func fetchRealtimePricesAsync(for symbols: [String]) async throws -> [Stock] {
+        try await withCheckedThrowingContinuation { continuation in
+            self.fetchRealtimePrices(for: symbols)
+                .sink(receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        continuation.resume(throwing: error)
+                    }
+                }, receiveValue: { stocks in
+                    continuation.resume(returning: stocks)
+                })
+                .store(in: &self.cancellables)
+        }
+    }
+    
+}

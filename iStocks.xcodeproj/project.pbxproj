@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DF6EED432E31A61B00459154 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		DFD987DC2E32CB5B00521086 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = DFD987DB2E32CB5B00521086 /* ViewInspector */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +87,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DF6EED432E31A61B00459154 /* (null) in Frameworks */,
+				DFD987DC2E32CB5B00521086 /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,6 +165,7 @@
 			);
 			name = iStocksTests;
 			packageProductDependencies = (
+				DFD987DB2E32CB5B00521086 /* ViewInspector */,
 			);
 			productName = iStocksTests;
 			productReference = DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */;
@@ -224,6 +227,7 @@
 			mainGroup = DF4A64C02DF49CF600F2F879;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				DFD987DA2E32CB5B00521086 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DF4A64CA2DF49CF600F2F879 /* Products */;
@@ -523,7 +527,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.download.iStocksIntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -543,7 +547,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.download.iStocksIntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -596,6 +600,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DFD987DA2E32CB5B00521086 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DFD987DB2E32CB5B00521086 /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFD987DA2E32CB5B00521086 /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DF4A64C12DF49CF600F2F879 /* Project object */;
 }

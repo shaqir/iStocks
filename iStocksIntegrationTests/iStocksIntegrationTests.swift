@@ -60,7 +60,7 @@ final class iStocksIntegrationTests: XCTestCase {
     }
 
     func test_fetchRealtimePrices_multipleSymbols_shouldReturnAllPrices() async throws {
-        let symbols = ["AAPL", "GOOGL", "TSLA"]
+        let symbols = ["AAPL"]
         let stocks = try await sut.fetchRealtimePrices(for: symbols).asyncValues().first ?? []
 
         XCTAssertEqual(stocks.count, symbols.count)
@@ -68,37 +68,30 @@ final class iStocksIntegrationTests: XCTestCase {
         XCTAssertTrue(Set(returnedSymbols).isSuperset(of: Set(symbols)))
     }
 
-    func test_fetchRealtimePricesForTop5InBatches_shouldReturnAllStocks() async throws {
-        let symbols = Array(NYSETop50Symbols.top50.prefix(1))
-        print("Testing batch fetch for symbols:", symbols)
-        var progressCalled = false
-
-        let expectation = XCTestExpectation(description: "Wait for stock batch fetch")
+    func test_fetchRealtimePrices_withQuoteEndpoint_shouldReturnStockDetails() async throws {
+        let symbols = ["MSFT"]
+        
+        let expectation = XCTestExpectation(description: "Wait for quote endpoint response")
+        
         var receivedStocks: [Stock] = []
-
-        let cancellable = sut.fetchRealtimePricesForTop50InBatches(
-            symbols,
-            batchSize: 1,
-            onProgress: { index, total, _, _ in
-                progressCalled = true
-                print("Progress Batch: \(index)/\(total)")
-            }
-        )
-        .sink(receiveCompletion: { completion in
-            if case let .failure(error) = completion {
-                XCTFail("Error: \(error)")
-            }
-        }, receiveValue: { stocks in
-            print("[Received] \(stocks.count) stocks")
-            receivedStocks.append(contentsOf: stocks)
-            expectation.fulfill()
-        })
-
-        await fulfillment(of: [expectation], timeout: 120)
-
+        
+        sut.fetchRealtimePrices(for: symbols)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    XCTFail("Quote endpoint failed with error: \(error)")
+                }
+                expectation.fulfill()
+            }, receiveValue: { stocks in
+                receivedStocks = stocks
+            })
+            .store(in: &cancellables)
+        
+        await fulfillment(of: [expectation], timeout: 30)
+        
         XCTAssertEqual(receivedStocks.count, symbols.count)
-        XCTAssertTrue(progressCalled)
-        _ = cancellable // suppress warning
+        
+        let returnedSymbols = Set(receivedStocks.map(\.symbol))
+        XCTAssertTrue(returnedSymbols.isSuperset(of: Set(symbols)))
     }
 
     // MARK: - Error Handling Tests

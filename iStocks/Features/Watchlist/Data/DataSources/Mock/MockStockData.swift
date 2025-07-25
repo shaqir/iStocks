@@ -44,8 +44,4 @@ struct MockStockData {
     static var sectors: [String] {
         Set(allStocks.map { $0.sector }).sorted()
     }
-    
-    
 }
-
-

@@ -68,9 +68,28 @@ func makeWatchlistUseCases(mode: WatchlistAppMode, mockRepo: any MockWatchlistRe
 
 func makeWatchlistsViewModel(mode: WatchlistAppMode = .mock) throws -> WatchlistsViewModel {
     let context = try makeInMemoryModelContext()
+    let persistenceService = WatchlistPersistenceService(context: context)
     let mockRepo = makeMockRepository()
     let useCases = makeWatchlistUseCases(mode: .mock, mockRepo: mockRepo)
+    let provider = MockWatchlistViewModelProvider(availableStocks: MockStockData.allStocks)
+
+    return WatchlistsViewModel(
+        useCases: useCases,
+        persistenceService: persistenceService,
+        viewModelProvider: provider
+    )
+}
+
+func makeWatchlistsViewModelWithMockData() throws -> WatchlistsViewModel {
+    let context = try makeInMemoryModelContext()
     let persistenceService = WatchlistPersistenceService(context: context)
+
+    // Inject mock watchlists
+    let mockWatchlists = WatchlistFactory.createMockWatchlists()
+    persistenceService.saveWatchlists(mockWatchlists)
+
+    let mockRepo = makeMockRepository()
+    let useCases = makeWatchlistUseCases(mode: .mock, mockRepo: mockRepo)
     let provider = MockWatchlistViewModelProvider(availableStocks: MockStockData.allStocks)
 
     return WatchlistsViewModel(
@@ -94,7 +113,7 @@ class WatchlistsViewModelTests: XCTestCase {
     // MARK: A. Setup & Load
 
     func test_loadWatchlists_inMockMode_shouldLoadInitialMockWatchlists() throws {
-        let viewModel = try makeWatchlistsViewModel()
+        let viewModel = try makeWatchlistsViewModelWithMockData()
         viewModel.loadWatchlists()
 
         let loadedNames = viewModel.watchlists.map { $0.name }
@@ -142,8 +161,15 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let duplicateName = viewModel.watchlists.first!.name
-        let selectedStock = viewModel.watchlists.first!.stocks.first!
+        guard let firstWatchlist = viewModel.watchlists.first,
+              let _ = firstWatchlist.stocks.first else {
+            return XCTFail("No watchlists or stocks found in setup")
+        }
+        
+        guard let duplicateName = viewModel.watchlists.first?.name,
+              let selectedStock = viewModel.watchlists.first?.stocks.first else {
+            return XCTFail("No valid watchlist or stock found for duplicate test.")
+        }
 
         let editVM = EditWatchlistViewModel(
             watchlist: Watchlist(id: UUID(), name: duplicateName, stocks: [selectedStock]),
@@ -199,7 +225,10 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        var edited = viewModel.watchlists.first!
+        guard var edited = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
+        
         edited.name = "Updated Name"
         viewModel.updateWatchlist(edited)
 
@@ -210,7 +239,9 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let original = viewModel.watchlists.first!
+        guard let original = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
         var modified = original
         modified.name = "Modified Name"
 
@@ -231,7 +262,9 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        var watchlist = viewModel.watchlists.first!
+        guard var watchlist = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
         watchlist.name = "New Name"
 
         viewModel.updateWatchlist(watchlist)
@@ -248,7 +281,9 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let toDelete = viewModel.watchlists.first!
+        guard let toDelete = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
         viewModel.test_removeWatchlist(toDelete)
         
 
@@ -259,7 +294,9 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let first = viewModel.watchlists.first!
+        guard let first = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
         viewModel.test_removeWatchlist(first)
 
         XCTAssertFalse(viewModel.watchlists.contains(first))
@@ -281,7 +318,10 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let base = viewModel.watchlists.first!
+        guard let base = viewModel.watchlists.first else {
+            return XCTFail("No watchlists available for test_addTooManyStocksToOneWatchlist_shouldRespectLimit")
+        }
+        
         let mockStocks = (0..<100).map {
             Stock(symbol: "SYM\($0)", name: "Dummy \($0)", price: Double($0), previousPrice: 0, isPriceUp: true, qty: 0, averageBuyPrice: 0, sector: "Tech", currency: "USD", exchange: "NSE", isFavorite: false)
         }
@@ -318,12 +358,21 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let before = viewModel.watchlists.first!.stocks.first!
-        let updated = before.withPriceIncremented(by: 10)
+        guard let firstWatchlist = viewModel.watchlists.first else {
+            return XCTFail("No watchlists found in mock setup.")
+        }
 
+        guard let before = firstWatchlist.stocks.first else {
+            return XCTFail("No stocks found in first watchlist.")
+        }
+
+        let updated = before.withPriceIncremented(by: 10)
         viewModel.test_updateStockPrices([updated])
 
-        let after = viewModel.watchlists.first!.stocks.first!
+        guard let after = viewModel.watchlists.first?.stocks.first else {
+            return XCTFail("No updated stock found.")
+        }
+
         XCTAssertEqual(after.price, before.price + 10)
         XCTAssertEqual(after.symbol, before.symbol)
     }
@@ -332,13 +381,20 @@ class WatchlistsViewModelTests: XCTestCase {
         let viewModel = try makeWatchlistsViewModel()
         viewModel.loadWatchlists()
 
-        let beforeCount = viewModel.watchlists.first!.stocks.count
-        let updates = viewModel.watchlists.first!.stocks.map { $0.withPriceIncremented(by: 1) }
+        guard let beforeCount = viewModel.watchlists.first else {
+            return XCTFail("No watchlists Stocks found in mock setup.")
+        }
+        
+        guard let firstwatchlist = viewModel.watchlists.first else {
+            return XCTFail("No watchlists Stocks found in mock setup.")
+        }
+        
+        let updates = firstwatchlist.stocks.map { $0.withPriceIncremented(by: 1) }
 
         viewModel.test_replacePrices(updates)
 
-        XCTAssertEqual(viewModel.watchlists.first!.stocks.count, beforeCount)
-        XCTAssertTrue(viewModel.watchlists.first!.stocks.allSatisfy { $0.price > 0 })
+        XCTAssertEqual(firstwatchlist.stocks.count, beforeCount.stocks.count)
+        XCTAssertTrue(firstwatchlist.stocks.allSatisfy { $0.price > 0 })
     }
 
     // MARK: F. Live Update Behavior

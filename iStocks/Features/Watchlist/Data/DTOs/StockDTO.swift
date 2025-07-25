@@ -12,8 +12,8 @@ import Foundation
 struct StockDTO: Decodable {
     let event: String?
     let symbol: String?
-    let close: String?
-    let previousClose: String?
+    var close: String?
+    var previousClose: String?
     let code: Int?
     let message: String?
     let status: String?
@@ -94,3 +94,4 @@ struct StockDTO: Decodable {
         )
     }
 }
+
