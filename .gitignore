@@ -1,0 +1,51 @@
+# Xcode build and workspace
+DerivedData/
+build/
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+*.xcuserdatad
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# Cocoapods (if used)
+Pods/
+Podfile.lock
+
+# Carthage (if used)
+Carthage/
+Cartfile.resolved
+
+# Coverage and Logs
+coverage.txt
+*.profdata
+*.xcresult
+*.log
+
+# Temporary files
+*.tmp
+*.DS_Store
+
+# CI/CD
+xcpretty-report.xml
+fastlane/report.xml
+fastlane/test_output/
+
+# Xcode Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# App artifacts
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Personal user data
+*.env
+*.key
+*.pem

@@ -1,4 +1,4 @@
-name: iStocks iOS Build
+name: Build and Test iStocks App
 
 on:
   push:
@@ -7,29 +7,81 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    runs-on: self-hosted
+  build-and-test:
+    runs-on: macos-14
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for accurate coverage
 
-    - name: Clean Build
-      run: |
-        xcodebuild clean \
-        -project iStocks.xcodeproj \
-        -scheme iStocks
+      - name: 🛠 Set Xcode 16.2 Beta
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
-    - name: Resolve Swift Package Dependencies
-      run: |
-        xcodebuild -resolvePackageDependencies \
-        -project iStocks.xcodeproj \
-        -scheme iStocks
+      - name: 💾 Cache DerivedData and SwiftPM
+        uses: actions/cache@v3
+        with:
+          path: |
+            DerivedData
+            ~/.swiftpm
+          key: ${{ runner.os }}-derived-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-
 
-    - name: Build
-      run: |
-        xcodebuild build \
-        -project iStocks.xcodeproj \
-        -scheme iStocks \
-        -destination 'platform=iOS Simulator,name=iPhone 14' \
-        CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+      - name: 📦 Resolve Swift Package Dependencies
+        run: xcodebuild -resolvePackageDependencies -project iStocks.xcodeproj
+
+      - name: 🧪 Build and Run Tests with Coverage
+        run: |
+          xcodebuild build-for-testing \
+            -project iStocks.xcodeproj \
+            -scheme iStocks \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+
+          xcodebuild test-without-building \
+            -project iStocks.xcodeproj \
+            -scheme iStocks \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -enableCodeCoverage YES \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: 📊 Convert Coverage to LCOV
+        run: |
+          mkdir -p coverage
+
+          TEST_BINARY=$(find DerivedData/Build/Products/Debug-iphonesimulator -type d -name "*.xctest" | head -n 1)
+          PROF_PATH=$(find DerivedData/Build/ProfileData -name "*.profdata" | head -n 1)
+          BINARY_EXECUTABLE=$(find "$TEST_BINARY" -type f -perm +111 -not -name "*.plist" | head -n 1)
+
+          echo "✅ Test Binary Dir: $TEST_BINARY"
+          echo "✅ Profdata: $PROF_PATH"
+          echo "✅ Executable: $BINARY_EXECUTABLE"
+
+          if [[ -z "$TEST_BINARY" || -z "$PROF_PATH" || -z "$BINARY_EXECUTABLE" ]]; then
+            echo "❌ Required coverage files not found"
+            exit 1
+          fi
+
+          xcrun llvm-cov export "$BINARY_EXECUTABLE" \
+            -instr-profile "$PROF_PATH" \
+            -format=lcov \
+            -ignore-filename-regex='(Tests|Pods|SourcePackages)' \
+            > coverage/coverage.txt
+
+      - name: ☁️ Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/coverage.txt
+          name: iStocks Coverage Report
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: 🧪 Debug Coverage Contents
+        run: |
+          echo "🔍 Showing first 20 lines of coverage.txt"
+          head -n 20 coverage/coverage.txt

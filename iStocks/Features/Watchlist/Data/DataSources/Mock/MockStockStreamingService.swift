@@ -44,7 +44,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
     private var timerCancellable: AnyCancellable?
     
     //Initializes the timer to fire every 1.5 seconds (or custom interval).
-    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 1.5) {
+    init(stocks: [Stock] = MockStockData.allStocks, interval: TimeInterval = 1.10) {
         self.stocks = stocks
         self.subject = CurrentValueSubject(stocks) // immediate snapshot to subscribers
         self.timer = Timer.publish(every: interval, on: .main, in: .common)

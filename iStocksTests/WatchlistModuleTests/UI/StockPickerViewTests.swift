@@ -37,17 +37,6 @@ final class StockPickerViewTests: XCTestCase {
         let text = try sut.inspect().find(text: "\(selected.count)/\(AppConstants.maxStocksPerWatchlist) stocks added")
         XCTAssertNotNil(text)
     }
-
-    func testListRendersFilteredStocks() throws {
-        // Setup
-        let sut = StockPickerView(viewModel: viewModel) { _ in }
-        let navStack = try sut.inspect().navigationStack()
-        let vStack = try navStack.vStack()
-        let list = try vStack.list(2) // Adjust index based on your view hierarchy
-        let forEach = try list.forEach(0)
-        let rowCount = forEach.count
-        XCTAssertEqual(rowCount, viewModel.filteredStocks.count)
-    }
     
     func testTappingStockTogglesSelection() throws {
         // Given

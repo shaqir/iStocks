@@ -1,186 +1,172 @@
-# iStocks – Real-Time Stock Tracker App
+# iStocks App
 
-[![Codemagic build status](https://api.codemagic.io/apps/YOUR_APP_ID/status_badge.svg)](https://codemagic.io/apps/6882e167f99be74b07eb63d1)
+A powerful and elegant **iOS stock tracking app** built with **SwiftUI**, **Combine**, and **MVVM CLEAN architecture**. 
 
-iStocks is a professional, scalable, and test-driven iOS app built with **Swift**, **SwiftUI**, **Combine**, and **Clean Architecture**. It mimics the experience of top trading platforms like Zerodha Kite, delivering real-time stock updates, custom watchlists, and a beautifully responsive UI.
+- It delivers real-time updates, organized watchlists, and a Kite Zerodha-inspired user experience.
+- This is a passion project for **CLEAN Architecutre** with latest tech stacks.
 
----
 
-## 🚀 Features
-
-- ✅ Real-time stock updates via WebSocket (Twelve Data API)
-- ✅ Watchlist creation, editing, and persistence
-- ✅ Smooth animations for price changes
-- ✅ Search bar with instant filtering
-- ✅ Add/remove stocks with validation and limits
-- ✅ Offline storage using SwiftData
-- ✅ Custom UI with top tabs, themes, and error handling
-- ✅ Modular MVVM with Clean Architecture
-- ✅ CI/CD via **Codemagic**
-- ✅ 90%+ Unit Test Coverage with ViewInspector
+&#x20;
 
 ---
 
-## 🧠 Architecture
+## 💠 Features
 
-This app follows a strict Clean Architecture with MVVM, designed for large-scale, maintainable projects.
+* 🔄 Real-time stock updates via **Mock data, REST API and WebSocket API**
+* 📊 Organized **Watchlists** with SwiftData persistence
+* 🔍 Search & pick stocks with intuitive UX
+* 📱 Built with **SwiftUI + Combine**
+* 🧠 Clean MVVM architecture + modular components
+* 🧪 Unit tested with **XCTest** + ViewInspector
+* ✅ Self-hosted **CI/CD with GitHub Actions** and Xcode 16
 
-📦 iStocks
-┣ 📁 Core                 # Models, DTOs, Mappers
-┣ 📁 Data                 # Remote APIs, Repositories, Persistence
-┣ 📁 Domain               # UseCases, Protocols, Entities
-┣ 📁 Presentation         # Views, ViewModels, UI State
-┗ 📁 Shared               # Utilities, Alerts, Constants
+---
 
-**Principles Used:**
-- ✅ MVVM + Combine
-- ✅ Clean Code & SOLID
-- ✅ Dependency Injection
-- ✅ Separation of Concerns
-- ✅ Reactive UI + Testable Layers
+## 💠 Tech Stack
+
+| Layer        | Tech/Tool                           |
+| ------------ | ----------------------------------- |
+| Language     | Swift 5.10                          |
+| UI           | SwiftUI                             |
+| Reactive     | Combine                             |
+| Architecture | MVVM + Clean Architecture           |
+| Persistence  | SwiftData                           |
+| Networking   | REST & WebSocket (Twelve Data API)  |
+| Testing      | XCTest + ViewInspector              |
+| CI/CD        | GitHub Actions + Self-Hosted Runner |
+
+---
+
+## 💠 Folder Structure
+
+```
+iStocks/
+│
+├── iStocksApp.swift
+├── Resources/                  # Assets, fonts
+├── Models/                     # Stock, Watchlist domain models
+├── Views/                      # SwiftUI Views (Watchlist, Picker, Tabs)
+├── ViewModels/                 # MVVM logic with Combine
+├── Services/                   # API Clients, WebSocket, Persistence
+├── UseCases/                   # Business Usecases
+├── Domain/                     # Domain Logic and models
+├── Repositories/               # Repository protocols, implementations 
+├── DI/                         # Dependency injection setup
+├── Tests/                      # XCTest Unit Tests
+└── Utilities/                  # Extensions, Constants, Helpers
+```
+<img width="510" height="708" alt="Structure" src="https://github.com/user-attachments/assets/433ec79f-0ca7-4126-99c4-a35b4b48cdd9" />
+
+---
+
+## 💠 CI/CD Pipeline
+
+This project uses a **self-hosted GitHub Actions runner on macOS with Xcode 16**.
+
+### 🔧 Workflow Summary (`.github/workflows/ci.yml`)
+
+* Checkout source code
+* Set correct Xcode version
+* Cache DerivedData and SwiftPM
+* Clean build with `xcodebuild`
+* Resolve dependencies
+* Build for iPhone 16 simulator
+* (Optional) Run Unit Tests & Report Coverage
+
+> You can customize this workflow for TestFlight or Fastlane integration later.
+
+[![codecov](https://codecov.io/gh/sakirsaiyed/iStocks/branch/main/graph/badge.svg)](https://codecov.io/gh/sakirsaiyed/iStocks)
+
+---
+
+## 💠 Testing
+
+To run tests locally:
+
+```bash
+xcodebuild test \
+  -project iStocks.xcodeproj \
+  -scheme iStocks \
+  -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+<table>
+  <tr>
+    <th>📊 Test Plan</th>
+    <th>🧮 TestCases</th>
+  </tr>
+  <tr>
+    <td><img width="250" src="https://github.com/user-attachments/assets/14ba78ee-24d3-4062-9cb8-b97633c3529a" alt="Test Plan Screenshot" /></td>
+    <td><img width="250" src="https://github.com/user-attachments/assets/dd472407-c2a6-4d5e-b320-f43966d66ef4" alt="Test Cases Screenshot" /></td>
+  </tr>
+</table>
+
+Tests are located under `/iStocksTests`, covering ViewModels, Services, and UI (via ViewInspector).
+
+---
+
+## 💠 Requirements
+
+* macOS 14+
+* Xcode 16 (Beta)
+* iOS 17+ Simulator (iPhone 16 recommended)
+* Swift 5.10+
+
+---
+
+## 🔐 Secrets & API Keys
+
+* Uses [Twelve Data API](https://twelvedata.com)
+* Store your API key securely in `.env` or CI/CD secrets
+* Avoid committing keys to the repo
+
+---
+
+## 📦 Setup Instructions
+
+```bash
+git clone https://github.com/your-username/iStocks.git
+cd iStocks
+open iStocks.xcodeproj
+```
+---
+
+## 💠 Roadmap
+
+* Watchlist Module - Completed
+* Upcoming Modules - Orders, Portfolio, Positions, StockDetails, etc
 
 ---
 
 ## 📸 Screenshots
+<table>
+  <tr>
+    <th>📊 Watchlist</th>
+    <th>🧮 Stock Picker</th>
+    <th>📈 Edit Watchlist</th>
+  </tr>
+  <tr>
+    <td><img width="250" src="https://github.com/user-attachments/assets/f47e92a0-8da8-4769-a04b-0d030031005c" alt="Watchlist Screenshot" /></td>
+    <td><img width="250" src="https://github.com/user-attachments/assets/61051964-fc64-4f71-a75d-0c59e5bcd099" alt="Stock Picker Screenshot" /></td>
+    <td><img width="250" src="https://github.com/user-attachments/assets/14c66f8d-09c5-4856-95e7-7f464780a426" alt="Edit Watchlist Screenshot" /></td>
+  </tr>
+</table>
 
-> *(Insert screenshots of the Watchlist tab, Search bar, Add/Edit Watchlist modal, and Real-time update UI)*
+🎥 Demo Video
 
----
+https://github.com/user-attachments/assets/22e8d3cf-b6da-4c6b-a49b-e9572326135b
 
-## 🧪 Testing
+## 👨‍💼 Author
 
-This project is written to be **100% testable** with deep coverage of ViewModels, Repositories, and even SwiftUI views.
-
-| Layer         | Coverage |
-|---------------|----------|
-| `WatchlistsViewModelTests`         | ✅ |
-| `WatchlistViewModelTests`          | ✅ |
-| `EditWatchlistViewModelTests`      | ✅ |
-| `StockRemoteDataSourceTests`       | ✅ |
-| `Persistence Layer` (SwiftData)    | ✅ |
-| `QuoteResponseMapperTests`         | ✅ |
-| `View Tests (ViewInspector)`       | ✅ |
-| `Integration Tests (REST + WebSocket)` | ✅ |
-
-> 📊 Coverage: 90%+ via `xcodebuild` + `ViewInspector`
-
----
-
-## ⚙️ Requirements
-
-- macOS 13+ (Ventura or later)
-- Xcode 15.2 or later (🔁 Downgraded from Xcode 16/26 for CI compatibility)
-- iOS 17.0+
-- Simulator: iPhone 15 (or any compatible)
-- Swift Package Manager
+**Sakir Saiyed**
+Senior iOS Developer |
+📍 Calgary, Canada |
+[LinkedIn](https://www.linkedin.com/in/sakirsaiyed/) |
+[GitHub](https://github.com/sakirsaiyed)
 
 ---
 
-## 🛠️ Getting Started
+## 📄 License
 
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/YOUR_USERNAME/iStocks.git
-cd iStocks
-
-2. Open in Xcode
-
-xed .
-
-3. Resolve Packages
-
-xcodebuild -resolvePackageDependencies -project iStocks.xcodeproj -scheme iStocks
-
-4. Build & Run
-	•	Select iPhone 15 Simulator (or any)
-	•	Press ⌘ + R
-
-⸻
-
-🧪 Running Tests
-
-xcodebuild test \
-  -project iStocks.xcodeproj \
-  -scheme iStocks \
-  -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
-
-
-⸻
-
-🔁 CI/CD – Codemagic
-
-This project is powered by Codemagic for continuous integration and test automation.
-
-✅ Features
-	•	Build + test on every push to main
-	•	Xcode 15.2 compatibility
-	•	Codemagic badge in README
-	•	Fastlane-ready (optional)
-
-For setup, see codemagic.yaml
-
-⸻
-
-🌐 APIs Used
-	•	Twelve Data for real-time stock prices
-	•	Supports REST and WebSocket modes
-	•	Mock data mode available for development/testing
-
-⸻
-
-🔍 Watchlist Features
-	•	Create up to 10 watchlists
-	•	Each watchlist can contain up to 50 stocks
-	•	Stocks grouped by sector
-	•	Local persistence and sync
-	•	Live price refresh with animation
-	•	Edit safely while background updates are paused
-
-⸻
-
-📦 Folder Highlights
-
-Folder	Description
-Presentation/	SwiftUI views, ViewModels
-Domain/	UseCases, Protocols
-Data/	Repositories, Remote & Local
-Core/	Models, DTOs, Mappers
-Shared/	Alert manager, constants, extensions
-
-
-⸻
-
-🔮 Future Roadmap
-	•	Watchlist CRUD & persistence
-	•	Real-time stock updates via WebSocket
-	•	Combine-based reactive state
-	•	SwiftData integration
-	•	Unit & View testing
-	•	Codemagic integration
-	•	GraphQL support
-	•	App lifecycle optimization
-	•	Multi-device sync (iCloud CoreData or CloudKit)
-	•	TestFlight deployment
-
-⸻
-
-👨‍💻 Author
-
-Sakir Saiyed
-Senior Mobile Developer | iOS & Flutter Expert
-📍 Edmonton, AB, Canada
-📬 LinkedIn
-🌐 Portfolio: Coming Soon
-
-⸻
-
-📄 License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-⸻
-
-💡 Built as a passion project to master Clean Architecture, Combine, SwiftData, and real-time apps using best practices.
-
----
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
