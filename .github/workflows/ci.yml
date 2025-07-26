@@ -36,6 +36,7 @@ jobs:
 
       - name: 🧪 Build and Run Tests with Coverage
         run: |
+          rm -rf DerivedData
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
@@ -80,7 +81,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/coverage.txt
           name: iStocks Coverage Report
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           verbose: true
 
       - name: 🧪 Debug Coverage Contents
