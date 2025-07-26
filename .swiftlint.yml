@@ -1,0 +1,23 @@
+included:
+  - iStocks
+  - iStocksTests
+  - iStocksIntegrationTests
+
+excluded:
+  - Pods
+  - DerivedData
+  - .build
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - joined_default_parameter
+  - unneeded_break_in_switch
+
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - identifier_name
+  - function_body_length
+
+reporter: xcode
