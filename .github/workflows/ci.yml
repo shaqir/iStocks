@@ -5,8 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+
 env:
-  CI: true 
+  CI: true
 
 jobs:
   build-and-test:
@@ -16,7 +17,7 @@ jobs:
       - name: 📦 Checkout Repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Full history for accurate coverage
+          fetch-depth: 0
 
       - name: 🛠 Set Xcode 16.2 Beta
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
@@ -36,7 +37,6 @@ jobs:
 
       - name: 🧪 Build and Run Tests with Coverage
         run: |
-          rm -rf DerivedData
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
@@ -55,7 +55,6 @@ jobs:
       - name: 📊 Convert Coverage to LCOV
         run: |
           mkdir -p coverage
-
           TEST_BINARY=$(find DerivedData/Build/Products/Debug-iphonesimulator -type d -name "*.xctest" | head -n 1)
           PROF_PATH=$(find DerivedData/Build/ProfileData -name "*.profdata" | head -n 1)
           BINARY_EXECUTABLE=$(find "$TEST_BINARY" -type f -perm +111 -not -name "*.plist" | head -n 1)
@@ -75,16 +74,17 @@ jobs:
             -ignore-filename-regex='(Tests|Pods|SourcePackages)' \
             > coverage/coverage.txt
 
+      - name: 🔧 Normalize LCOV Paths
+        run: |
+          echo "🔁 Rewriting absolute SF paths to relative..."
+          sed -i '' 's|SF:.*/iStocks/|SF:iStocks/|g' coverage/coverage.txt
+          head -n 10 coverage/coverage.txt
+
       - name: ☁️ Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/coverage.txt
           name: iStocks Coverage Report
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           verbose: true
-
-      - name: 🧪 Debug Coverage Contents
-        run: |
-          echo "🔍 Showing first 20 lines of coverage.txt"
-          head -n 20 coverage/coverage.txt
