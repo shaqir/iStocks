@@ -3,6 +3,16 @@ coverage:
     project:
       default:
         target: auto
+  parsers:
+    gcov:
+      branch_detection:
+        conditional: true
+        loop: true
+  ignore:
+    - "iStocksTests/Helpers/*"
+    - "iStocksIntegrationTests/*"
+    - "iStocks/Resources/*"
+    - "iStocks.xcodeproj/*"
+    - "DerivedData/*"
 
-fixes:
-  - "DerivedData/Build/Products/Debug-iphonesimulator/iStocks.app/::"
+comment: false
