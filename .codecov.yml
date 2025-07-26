@@ -1,3 +1,4 @@
+comment: false
 coverage:
   status:
     project:
@@ -14,5 +15,3 @@ coverage:
     - "iStocks/Resources/*"
     - "iStocks.xcodeproj/*"
     - "DerivedData/*"
-
-comment: false
