@@ -1,17 +1,26 @@
 comment: false
+
 coverage:
   status:
     project:
       default:
         target: auto
-  parsers:
-    gcov:
-      branch_detection:
-        conditional: true
-        loop: true
-  ignore:
-    - "iStocksTests/Helpers/*"
-    - "iStocksIntegrationTests/*"
-    - "iStocks/Resources/*"
-    - "iStocks.xcodeproj/*"
-    - "DerivedData/*"
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+
+ignore:
+  - "iStocksTests/Helpers/*"
+  - "iStocksIntegrationTests/*"
+  - "iStocks/Resources/*"
+  - "iStocks.xcodeproj/*"
+  - "DerivedData/*"
+
+codecov:
+  require_ci_to_pass: yes
+
+fixes:
+  - "/Users/runner/work/iStocks/iStocks/::"
