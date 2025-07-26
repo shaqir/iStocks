@@ -73,9 +73,7 @@ This project uses a **self-hosted GitHub Actions runner on macOS with Xcode 16**
 * Build for iPhone 16 simulator
 * (Optional) Run Unit Tests & Report Coverage
 
-> You can customize this workflow for TestFlight or Fastlane integration later.
-
-[![codecov](https://codecov.io/gh/sakirsaiyed/iStocks/branch/main/graph/badge.svg)](https://codecov.io/gh/sakirsaiyed/iStocks)
+> You can customize this workflow for TestFlight or Fastlane integration later.vg)](https://codecov.io/gh/sakirsaiyed/iStocks)
 
 ---
 
