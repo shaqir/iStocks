@@ -86,7 +86,7 @@ final class TwelveDataWebSocketClient: NSObject, WebSocketClient {
         Logger.log("TwelveDataWebSocketClient initialized – instance: \(Unmanaged.passUnretained(self).toOpaque())", category: "WebSocket")
     }
     
-    private let apiKey = API.apiKey
+    private let apiKey = API.apiKey_TwelveData
     private lazy var session = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue.main)
     private var webSocketTask: URLSessionWebSocketTask?
     

@@ -39,7 +39,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
 
     // MARK: - Public Methods
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
-        let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey)
+        let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey_TwelveData)
         print("Calling fetchRealtimePrices with symbols:", symbols)
         return networkClient.request(endpoint)
             .tryMap { (response: StockQuoteDynamicResponse) in
@@ -86,7 +86,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     // MARK: - Private Helpers
 
     private func fetchPrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
-        let endpoint = PriceEndpoint.forSymbols(symbols, apiKey: API.apiKey)
+        let endpoint = PriceEndpoint.forSymbols(symbols, apiKey: API.apiKey_TwelveData)
         
         return networkClient.request(endpoint)
             .map { (rawMap: [String: StockPriceDTO]) in

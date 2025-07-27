@@ -10,52 +10,66 @@ import Foundation
 import Combine
 
 final class WebSocketStockRepositoryImpl: StockLiveRepository {
-    private var webSocket: WebSocketClient
+    private var webSocket: WebSocketClient2
     private var subject = PassthroughSubject<[Stock], Never>()
     private var currentStocks: [String: Stock] = [:]
     private var cancellables = Set<AnyCancellable>()
-
-    init(webSocket: WebSocketClient) {
+    
+    init(webSocket: WebSocketClient2) {
         self.webSocket = webSocket
         self.bindWebSocket()
     }
-
+    
     private func bindWebSocket() {
         print("Binding stockPublisher...")
-        if let webSocketClient = webSocket as? TwelveDataWebSocketClient {
-            webSocketClient.stockPublisher
-                .receive(on: RunLoop.main)
-                .sink { [weak self] dto in
-                    print("Received stock DTO: \(dto.symbol ?? "nil") @ \(dto.price ?? -1)")
+
+        webSocket.stockPublisher
+            .collect(.byTime(RunLoop.main, .seconds(1)))
+            .map { updates in
+                // Group by symbol and pick latest for each symbol
+                Dictionary(grouping: updates, by: \.symbol)
+                    .compactMapValues { $0.last }
+                    .values
+            }
+            .sink { [weak self] latestUpdates in
+                for dto in latestUpdates {
                     self?.handle(dto)
                 }
-                .store(in: &cancellables)
-        }
+            }
+            .store(in: &cancellables)
     }
-
+    
     func observeStocks() -> AnyPublisher<[Stock], Error> {
         webSocket.connect()
         return subject.setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-
+    
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         subject.setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-
+    
     func subscribeToSymbols(_ symbols: [String]) {
         webSocket.subscribe(to: symbols)
     }
+    
+    private func handle(_ dto: StockPriceDTO2) {
+        
+        guard let symbol = dto.symbol else {
+            print("⚠️ Missing symbol in DTO, skipping: \(dto)")
+            return
+        }
 
-    private func handle(_ dto: StockPriceDTO) {
-        let symbol = dto.symbol ?? "nil"
-        let price = dto.price ?? -1
+        let price = dto.price
         print("Handling DTO: symbol=\(symbol), price=\(price)")
 
-        let oldPrice = currentStocks[dto.symbol ?? ""]?.price ?? 0
+        let oldPrice = currentStocks[symbol]?.price ?? 0
+
         if let stock = dto.toDomainModel(invested: oldPrice) {
-            currentStocks[dto.symbol ?? ""] = stock
+            currentStocks[symbol] = stock
             subject.send(Array(currentStocks.values))
         } else {
-            print("⚠️ Invalid StockDTO, skipping: \(dto)")
+            print("⚠️ Invalid StockDTO, could not convert to Stock: \(dto)")
         }
-    }}
+    }
+    
+}

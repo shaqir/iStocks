@@ -401,7 +401,7 @@ extension WatchlistsViewModel {
         //TESTING...
         symbols = MarketHoursHelper.isUSMarketOpen() ? symbols : ["BTC/USD", "ETH/USD", "EUR/USD"]
         
-        symbols = ["BTC/USD", "ETH/USD", "EUR/USD"]
+        symbols = ["BINANCE:BTCUSDT"]
         
         guard !symbols.isEmpty else {
             Logger.log("No symbols in watchlist: \(selectedWatchlist.name) [\(selectedWatchlist.id)]", category: "WebSocket")
