@@ -35,17 +35,6 @@ jobs:
       - name: 📦 Resolve Swift Package Dependencies
         run: xcodebuild -resolvePackageDependencies -project iStocks.xcodeproj
 
-      - name: 🔍 Install SwiftLint (if missing)
-        run: |
-          if ! command -v swiftlint &> /dev/null; then
-            echo "Installing SwiftLint..."
-            brew install swiftlint
-          fi
-
-      - name: 🔍 Run SwiftLint Linter
-        run: |
-          swiftlint lint --config .swiftlint.yml || true
-
       - name: 🧪 Build and Run Tests with Coverage
         run: |
           xcodebuild build-for-testing \
