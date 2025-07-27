@@ -1,3 +1,5 @@
+# SwiftLint Configuration File
+
 included:
   - iStocks
   - iStocksTests
@@ -8,16 +10,16 @@ excluded:
   - DerivedData
   - .build
 
-opt_in_rules:
+opt_in_rules: # Optional strict rules that are not enabled by default
   - empty_count
   - explicit_init
   - joined_default_parameter
   - unneeded_break_in_switch
 
-disabled_rules:
+disabled_rules: # Common relaxed rules for flexibility
   - trailing_whitespace
   - line_length
   - identifier_name
   - function_body_length
 
-reporter: xcode
+reporter: xcode # Makes output format friendly for Xcode
