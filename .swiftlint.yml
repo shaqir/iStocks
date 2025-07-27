@@ -1,7 +1,0 @@
-included:
-  - iStocks
-
-disabled_rules:
-  - line_length
-
-reporter: xcode
