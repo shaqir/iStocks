@@ -32,6 +32,7 @@
 		DF4A64C92DF49CF600F2F879 /* iStocks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iStocks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFED424F2E38839B0022F84F /* iStocksTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = iStocksTestPlan.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -49,13 +50,6 @@
 			);
 			target = DF4A64D72DF49CF700F2F879 /* iStocksTests */;
 		};
-		DFED41302E3840260022F84F /* Exceptions for "iStocksTests" folder in "iStocksTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				iStocksTestPlan.xctestplan,
-			);
-			target = DF4A64D72DF49CF700F2F879 /* iStocksTests */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -70,9 +64,6 @@
 		};
 		DF4A64DB2DF49CF700F2F879 /* iStocksTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DFED41302E3840260022F84F /* Exceptions for "iStocksTests" folder in "iStocksTests" target */,
-			);
 			path = iStocksTests;
 			sourceTree = "<group>";
 		};
@@ -117,6 +108,7 @@
 				DF4A64DB2DF49CF700F2F879 /* iStocksTests */,
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 				DF4A64CA2DF49CF600F2F879 /* Products */,
+				DFED424F2E38839B0022F84F /* iStocksTestPlan.xctestplan */,
 			);
 			sourceTree = "<group>";
 		};
