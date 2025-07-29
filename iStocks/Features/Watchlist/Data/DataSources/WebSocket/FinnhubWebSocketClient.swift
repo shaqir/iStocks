@@ -10,55 +10,19 @@ import Combine
 
 // MARK: - Protocol
 
-protocol WebSocketClient2 {
+protocol WebSocketClient {
     func connect()
     func disconnect(clearPending: Bool)
     func subscribe(to symbols: [String])
-    var stockPublisher: AnyPublisher<StockPriceDTO2, Never> { get }
+    var stockPublisher: AnyPublisher<StockFinnPriceDTO, Never> { get }
 }
 
-// MARK: - StockPriceDTO
-
-struct StockPriceDTO2: Decodable {
-    let symbol: String?
-    let price: Double
-    let timestamp: TimeInterval
-}
-extension StockPriceDTO2 {
-    func toDomainModel(invested: Double) -> Stock? {
-        guard let symbol = symbol else { return nil }
-
-        let previous = invested > 0 ? invested : price * Double.random(in: 0.97...1.03)
-
-        return Stock(
-            symbol: symbol,
-            name: symbol,
-            price: price,
-            previousPrice: previous,
-            isPriceUp: price >= previous,
-            qty: Double(Int.random(in: 1...10)),
-            averageBuyPrice: previous,
-            sector: "Crypto", // or use a mapping
-            currency: "USD",
-            exchange: "Finnhub",
-            isFavorite: false
-        )
-    }
-}
-// MARK: - Finnhub Message Model
-
-private struct FinnhubTradeMessage: Decodable {
-    struct Trade: Decodable {
-        let p: Double   // price
-        let s: String   // symbol
-        let t: TimeInterval // timestamp
-    }
-    let type: String
-    let data: [Trade]?
+// MARK: - Connection State Enum
+enum WebSocketConnectionState {
+    case disconnected, connecting, connected, reconnecting
 }
 
-
-final class FinnhubWebSocketClient: NSObject, WebSocketClient2 {
+final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     
     // MARK: - Singleton
     static let shared = FinnhubWebSocketClient()
@@ -68,8 +32,8 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient2 {
     private let apiKey = API.apiKey_finnhub
     private lazy var session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
     private var webSocketTask: URLSessionWebSocketTask?
-    private let stockSubject = PassthroughSubject<StockPriceDTO2, Never>()
-    var stockPublisher: AnyPublisher<StockPriceDTO2, Never> {
+    private let stockSubject = PassthroughSubject<StockFinnPriceDTO, Never>()
+    var stockPublisher: AnyPublisher<StockFinnPriceDTO, Never> {
         stockSubject.eraseToAnyPublisher()
     }
 
@@ -130,7 +94,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient2 {
 
     private func startHeartbeat() {
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            self?.sendJSON(["type": "ping"])
+            self?.sendJSON(["type": "heartbeat"])
         }
     }
 
@@ -208,10 +172,10 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient2 {
     private func handleIncoming(_ data: Data) {
         Logger.log("[WebSocket] RAW incoming: \(String(data: data, encoding: .utf8) ?? "<invalid>")", category: "WebSocket")
         do {
-            let message = try JSONDecoder().decode(FinnhubTradeMessage.self, from: data)
+            let message = try JSONDecoder().decode(FinnhubResponseMapper.self, from: data)
             if message.type == "trade", let trades = message.data {
                 for trade in trades {
-                    let dto = StockPriceDTO2(symbol: trade.s, price: trade.p, timestamp: trade.t)
+                    let dto = StockFinnPriceDTO(symbol: trade.s, price: trade.p, timestamp: trade.t)
                     stockSubject.send(dto)
                 }
             }

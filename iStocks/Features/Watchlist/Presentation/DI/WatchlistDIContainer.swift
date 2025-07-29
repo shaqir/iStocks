@@ -19,29 +19,51 @@ enum WatchlistAppMode {
 final class WatchlistDIContainer {
     
     static let mode: WatchlistAppMode = .websocket
-
+    private static var cachedUseCases: WatchlistUseCases?
+    
+    // MARK: - Cached repositories
+    private static var cachedMockRepository: MockWatchlistRepository?
+    private static var cachedRestRepository: RestStockRepository?
+    private static var cachedWebSocketRepository: StockLiveRepository?
+    
     // MARK: - Repository Factories
     
     private static func makeMockRepository() -> MockWatchlistRepository {
-        Logger.log("makeMockRepository() called.")
-        return MockStockRepositoryImpl(service: MockStockStreamingService())
-    }
-
+            if let cached = cachedMockRepository {
+                Logger.log("cachedMockRepository instance returned.")
+                return cached
+            }
+            Logger.log("makeMockRepository() called.")
+            let mockRepo = MockStockRepositoryImpl()
+            cachedMockRepository = mockRepo
+            return mockRepo
+        }
+    
     private static func makeRestRepository(context: ModelContext) -> RestStockRepository {
+        if let cached = cachedRestRepository {
+            Logger.log("cachedRestRepository instance returned.")
+            return cached
+        }
         Logger.log("makeRestRepository() called.")
-
         let client = URLSessionNetworkClient()
         let apiService = StockRemoteDataSource(networkClient: client)
         let persistence = WatchlistPersistenceService(context: context)
-        return RestStockRepositoryImpl(service: apiService, persistenceService: persistence)
+        let restRepo = RestStockRepositoryImpl(service: apiService, persistenceService: persistence)
+        cachedRestRepository = restRepo
+        return restRepo
     }
-
+    
     private static func makeWebSocketRepository() -> StockLiveRepository {
-        Logger.log("makeWebSocketRepository() called.")
-        //let webSocketClient = TwelveDataWebSocketClient.shared
-        let webSocketClient = FinnhubWebSocketClient.shared
-        return WebSocketStockRepositoryImpl(webSocket: webSocketClient)
-    }
+           if let cached = cachedWebSocketRepository {
+               Logger.log("cachedWebSocketRepository instance returned.")
+               return cached
+           }
+           Logger.log("makeWebSocketRepository() called.")
+           let webSocketClient = FinnhubWebSocketClient.shared
+           let webSocketRepo = WebSocketStockRepositoryImpl(webSocket: webSocketClient)
+           cachedWebSocketRepository = webSocketRepo
+           return webSocketRepo
+       }
 
     private static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
         WatchlistPersistenceService(context: context)
@@ -51,10 +73,17 @@ final class WatchlistDIContainer {
     static func makeWatchlistUseCases(context: ModelContext) -> WatchlistUseCases {
         Logger.log("makeWatchlistUseCases() called.")
         
+        if let existing = cachedUseCases {
+                    Logger.log("Returning cached WatchlistUseCases instance", category: "DI")
+                    return existing
+                }
+
+                let useCases: WatchlistUseCases
+
         switch mode {
         case .mock:
             let mockRepo = makeMockRepository()
-            return WatchlistUseCases(
+            useCases =  WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: mockRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: mockRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: mockRepo),
@@ -64,7 +93,7 @@ final class WatchlistDIContainer {
             
         case .restAPI:
             let restRepo = makeRestRepository(context: context)
-            return WatchlistUseCases(
+            useCases = WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: restRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: restRepo),
@@ -75,7 +104,7 @@ final class WatchlistDIContainer {
         case .websocket:
             let liveRepo = makeWebSocketRepository()
             let restRepo = makeRestRepository(context: context)
-            return WatchlistUseCases(
+            useCases = WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: liveRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: liveRepo),
@@ -83,6 +112,10 @@ final class WatchlistDIContainer {
                 fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo)
             )
         }
+        
+        cachedUseCases = useCases
+        Logger.log("Caching WatchlistUseCases instance", category: "DI")
+        return useCases
     }
 
     // MARK: - ViewModel Factory
@@ -102,5 +135,12 @@ final class WatchlistDIContainer {
             persistenceService: persistence,
             viewModelProvider: viewModelProvider
         )
+    }
+}
+
+extension WatchlistDIContainer {
+    ///Add a reset() for testing or logout
+    static func resetWatchlistUseCases() {
+        cachedUseCases = nil
     }
 }

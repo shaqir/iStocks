@@ -145,7 +145,7 @@ final class WatchlistViewModel: ObservableObject {
     }
     
     // MARK: - Private
-    
+        
     private func setupSearchBinding() {
         $searchText
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
