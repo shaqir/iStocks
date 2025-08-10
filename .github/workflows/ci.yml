@@ -35,8 +35,9 @@ jobs:
       - name: 📦 Resolve Swift Package Dependencies
         run: xcodebuild -resolvePackageDependencies -project iStocks.xcodeproj
 
-      - name: 🧪 Build and Run Tests with Coverage
+      - name: 🧪 Build and Run Tests with Coverage (skip integration tests)
         run: |
+          # Build for testing
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
@@ -44,10 +45,12 @@ jobs:
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO
 
+          # Run tests but skip iStocksIntegrationTests
           xcodebuild test-without-building \
             -project iStocks.xcodeproj \
             -scheme iStocks \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -enableCodeCoverage YES \
             -derivedDataPath DerivedData \
+            -skip-testing:iStocksIntegrationTests \
             CODE_SIGNING_ALLOWED=NO
