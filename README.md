@@ -4,6 +4,7 @@ A powerful and elegant **iOS stock tracking app** built with **SwiftUI**, **Comb
 
 - It delivers real-time updates, organized watchlists, and a Kite Zerodha-inspired user experience.
 - This is a passion project for **CLEAN Architecutre** with latest tech stacks.
+- Only 1 module is completed till now which is Watchlist Module, other modules are in progress.
 
 
 &#x20;
