@@ -18,7 +18,7 @@ A powerful and elegant **iOS stock tracking app** built with **SwiftUI**, **Comb
 * 📱 Built with **SwiftUI + Combine**
 * 🧠 Clean MVVM architecture + modular components
 * 🧪 Unit tested with **XCTest** + ViewInspector
-* ✅ Self-hosted **CI/CD with GitHub Actions** and Xcode 16
+* ✅ Self-hosted **CI Pipelines with GitHub Actions** and Xcode 16
 
 ---
 
