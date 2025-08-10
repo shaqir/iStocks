@@ -67,15 +67,12 @@ This project uses a **self-hosted GitHub Actions runner on macOS with Xcode 16**
 
 ### 🔧 Workflow Summary (`.github/workflows/ci.yml`)
 
-* Checkout source code
-* Set correct Xcode version
-* Cache DerivedData and SwiftPM
-* Clean build with `xcodebuild`
-* Resolve dependencies
-* Build for iPhone 16 simulator
-* (Optional) Run Unit Tests & Report Coverage
-
-> You can customize this workflow for TestFlight or Fastlane integration later.vg)](https://codecov.io/gh/sakirsaiyed/iStocks)
+  •	Source checkout & Xcode version setup
+	•	DerivedData & SwiftPM caching
+	•	Clean build with xcodebuild
+	•	Dependency resolution
+	•	Build for iPhone 16 Simulator
+	•	Unit & UI tests with coverage reports
 
 ---
 
