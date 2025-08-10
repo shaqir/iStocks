@@ -14,15 +14,23 @@ jobs:
     runs-on: macos-14
 
     steps:
-      - name: 📦 Checkout Repository
-        uses: actions/checkout@v3
+      - name: 📦 Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🛠 Set Xcode 16.2 Beta
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      # More robust than hardcoding /Applications/Xcode_16.2.app (which may not exist)
+      - name: 🛠 Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.0' # or '16.2' if you KNOW it exists on your runner
 
-      - name: 💾 Cache DerivedData and SwiftPM
+      - name: 🔎 Show Xcode & SDKs
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: 💾 Cache DerivedData & SwiftPM
         uses: actions/cache@v3
         with:
           path: |
@@ -35,19 +43,75 @@ jobs:
       - name: 📦 Resolve Swift Package Dependencies
         run: xcodebuild -resolvePackageDependencies -project iStocks.xcodeproj
 
-      - name: 🧪 Build and Run Tests with Coverage
+      - name: 📱 List Simulators
+        run: xcrun simctl list devices
+
+      - name: 🧭 Pick Simulator (with fallback)
+        id: pick-sim
+        shell: bash
+        run: |
+          # Try iPhone 16 first
+          SIM_ID=$(xcrun simctl list devices | awk -F '[()]' '/iPhone 16 .*Booted|iPhone 16 .*Shutdown/ {print $2; exit}')
+          if [ -z "$SIM_ID" ]; then
+            # Fallback to widely available iPhone 15 (iOS 17)
+            SIM_ID=$(xcrun simctl list devices | awk -F '[()]' '/iPhone 15 .*Booted|iPhone 15 .*Shutdown/ {print $2; exit}')
+          fi
+          if [ -z "$SIM_ID" ]; then
+            echo "No suitable simulator found"; exit 1
+          fi
+          echo "sim_id=$SIM_ID" >> $GITHUB_OUTPUT
+          xcrun simctl boot "$SIM_ID" || true
+          xcrun simctl bootstatus "$SIM_ID" -b
+
+      - name: 🧪 Build for Testing
         run: |
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "id=${{ steps.pick-sim.outputs.sim_id }}" \
             -derivedDataPath DerivedData \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
+      - name: 🧪 Run Tests (with result bundle)
+        env:
+          RESULT_BUNDLE: ${{ github.workspace }}/artifacts/TestResults.xcresult
+        run: |
+          mkdir -p artifacts
+          set -o pipefail
           xcodebuild test-without-building \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "id=${{ steps.pick-sim.outputs.sim_id }}" \
             -enableCodeCoverage YES \
             -derivedDataPath DerivedData \
-            CODE_SIGNING_ALLOWED=NO
+            -resultBundlePath "$RESULT_BUNDLE" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+          | xcpretty || EXIT=$?
+          exit ${EXIT:-0}
+
+      - name: 🧾 Summarize Failures
+        if: always()
+        run: |
+          xcrun xcresulttool get --format json --path artifacts/TestResults.xcresult > artifacts/TestResults.json
+          echo "---- Quick Failure Summary ----"
+          /usr/bin/python3 - <<'PY'
+import json, sys
+p="artifacts/TestResults.json"
+try:
+  j=json.load(open(p))
+except Exception as e:
+  print("No xcresult JSON (tests might not have started)."); sys.exit(0)
+actions=j.get('actions',[])
+for a in actions:
+  issues=a.get('actionResult',{}).get('issues',{})
+  fails=issues.get('testFailureSummaries',[])
+  for f in fails:
+    print("❌", f.get('testCaseName'), "-", (f.get('message') or '').splitlines()[0])
+PY
+
+      - name: 📤 Upload Artifacts (xcresult & logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-and-logs
+          path: artifacts/
