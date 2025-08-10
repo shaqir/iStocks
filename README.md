@@ -151,7 +151,6 @@ open iStocks.xcodeproj
 
 🎥 Demo Video
 
-https://github.com/user-attachments/assets/22e8d3cf-b6da-4c6b-a49b-e9572326135b
 https://youtube.com/shorts/u0Ma-Z8fVSY?feature=share
 
 ## 👨‍💼 Author
