@@ -10,10 +10,11 @@ import Foundation
 import Combine
 
 final class WebSocketStockRepositoryImpl: StockLiveRepository {
-    
+
     private var webSocket: WebSocketClient
     private var subject = PassthroughSubject<[Stock], Never>()
     private var currentStocks: [String: Stock] = [:]
+    private let stocksQueue = DispatchQueue(label: "com.istocks.currentStocks")
     private var cancellables = Set<AnyCancellable>()
     
     init(webSocket: WebSocketClient) {
@@ -22,10 +23,10 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     }
     
     private func bindWebSocket() {
-        print("Binding WebSocket to stockPublisher...")
+        Logger.log("Binding WebSocket to stockPublisher", category: "WebSocket")
         webSocket.stockPublisher
         ///Batches incoming DTOs per 1 second. Prevents excessive UI updates.
-            .collect(.byTime(RunLoop.main, .seconds(1)))
+            .collect(.byTime(RunLoop.main, .seconds(AppConstants.batchCollectionSeconds)))
             .map { updates in
                 // Group by symbol and pick latest for each symbol
                 ///Ensures only the latest update per symbol is processed.
@@ -57,17 +58,19 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     private func handle(_ dto: StockFinnPriceDTO) {
         
         guard let symbol = dto.symbol else {
-            print("Missing symbol in DTO, skipping: \(dto)")
+            Logger.log("Missing symbol in DTO, skipping", category: "WebSocket")
             return
         }
         let price = dto.price
-        print("Handling DTO: symbol=\(symbol), price=\(price)")
-        let oldPrice = currentStocks[symbol]?.price ?? 0
-        if let stock = dto.toDomainModel(invested: oldPrice) {
-            currentStocks[symbol] = stock
-            subject.send(Array(currentStocks.values))
-        } else {
-            print("Invalid StockDTO, could not convert to Stock: \(dto)")
+        Logger.log("Handling DTO: symbol=\(symbol), price=\(price)", category: "WebSocket")
+        stocksQueue.sync {
+            let oldPrice = currentStocks[symbol]?.price ?? 0
+            if let stock = dto.toDomainModel(invested: oldPrice) {
+                currentStocks[symbol] = stock
+                subject.send(Array(currentStocks.values))
+            } else {
+                Logger.log("Invalid StockDTO, could not convert to Stock: \(symbol)", category: "WebSocket")
+            }
         }
     }
 }

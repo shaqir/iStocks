@@ -241,7 +241,7 @@ extension WatchlistsViewModel {
         let grouped = Dictionary(grouping: allFetchedStocks, by: { stock in
             let sector = stock.sector.isEmpty ? "Technology" : stock.sector
             if stock.sector.isEmpty {
-                print("[Warning] Stock \(stock.symbol) has empty sector. Defaulting to Technology.")
+                Logger.log("Stock \(stock.symbol) has empty sector — defaulting to Technology", category: "Watchlist")
             }
             return sector
         })

@@ -101,7 +101,20 @@ final class URLSessionNetworkClient: NetworkClient {
     private func validate(data: Data?, response: URLResponse?) throws -> Data {
         Logger.log("validate data: \(String(data: data ?? Data(), encoding: .utf8) ?? "nil")")
         guard let data = data else { throw NetworkError.noData }
-        guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
+        guard let http = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        switch http.statusCode {
+        case 200..<300:
+            break
+        case 401:
+            throw NetworkError.unauthorized
+        case 429:
+            throw NetworkError.rateLimited
+        case 500...599:
+            throw NetworkError.serverError(http.statusCode)
+        default:
             throw NetworkError.invalidResponse
         }
 

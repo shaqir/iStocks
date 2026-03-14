@@ -48,7 +48,14 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     private let reconnectManager = ConnectionRetryManager()
 
     private var url: URL {
-        URL(string: "wss://ws.finnhub.io?token=\(apiKey)")!
+        var components = URLComponents()
+        components.scheme = "wss"
+        components.host = "ws.finnhub.io"
+        components.queryItems = [URLQueryItem(name: "token", value: apiKey)]
+        guard let url = components.url else {
+            fatalError("Invalid WebSocket URL — check API key configuration")
+        }
+        return url
     }
 
     // MARK: - Connection Lifecycle
@@ -93,7 +100,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     }
 
     private func startHeartbeat() {
-        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: AppConstants.heartbeatIntervalSeconds, repeats: true) { [weak self] _ in
             self?.sendJSON(["type": "heartbeat"])
         }
     }

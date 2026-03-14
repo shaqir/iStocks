@@ -40,10 +40,10 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     // MARK: - Public Methods
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey_TwelveData)
-        print("Calling fetchRealtimePrices with symbols:", symbols)
+        Logger.log("Fetching realtime prices for: \(symbols)", category: "StockRemoteDataSource")
         return networkClient.request(endpoint)
             .tryMap { (response: StockQuoteDynamicResponse) in
-                print("Response received for symbols:", symbols)
+                Logger.log("Response received for: \(symbols)", category: "StockRemoteDataSource")
                 switch response {
                 case .dictionary(let map):
                     Logger.log("Dictionary-response: \(map)", category: "StockQuoteDynamicResponse")

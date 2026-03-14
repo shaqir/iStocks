@@ -19,7 +19,6 @@ final class EditWatchlistViewModel: ObservableObject {
     /// Emits validated Watchlist when saved
     let onSave = PassthroughSubject<Watchlist, Never>()
         
-    //test
     var existingNames: [String] = []
 
     init(watchlist: Watchlist, availableStocks: [Stock], isNewWatchlist: Bool = false) {

@@ -148,9 +148,9 @@ extension WatchlistPersistenceService {
 
         do {
             try context.save()
-            print("All stocks saved successfully.")
+            Logger.log("All stocks saved successfully.", category: "Persistence")
         } catch {
-            print("Failed to save all stocks:", error.localizedDescription)
+            Logger.log("Failed to save all stocks: \(error.localizedDescription)", category: "Persistence")
         }
     }
 

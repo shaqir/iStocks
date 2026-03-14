@@ -64,9 +64,7 @@ final class WatchlistViewModel: ObservableObject {
         self.watchlist = watchlist
         self.availableStocks = availableStocks
 
-        print("[Init] WatchlistViewModel created for \(watchlist.name)")
-        
-        setupSearchBinding()
+        Logger.log("WatchlistViewModel created for \(watchlist.name)", category: "Watchlist")
     }
     
     deinit {
@@ -144,13 +142,4 @@ final class WatchlistViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Private
-        
-    private func setupSearchBinding() {
-        $searchText
-            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .removeDuplicates()
-            .sink { _ in }
-            .store(in: &cancellables)
-    }
 }

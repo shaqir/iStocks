@@ -59,11 +59,11 @@ struct WatchlistLoadedView: View {
             if !viewModel.isPriceBindingSetup {
                 viewModel.priceUpdate
                     .sink { updatedStocks in
-                        print("[PriceUpdate] Received in \(viewModel.watchlist.name): \(updatedStocks.map(\.symbol))")
+                        Logger.log("Price update in \(viewModel.watchlist.name): \(updatedStocks.map(\.symbol))", category: "PriceUpdate")
                         // Set animated symbols for visual feedback
                         viewModel.animatedSymbols = Set(updatedStocks.map(\.symbol))
                         // Optional: Clear animation after short delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.priceAnimationDuration) {
                             viewModel.animatedSymbols.removeAll()
                         }
                     }

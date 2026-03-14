@@ -11,4 +11,9 @@ enum API {
     static let baseURL = "https://api.twelvedata.com"
     static let apiKey_TwelveData = ""
     static let apiKey_finnhub = ""
+
+    static func validateKeys() {
+        assert(!apiKey_TwelveData.isEmpty, "TwelveData API key is not configured — set it in NetworkConstants.swift")
+        assert(!apiKey_finnhub.isEmpty, "Finnhub API key is not configured — set it in NetworkConstants.swift")
+    }
 }
