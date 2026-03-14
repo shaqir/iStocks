@@ -49,3 +49,8 @@ playground.xcworkspace
 *.env
 *.key
 *.pem
+
+# AI assistant config
+CLAUDE.md
+AGENTS.md
+.claude/
