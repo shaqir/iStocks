@@ -388,18 +388,36 @@ When evaluating new technologies or upgrades, use these criteria:
 
 ## Decision Log
 
-### March 14, 2026: CI/CD Platform Decision
-**Decision**: Stay with GitHub Actions for now
+### March 14, 2026: CI/CD Temporarily Disabled
+**Decision**: Disable GitHub Actions CI/CD workflow
 **Rationale**:
-- Free for open source project
-- Recently fixed with macOS-15 + Xcode 16 support
-- Good enough for current needs
-- Can migrate to Bitrise when project goes commercial
+- macOS-15 runner with Xcode 16 still experiencing compatibility issues
+- Project uses Xcode 26.3 locally with objectVersion 77 format
+- Xcode 26.x not yet available on GitHub Actions runners
+- CI/CD stability blocking development workflow
 
-**Revisit**: When project needs:
-- Automated TestFlight deployment
-- Faster build times (>5 min becomes bottleneck)
-- Commercial release schedule
+**Current Status**:
+- Workflow file renamed to `ci.yml.disabled`
+- Manual local testing until CI stabilizes
+- Will re-enable when GitHub Actions supports Xcode 26.x or alternative CI solution implemented
+
+**Action Items**:
+1. Monitor GitHub Actions for Xcode 26.x availability
+2. Consider alternative CI/CD platforms (Bitrise, Jenkins+Fastlane)
+3. Re-enable CI when infrastructure compatibility resolved
+
+**Revisit Timeline**:
+- Check monthly for Xcode 26.x on macOS-15 runners
+- Evaluate alternative CI/CD in Q2 2026 if GitHub Actions not updated
+
+### March 14, 2026 (Earlier): CI/CD Platform Decision
+**Decision**: ~~Stay with GitHub Actions~~ (Later disabled - see above)
+**Initial Rationale**:
+- Free for open source project
+- Attempted fix with macOS-15 + Xcode 16 support
+- Good enough for current needs in theory
+
+**Outcome**: Xcode version mismatch persisted (local Xcode 26.3 vs CI Xcode 16.4)
 
 ### March 14, 2026: Logging Strategy Refinement
 **Decision**: Reduce logging verbosity to warnings+ only

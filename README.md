@@ -6,7 +6,7 @@
 [![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://developer.apple.com/ios/)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green.svg)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/shaqir/iStocks/workflows/CI/badge.svg)](https://github.com/shaqir/iStocks/actions)
+[![CI](https://img.shields.io/badge/CI-Disabled-red.svg)](TECH_DECISIONS.md#march-14-2026-cicd-temporarily-disabled)
 
 A modern iOS stock market app featuring multiple watchlists, real-time price tracking, and flexible data sources. Built with Clean Architecture + MVVM for maintainability and testability.
 
