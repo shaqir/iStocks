@@ -23,7 +23,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     }
     
     private func bindWebSocket() {
-        AppLogger.info("Binding WebSocket to stockPublisher", category: AppLogger.webSocket)
+        // Initialization - no logging needed
         webSocket.stockPublisher
         ///Batches incoming DTOs per 1 second. Prevents excessive UI updates.
             .collect(.byTime(RunLoop.main, .seconds(AppConstants.batchCollectionSeconds)))
@@ -62,7 +62,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
             return
         }
         let price = dto.price
-        AppLogger.debug("Handling DTO: symbol=\(symbol), price=\(price)", category: AppLogger.webSocket)
+        // Debug logging removed - only log errors
         stocksQueue.sync {
             let oldPrice = currentStocks[symbol]?.price ?? 0
             if let stock = dto.toDomainModel(invested: oldPrice) {

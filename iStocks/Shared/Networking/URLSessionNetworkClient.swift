@@ -19,7 +19,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Raw Data
     func request(_ endpoint: Endpoint) -> AnyPublisher<Data, Error> {
-        AppLogger.debug("request - Combine Raw Data: \(endpoint)", category: AppLogger.network)
+        // Verbose logging removed
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -35,7 +35,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Decodable
     func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error> {
-        AppLogger.debug("request - Combine Decodable: \(endpoint)", category: AppLogger.network)
+        // Verbose logging removed
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -52,7 +52,7 @@ final class URLSessionNetworkClient: NetworkClient {
     /*
     // MARK: - Closure
     func request<T: Decodable>(_ endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
-        AppLogger.debug("request - Closure Decodable: \(endpoint)", category: AppLogger.network)
+        // Verbose logging removed
         
         guard let url = endpoint.url else {
             completion(.failure(NetworkError.invalidURL))
@@ -83,7 +83,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Async/Await
     func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
-        AppLogger.debug("request - Async/Await Decodable: \(endpoint)", category: AppLogger.network)
+        // Verbose logging removed
 
         guard let url = endpoint.url else {
             throw NetworkError.invalidURL
@@ -99,7 +99,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Shared Validation
     private func validate(data: Data?, response: URLResponse?) throws -> Data {
-        AppLogger.debug("validate data: \(String(data: data ?? Data(), encoding: .utf8) ?? "nil")", category: AppLogger.network)
+        // Verbose validation logging removed
         guard let data = data else { throw NetworkError.noData }
         guard let http = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse
@@ -136,7 +136,7 @@ final class URLSessionNetworkClient: NetworkClient {
         if let json = try? JSONSerialization.jsonObject(with: data),
            let prettyData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
            let jsonString = String(data: prettyData, encoding: .utf8) {
-            AppLogger.debug("Raw JSON Response:\n\(jsonString)", category: AppLogger.network)
+            // Raw JSON logging removed - too verbose
         }
     }
 }

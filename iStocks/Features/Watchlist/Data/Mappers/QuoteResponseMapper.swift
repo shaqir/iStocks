@@ -24,21 +24,21 @@ enum QuoteResponseMapper {
         }
 
         if validStocks.isEmpty && !errorMessages.isEmpty {
-            AppLogger.error("Valid Stocks empty and errorMessages not empty", category: AppLogger.network)
+            AppLogger.error("No valid stocks returned", category: AppLogger.network)
             throw TwelveDataAPIError.invalidSymbols(errorMessages)
         }
 
         if !errorMessages.isEmpty {
-            AppLogger.warning("Quote mapping errors: \(errorMessages.joined(separator: ", "))", category: AppLogger.network)
+            AppLogger.warning("\(errorMessages.count) symbol(s) failed to map", category: AppLogger.network)
         }
 
         // Always throw if no valid stocks returned
         if validStocks.isEmpty {
-            AppLogger.error("Valid Stocks Empty", category: AppLogger.network)
+            AppLogger.error("Empty response received", category: AppLogger.network)
             throw AppError.api(message: "Invalid or empty response for symbols.")
         }
 
-        AppLogger.debug("Successfully mapped \(validStocks.count) valid stocks", category: AppLogger.network)
+        // Success logging removed - too verbose
         return validStocks
     }
 }

@@ -40,13 +40,13 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     // MARK: - Public Methods
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey_TwelveData)
-        AppLogger.debug("Fetching realtime prices for: \(symbols)", category: AppLogger.network)
+        // Verbose logging removed
         return networkClient.request(endpoint)
             .tryMap { (response: StockQuoteDynamicResponse) in
-                AppLogger.debug("Response received for: \(symbols)", category: AppLogger.network)
+                // Verbose logging removed
                 switch response {
                 case .dictionary(let map):
-                    AppLogger.debug("Dictionary-response: \(map)", category: AppLogger.network)
+                    // Verbose logging removed
                     let stocks = try QuoteResponseMapper.map(map)
                     guard !stocks.isEmpty else {
                         throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
@@ -54,7 +54,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                     return stocks
 
                 case .single(let wrapper):
-                    AppLogger.debug("single-response \(wrapper)", category: AppLogger.network)
+                    // Verbose logging removed
                     let stocks = try QuoteResponseMapper.map(["SINGLE": wrapper])
                     guard !stocks.isEmpty else {
                         throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
@@ -114,7 +114,10 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         let totalBatches = batches.count
         let currentRetry = retryCounts.indices.contains(index) ? retryCounts[index] : 0
 
-        AppLogger.info("Sending batch \(index + 1)/\(totalBatches): \(batch)", category: AppLogger.network)
+        // Only log first batch and errors (reduce verbosity)
+        if index == 0 {
+            AppLogger.info("Starting batch fetch: \(totalBatches) batches", category: AppLogger.network)
+        }
 
         fetchPrices(for: batch)
             .sink(receiveCompletion: { [weak self] completion in

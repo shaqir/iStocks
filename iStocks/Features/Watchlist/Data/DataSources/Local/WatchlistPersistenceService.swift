@@ -59,7 +59,7 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
         
         do {
             try context.save()
-            AppLogger.info("Watchlists saved successfully", category: AppLogger.persistence)
+            // Success logging removed - too verbose
             
         } catch {
             AppLogger.error("Failed to save Watchlists", category: AppLogger.persistence, error: error)
@@ -148,7 +148,7 @@ extension WatchlistPersistenceService {
 
         do {
             try context.save()
-            AppLogger.info("All stocks saved successfully", category: AppLogger.persistence)
+            // Success logging removed - too verbose
         } catch {
             AppLogger.error("Failed to save all stocks", category: AppLogger.persistence, error: error)
         }

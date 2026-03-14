@@ -187,7 +187,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     }
 
     private func handleIncoming(_ data: Data) {
-        AppLogger.debug("RAW incoming: \(String(data: data, encoding: .utf8) ?? "<invalid>")", category: AppLogger.webSocket)
+        // Debug logging removed - only log errors
         do {
             let message = try JSONDecoder().decode(FinnhubResponseMapper.self, from: data)
             if message.type == "trade", let trades = message.data {

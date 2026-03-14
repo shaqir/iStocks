@@ -32,9 +32,12 @@ final class ConnectionRetryManager {
         
         let delay = min(pow(2.0, Double(attempt)) * baseDelay, maxDelay)
         attempt += 1
-        
-        AppLogger.info("Scheduling retry #\(attempt) for \(taskName) in \(delay) seconds", category: AppLogger.webSocket)
-        
+
+        // Only log retries for warnings and above (not every retry)
+        if attempt > 2 {
+            AppLogger.warning("Retry #\(attempt) for \(taskName) in \(delay)s", category: AppLogger.webSocket)
+        }
+
         workItem?.cancel()
         let item = DispatchWorkItem(block: retryBlock)
         workItem = item
@@ -42,7 +45,7 @@ final class ConnectionRetryManager {
     }
     
     func reset() {
-        AppLogger.debug("Resetting retry state", category: AppLogger.webSocket)
+        // Debug logging removed - too verbose
         attempt = 0
         workItem?.cancel()
         workItem = nil
