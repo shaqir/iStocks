@@ -56,7 +56,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
         components.queryItems = [URLQueryItem(name: "token", value: apiKey)]
         
         guard let url = components.url else {
-            AppLogger.error("Invalid WebSocket URL — check API key configuration", category: .webSocket)
+            AppLogger.error("Invalid WebSocket URL — check API key configuration", category: AppLogger.webSocket)
             return nil
         }
         return url
@@ -67,14 +67,14 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
         guard connectionState != .connected && connectionState != .connecting else { return }
 
         guard let url = url else {
-            AppLogger.error("Cannot connect: Invalid WebSocket URL", category: .webSocket)
+            AppLogger.error("Cannot connect: Invalid WebSocket URL", category: AppLogger.webSocket)
             connectionState = .disconnected
             return
         }
 
         disconnect(clearPending: false)
         connectionState = .connecting
-        AppLogger.info("Connecting to \(url.absoluteString)", category: .webSocket)
+        AppLogger.info("Connecting to \(url.absoluteString)", category: AppLogger.webSocket)
 
         let request = URLRequest(url: url)
         webSocketTask = session.webSocketTask(with: request)
@@ -102,7 +102,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     private func reconnect() {
         guard connectionState != .reconnecting else { return }
         if reconnectManager.hasReachedMaxAttempts {
-            Logger.log("[WebSocket] Max reconnect attempts reached", category: "WebSocket")
+            AppLogger.warning("Max reconnect attempts reached", category: AppLogger.webSocket)
             return
         }
         connectionState = .reconnecting
@@ -123,7 +123,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
         }
         webSocketTask?.send(message) { error in
             if let error = error {
-                Logger.log("[WebSocket] Send failed: \(error)", category: "WebSocket")
+                AppLogger.error("Send failed", category: AppLogger.webSocket, error: error)
             }
         }
     }
@@ -175,10 +175,10 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
                 case .string(let text):
                     self.handleIncoming(Data(text.utf8))
                 @unknown default:
-                    Logger.log("[WebSocket] Unknown message format", category: "WebSocket")
+                    AppLogger.warning("Unknown message format", category: AppLogger.webSocket)
                 }
             case .failure(let error):
-                Logger.log("[WebSocket] Receive error: \(error)", category: "WebSocket")
+                AppLogger.error("Receive error", category: AppLogger.webSocket, error: error)
                 self.connectionState = .disconnected
                 self.isReadyToSubscribe = false
                 self.reconnect()
@@ -187,7 +187,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     }
 
     private func handleIncoming(_ data: Data) {
-        Logger.log("[WebSocket] RAW incoming: \(String(data: data, encoding: .utf8) ?? "<invalid>")", category: "WebSocket")
+        AppLogger.debug("RAW incoming: \(String(data: data, encoding: .utf8) ?? "<invalid>")", category: AppLogger.webSocket)
         do {
             let message = try JSONDecoder().decode(FinnhubResponseMapper.self, from: data)
             if message.type == "trade", let trades = message.data {
@@ -197,14 +197,14 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
                 }
             }
         } catch {
-            Logger.log("[WebSocket] JSON decoding failed: \(error)", category: "WebSocket")
+            AppLogger.error("JSON decoding failed", category: AppLogger.webSocket, error: error)
         }
     }
 }
 
 extension FinnhubWebSocketClient: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        Logger.log("[WebSocket] Connected", category: "WebSocket")
+        AppLogger.info("Connected", category: AppLogger.webSocket)
         connectionState = .connected
         isReadyToSubscribe = true
         reconnectManager.reset()
@@ -213,7 +213,7 @@ extension FinnhubWebSocketClient: URLSessionWebSocketDelegate {
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        Logger.log("[WebSocket] Disconnected", category: "WebSocket")
+        AppLogger.info("Disconnected", category: AppLogger.webSocket)
         connectionState = .disconnected
         isReadyToSubscribe = false
         reconnect()
@@ -221,7 +221,7 @@ extension FinnhubWebSocketClient: URLSessionWebSocketDelegate {
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
-            Logger.log("[WebSocket] Completed with error: \(error.localizedDescription)", category: "WebSocket")
+            AppLogger.error("Completed with error", category: AppLogger.webSocket, error: error)
         }
     }
 }

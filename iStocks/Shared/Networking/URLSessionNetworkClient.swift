@@ -19,7 +19,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Raw Data
     func request(_ endpoint: Endpoint) -> AnyPublisher<Data, Error> {
-        Logger.log("request - Combine Raw Data: \(endpoint)", category: "URLSessionNetworkClient")
+        AppLogger.debug("request - Combine Raw Data: \(endpoint)", category: AppLogger.network)
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -35,7 +35,7 @@ final class URLSessionNetworkClient: NetworkClient {
     
     // MARK: - Combine Decodable
     func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error> {
-        Logger.log("request - Combine Decodable: \(endpoint)", category: "URLSessionNetworkClient")
+        AppLogger.debug("request - Combine Decodable: \(endpoint)", category: AppLogger.network)
         guard let url = endpoint.url else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
@@ -52,7 +52,7 @@ final class URLSessionNetworkClient: NetworkClient {
     /*
     // MARK: - Closure
     func request<T: Decodable>(_ endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
-        Logger.log("request - Closure Decodable: \(endpoint)", category: "URLSessionNetworkClient")
+        AppLogger.debug("request - Closure Decodable: \(endpoint)", category: AppLogger.network)
         
         guard let url = endpoint.url else {
             completion(.failure(NetworkError.invalidURL))
@@ -83,7 +83,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Async/Await
     func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
-        Logger.log("request - Async/Await Decodable: \(endpoint)", category: "URLSessionNetworkClient")
+        AppLogger.debug("request - Async/Await Decodable: \(endpoint)", category: AppLogger.network)
 
         guard let url = endpoint.url else {
             throw NetworkError.invalidURL
@@ -99,7 +99,7 @@ final class URLSessionNetworkClient: NetworkClient {
 
     // MARK: - Shared Validation
     private func validate(data: Data?, response: URLResponse?) throws -> Data {
-        Logger.log("validate data: \(String(data: data ?? Data(), encoding: .utf8) ?? "nil")")
+        AppLogger.debug("validate data: \(String(data: data ?? Data(), encoding: .utf8) ?? "nil")", category: AppLogger.network)
         guard let data = data else { throw NetworkError.noData }
         guard let http = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse
@@ -136,7 +136,7 @@ final class URLSessionNetworkClient: NetworkClient {
         if let json = try? JSONSerialization.jsonObject(with: data),
            let prettyData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
            let jsonString = String(data: prettyData, encoding: .utf8) {
-            Logger.log("Raw JSON Response:\n\(jsonString)", category: "URLSession")
+            AppLogger.debug("Raw JSON Response:\n\(jsonString)", category: AppLogger.network)
         }
     }
 }

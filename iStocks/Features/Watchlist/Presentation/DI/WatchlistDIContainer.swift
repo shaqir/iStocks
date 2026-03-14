@@ -16,9 +16,7 @@ enum WatchlistAppMode {
 }
 
 // MARK: - DI Container
-/// Thread-safe dependency injection container for Watchlist module
-/// All static properties are accessed on MainActor to ensure thread safety
-@MainActor
+/// Dependency injection container for Watchlist module
 final class WatchlistDIContainer {
     
     static var mode: WatchlistAppMode {

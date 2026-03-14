@@ -50,7 +50,7 @@ extension WatchlistsViewModel: WatchlistsViewModelTestable {
             return oldWatchlist.copyWith(stocks: updatedStocks)
         }
         
-        AppLogger.debug("Sent price updates to all watchlists", category: .viewModel)
+        AppLogger.debug("Sent price updates to all watchlists", category: AppLogger.viewModel)
     }
 }
 

@@ -23,7 +23,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     }
     
     private func bindWebSocket() {
-        Logger.log("Binding WebSocket to stockPublisher", category: "WebSocket")
+        AppLogger.info("Binding WebSocket to stockPublisher", category: AppLogger.webSocket)
         webSocket.stockPublisher
         ///Batches incoming DTOs per 1 second. Prevents excessive UI updates.
             .collect(.byTime(RunLoop.main, .seconds(AppConstants.batchCollectionSeconds)))
@@ -58,18 +58,18 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     private func handle(_ dto: StockFinnPriceDTO) {
         
         guard let symbol = dto.symbol else {
-            Logger.log("Missing symbol in DTO, skipping", category: "WebSocket")
+            AppLogger.warning("Missing symbol in DTO, skipping", category: AppLogger.webSocket)
             return
         }
         let price = dto.price
-        Logger.log("Handling DTO: symbol=\(symbol), price=\(price)", category: "WebSocket")
+        AppLogger.debug("Handling DTO: symbol=\(symbol), price=\(price)", category: AppLogger.webSocket)
         stocksQueue.sync {
             let oldPrice = currentStocks[symbol]?.price ?? 0
             if let stock = dto.toDomainModel(invested: oldPrice) {
                 currentStocks[symbol] = stock
                 subject.send(Array(currentStocks.values))
             } else {
-                Logger.log("Invalid StockDTO, could not convert to Stock: \(symbol)", category: "WebSocket")
+                AppLogger.error("Invalid StockDTO, could not convert to Stock: \(symbol)", category: AppLogger.webSocket)
             }
         }
     }

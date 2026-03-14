@@ -32,13 +32,13 @@ final class RestStockRepositoryImpl: RestStockRepository {
         let missingSymbols = NYSETop50Symbols.top50.filter { !savedSymbols.contains($0) }
 
         if missingSymbols.isEmpty {
-            Logger.log("All top 50 symbols already saved — skipping API call", category: "RestStockRepository")
+            AppLogger.info("All top 50 symbols already saved — skipping API call", category: AppLogger.network)
             return Just(allSaved)
                 .setFailureType(to: Error.self)
                 .eraseToAnyPublisher()
         }
 
-        Logger.log("Fetching only \(missingSymbols.count) new symbols in batches", category: "RestStockRepository")
+        AppLogger.info("Fetching only \(missingSymbols.count) new symbols in batches", category: AppLogger.network)
 
         return remoteDataSource.fetchRealtimePricesForTop50InBatches(
             missingSymbols,

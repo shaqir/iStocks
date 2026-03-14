@@ -26,14 +26,14 @@ final class ConnectionRetryManager {
     
     func scheduleRetry(taskName: String, on queue: DispatchQueue = .main, retryBlock: @escaping () -> Void) {
         guard attempt < maxAttempts else {
-            Logger.log("[RetryManager] Max retry attempts reached for \(taskName).", category: "WebSocket")
+            AppLogger.warning("Max retry attempts reached for \(taskName)", category: AppLogger.webSocket)
             return
         }
         
         let delay = min(pow(2.0, Double(attempt)) * baseDelay, maxDelay)
         attempt += 1
         
-        Logger.log("[RetryManager] Scheduling retry #\(attempt) for \(taskName) in \(delay) seconds", category: "WebSocket")
+        AppLogger.info("Scheduling retry #\(attempt) for \(taskName) in \(delay) seconds", category: AppLogger.webSocket)
         
         workItem?.cancel()
         let item = DispatchWorkItem(block: retryBlock)
@@ -42,7 +42,7 @@ final class ConnectionRetryManager {
     }
     
     func reset() {
-        Logger.log("[RetryManager] Resetting retry state.", category: "WebSocket")
+        AppLogger.debug("Resetting retry state", category: AppLogger.webSocket)
         attempt = 0
         workItem?.cancel()
         workItem = nil

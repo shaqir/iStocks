@@ -59,10 +59,10 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
         
         do {
             try context.save()
-            Logger.log("Watchlists saved successfully.")
+            AppLogger.info("Watchlists saved successfully", category: AppLogger.persistence)
             
         } catch {
-            Logger.log("Failed to save Watchlists:\(error.localizedDescription)")
+            AppLogger.error("Failed to save Watchlists", category: AppLogger.persistence, error: error)
         }
     }
 
@@ -79,7 +79,7 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
         do {
             try context.save()
         } catch {
-            Logger.log("Failed to save single watchlist: \(error.localizedDescription)")
+            AppLogger.error("Failed to save single watchlist", category: AppLogger.persistence, error: error)
         }
     }
 
@@ -98,7 +98,7 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
                 try context.save()
             }
         } catch {
-            Logger.log("Failed to update watchlist: \(error.localizedDescription)")
+            AppLogger.error("Failed to update watchlist", category: AppLogger.persistence, error: error)
         }
     }
 
@@ -111,7 +111,7 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
             }
             try context.save()
         } catch {
-            Logger.log("Failed to clear Watchlists: \(error.localizedDescription)")
+            AppLogger.error("Failed to clear Watchlists", category: AppLogger.persistence, error: error)
         }
     }
     
@@ -126,7 +126,7 @@ extension WatchlistPersistenceService: WatchlistPersistenceProtocol{
                 try context.save()
             }
         } catch {
-            Logger.log("Failed to delete watchlist: \(error.localizedDescription)")
+            AppLogger.error("Failed to delete watchlist", category: AppLogger.persistence, error: error)
         }
     }
     
@@ -148,9 +148,9 @@ extension WatchlistPersistenceService {
 
         do {
             try context.save()
-            Logger.log("All stocks saved successfully.", category: "Persistence")
+            AppLogger.info("All stocks saved successfully", category: AppLogger.persistence)
         } catch {
-            Logger.log("Failed to save all stocks: \(error.localizedDescription)", category: "Persistence")
+            AppLogger.error("Failed to save all stocks", category: AppLogger.persistence, error: error)
         }
     }
 
@@ -160,7 +160,7 @@ extension WatchlistPersistenceService {
             let results = try context.fetch(descriptor)
             return results.map { $0.toDomain() }
         } catch {
-            Logger.log("Failed to load all stocks: \(error.localizedDescription)")
+            AppLogger.error("Failed to load all stocks", category: AppLogger.persistence, error: error)
             return []
         }
     }
@@ -174,7 +174,7 @@ extension WatchlistPersistenceService {
             }
             try context.save()
         } catch {
-            Logger.log("Failed to clear stock entities: \(error.localizedDescription)")
+            AppLogger.error("Failed to clear stock entities", category: AppLogger.persistence, error: error)
         }
     }
     

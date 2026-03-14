@@ -40,13 +40,13 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     // MARK: - Public Methods
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error> {
         let endpoint = QuoteEndPoint.forSymbols(symbols, apiKey: API.apiKey_TwelveData)
-        Logger.log("Fetching realtime prices for: \(symbols)", category: "StockRemoteDataSource")
+        AppLogger.debug("Fetching realtime prices for: \(symbols)", category: AppLogger.network)
         return networkClient.request(endpoint)
             .tryMap { (response: StockQuoteDynamicResponse) in
-                Logger.log("Response received for: \(symbols)", category: "StockRemoteDataSource")
+                AppLogger.debug("Response received for: \(symbols)", category: AppLogger.network)
                 switch response {
                 case .dictionary(let map):
-                    Logger.log("Dictionary-response: \(map)", category: "StockQuoteDynamicResponse")
+                    AppLogger.debug("Dictionary-response: \(map)", category: AppLogger.network)
                     let stocks = try QuoteResponseMapper.map(map)
                     guard !stocks.isEmpty else {
                         throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
@@ -54,7 +54,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                     return stocks
 
                 case .single(let wrapper):
-                    Logger.log("single-response \(wrapper)", category: "StockQuoteDynamicResponse")
+                    AppLogger.debug("single-response \(wrapper)", category: AppLogger.network)
                     let stocks = try QuoteResponseMapper.map(["SINGLE": wrapper])
                     guard !stocks.isEmpty else {
                         throw AppError.api(message: "Invalid or empty response for symbols: \(symbols)")
@@ -114,7 +114,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         let totalBatches = batches.count
         let currentRetry = retryCounts.indices.contains(index) ? retryCounts[index] : 0
 
-        Logger.log("Sending batch \(index + 1)/\(totalBatches): \(batch)", category: "StockRemoteDataSource")
+        AppLogger.info("Sending batch \(index + 1)/\(totalBatches): \(batch)", category: AppLogger.network)
 
         fetchPrices(for: batch)
             .sink(receiveCompletion: { [weak self] completion in
@@ -126,7 +126,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
 
                 case .failure:
                     if currentRetry < 2 {
-                        Logger.log("Retrying batch \(index + 1) in 60s (Attempt \(currentRetry + 2))", category: "Retry")
+                        AppLogger.warning("Retrying batch \(index + 1) in 60s (Attempt \(currentRetry + 2))", category: AppLogger.network)
                         onProgress?(index + 1, totalBatches, currentRetry + 1, false)
 
                         var updatedRetryCounts = retryCounts
@@ -146,7 +146,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
                         }
                         return
                     } else {
-                        Logger.log("Failed batch \(index + 1) after 3 tries — skipping", category: "Retry")
+                        AppLogger.error("Failed batch \(index + 1) after 3 tries — skipping", category: AppLogger.network)
                         onProgress?(index + 1, totalBatches, currentRetry, false)
                     }
                 }
@@ -178,7 +178,7 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
         } else {
             appError = .unknown(error)
         }
-        Logger.log("api error: \(appError)", category: "StockRemoteDataSource")
+        AppLogger.error("API error: \(appError)", category: AppLogger.network)
         return appError
     }
 }
