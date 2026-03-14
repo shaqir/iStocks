@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: 📦 Checkout Repository
@@ -19,12 +19,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🛠 Select Latest Xcode
+      - name: 🛠 Select Xcode 16.4
         run: |
-          # Use latest Xcode available on macOS 14
-          sudo xcode-select -s /Applications/Xcode_15.4.app || \
-          sudo xcode-select -s /Applications/Xcode_15.2.app || \
-          sudo xcode-select -s /Applications/Xcode_15.0.app || \
+          # Use Xcode 16.4 on macOS 15 for project format 77 compatibility
+          sudo xcode-select -s /Applications/Xcode_16.4.app || \
+          sudo xcode-select -s /Applications/Xcode_16.3.app || \
+          sudo xcode-select -s /Applications/Xcode_16.2.app || \
+          sudo xcode-select -s /Applications/Xcode_16.1.app || \
+          sudo xcode-select -s /Applications/Xcode_16.0.app || \
           sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
 
@@ -53,8 +55,7 @@ jobs:
           xcodebuild clean \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
-            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: 🧪 Build and Run Tests
@@ -63,10 +64,9 @@ jobs:
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath DerivedData \
             -enableCodeCoverage YES \
-            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             | xcpretty || true
@@ -75,11 +75,10 @@ jobs:
           xcodebuild test-without-building \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath DerivedData \
             -enableCodeCoverage YES \
             -skip-testing:iStocksIntegrationTests \
-            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             | xcpretty && exit ${PIPESTATUS[0]} || exit 0
