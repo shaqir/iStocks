@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: 📦 Checkout Repository
@@ -21,9 +21,11 @@ jobs:
 
       - name: 🛠 Select Latest Xcode
         run: |
-          # Use latest available Xcode on macOS 14
-          sudo xcode-select -s /Applications/Xcode_15.4.app || \
-          sudo xcode-select -s /Applications/Xcode_15.2.app || \
+          # Use Xcode 16.x for iOS 18.2 support
+          sudo xcode-select -s /Applications/Xcode_16.3.app || \
+          sudo xcode-select -s /Applications/Xcode_16.2.app || \
+          sudo xcode-select -s /Applications/Xcode_16.1.app || \
+          sudo xcode-select -s /Applications/Xcode_16.0.app || \
           sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
 
@@ -52,7 +54,7 @@ jobs:
           xcodebuild clean \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: 🧪 Build and Run Tests
@@ -61,7 +63,7 @@ jobs:
           xcodebuild build-for-testing \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath DerivedData \
             -enableCodeCoverage YES \
             CODE_SIGNING_ALLOWED=NO \
@@ -72,7 +74,7 @@ jobs:
           xcodebuild test-without-building \
             -project iStocks.xcodeproj \
             -scheme iStocks \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath DerivedData \
             -enableCodeCoverage YES \
             -skip-testing:iStocksIntegrationTests \
