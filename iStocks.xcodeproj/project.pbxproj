@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DF3920FC2F65E34900CA712C /* ARCHITECTURE.md in Resources */ = {isa = PBXBuildFile; fileRef = DF3920FB2F65E34900CA712C /* ARCHITECTURE.md */; };
+		DF3920FE2F65E39400CA712C /* SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = DF3920FD2F65E39400CA712C /* SETUP.md */; };
+		DF3921002F65E40800CA712C /* IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = DF3920FF2F65E40800CA712C /* IMPROVEMENTS.md */; };
 		DF6EED432E31A61B00459154 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		DFD987DC2E32CB5B00521086 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = DFD987DB2E32CB5B00521086 /* ViewInspector */; };
 /* End PBXBuildFile section */
@@ -29,6 +32,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DF3920FB2F65E34900CA712C /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
+		DF3920FD2F65E39400CA712C /* SETUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = "<group>"; };
+		DF3920FF2F65E40800CA712C /* IMPROVEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = IMPROVEMENTS.md; sourceTree = "<group>"; };
 		DF4A64C92DF49CF600F2F879 /* iStocks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iStocks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -109,6 +115,9 @@
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 				DF4A64CA2DF49CF600F2F879 /* Products */,
 				DFED424F2E38839B0022F84F /* iStocksTestPlan.xctestplan */,
+				DF3920FB2F65E34900CA712C /* ARCHITECTURE.md */,
+				DF3920FD2F65E39400CA712C /* SETUP.md */,
+				DF3920FF2F65E40800CA712C /* IMPROVEMENTS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -246,6 +255,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF3920FE2F65E39400CA712C /* SETUP.md in Resources */,
+				DF3920FC2F65E34900CA712C /* ARCHITECTURE.md in Resources */,
+				DF3921002F65E40800CA712C /* IMPROVEMENTS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

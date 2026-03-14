@@ -16,9 +16,15 @@ enum WatchlistAppMode {
 }
 
 // MARK: - DI Container
+/// Thread-safe dependency injection container for Watchlist module
+/// All static properties are accessed on MainActor to ensure thread safety
+@MainActor
 final class WatchlistDIContainer {
     
-    static let mode: WatchlistAppMode = .mock
+    static var mode: WatchlistAppMode {
+        AppConfiguration.watchlistMode
+    }
+    
     private static var cachedUseCases: WatchlistUseCases?
     
     // MARK: - Cached repositories

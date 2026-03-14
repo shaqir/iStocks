@@ -29,7 +29,9 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     private override init() { super.init() }
 
     // MARK: - Properties
-    private let apiKey = API.apiKey_finnhub
+    private var apiKey: String {
+        SecureAPIKeyManager.finnhubAPIKey
+    }
     private lazy var session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
     private var webSocketTask: URLSessionWebSocketTask?
     private let stockSubject = PassthroughSubject<StockFinnPriceDTO, Never>()
@@ -47,13 +49,15 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     private let maxSubscribeRetryAttempts = 5
     private let reconnectManager = ConnectionRetryManager()
 
-    private var url: URL {
+    private var url: URL? {
         var components = URLComponents()
         components.scheme = "wss"
         components.host = "ws.finnhub.io"
         components.queryItems = [URLQueryItem(name: "token", value: apiKey)]
+        
         guard let url = components.url else {
-            fatalError("Invalid WebSocket URL — check API key configuration")
+            AppLogger.error("Invalid WebSocket URL — check API key configuration", category: .webSocket)
+            return nil
         }
         return url
     }
@@ -62,9 +66,15 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     func connect() {
         guard connectionState != .connected && connectionState != .connecting else { return }
 
+        guard let url = url else {
+            AppLogger.error("Cannot connect: Invalid WebSocket URL", category: .webSocket)
+            connectionState = .disconnected
+            return
+        }
+
         disconnect(clearPending: false)
         connectionState = .connecting
-        Logger.log("[WebSocket] Connecting to \(url)", category: "WebSocket")
+        AppLogger.info("Connecting to \(url.absoluteString)", category: .webSocket)
 
         let request = URLRequest(url: url)
         webSocketTask = session.webSocketTask(with: request)

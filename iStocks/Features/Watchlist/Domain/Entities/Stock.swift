@@ -6,41 +6,88 @@
 //
 import Foundation
 
-//The Domain Model: This is the model your app logic and UI should use.
+/// Domain model representing a stock with price, holdings, and P&L calculations
+///
+/// This is the core business entity used throughout the app.
+/// Immutable except for price updates which create new instances.
+///
+/// Example:
+/// ```swift
+/// let stock = Stock(
+///     symbol: "AAPL",
+///     name: "Apple Inc.",
+///     price: 150.0,
+///     previousPrice: 148.0,
+///     isPriceUp: true,
+///     qty: 10,
+///     averageBuyPrice: 145.0,
+///     sector: "Technology",
+///     currency: "USD",
+///     exchange: "NASDAQ",
+///     isFavorite: false
+/// )
+/// print(stock.pnl) // Profit/Loss: 50.0
+/// ```
 struct Stock: Identifiable, Codable, Equatable {
     
-    var id: String { symbol } // Stable ID : // derive ID from symbol for uniqueness
+    /// Unique identifier derived from stock symbol
+    var id: String { symbol }
+    
+    /// Stock ticker symbol (e.g., "AAPL", "GOOGL")
     let symbol: String
+    
+    /// Company or stock name
     let name: String
-    var price: Double              // Current market price
+    
+    /// Current market price
+    var price: Double
+    
+    /// Previous price for change calculation
     let previousPrice: Double
+    
+    /// Whether the price increased from previous
     let isPriceUp: Bool
 
-    let qty: Double                // Total quantity owned
-    let averageBuyPrice: Double    // Weighted average buy price
+    /// Total quantity owned
+    let qty: Double
+    
+    /// Weighted average buy price per share
+    let averageBuyPrice: Double
+    
+    /// Stock sector (e.g., "Technology", "Finance")
     let sector: String
 
+    /// Currency code (e.g., "USD", "EUR")
     let currency: String
+    
+    /// Exchange name (e.g., "NASDAQ", "NYSE")
     let exchange: String
+    
+    /// Whether marked as favorite by user
     let isFavorite: Bool
    
+    /// Total amount invested (quantity × average buy price)
     var invested: Double {
         qty * averageBuyPrice
     }
 
+    /// Profit & Loss in currency units
     var pnl: Double {
         (price * qty) - invested
     }
 
+    /// Profit & Loss as a percentage of investment
     var pnlPercentage: Double {
         guard invested != 0 else { return 0 }
         return (pnl / invested) * 100
     }
 
+    /// Current market value of holdings
     var currentValue: Double {
         price * qty
     }
 
+    /// Whether price has changed from previous value
     var hasPriceChanged: Bool {
         price != previousPrice
     }
