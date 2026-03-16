@@ -87,33 +87,39 @@ final class WatchlistDIContainer {
         switch mode {
         case .mock:
             let mockRepo = makeMockRepository()
-            useCases =  WatchlistUseCases(
+            let persistence = makePersistenceService(context: context)
+            useCases = WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: mockRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: mockRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: mockRepo),
-                observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: mockRepo),
-                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo)
+                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo),
+                saveWatchlists: SaveWatchlistsUseCaseImpl(persistenceService: persistence),
+                loadWatchlists: LoadWatchlistsUseCaseImpl(persistenceService: persistence)
             )
-            
+
         case .restAPI:
             let restRepo = makeRestRepository(context: context)
+            let persistence = makePersistenceService(context: context)
             useCases = WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: restRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: restRepo),
-                observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: restRepo),
-                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo)
+                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo),
+                saveWatchlists: SaveWatchlistsUseCaseImpl(persistenceService: persistence),
+                loadWatchlists: LoadWatchlistsUseCaseImpl(persistenceService: persistence)
             )
-            
+
         case .websocket:
             let liveRepo = makeWebSocketRepository()
             let restRepo = makeRestRepository(context: context)
+            let persistence = makePersistenceService(context: context)
             useCases = WatchlistUseCases(
                 observeMock: ObserveMockStocksUseCaseImpl(repository: liveRepo),
                 observeTop50: ObserveTop50StocksUseCaseImpl(repository: restRepo),
                 observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: liveRepo),
-                observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: liveRepo),
-                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo)
+                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: restRepo),
+                saveWatchlists: SaveWatchlistsUseCaseImpl(persistenceService: persistence),
+                loadWatchlists: LoadWatchlistsUseCaseImpl(persistenceService: persistence)
             )
         }
         
@@ -123,20 +129,20 @@ final class WatchlistDIContainer {
     }
 
     // MARK: - ViewModel Factory
+    @MainActor
     static func makeWatchlistsViewModel(
         mode: WatchlistAppMode,
         context: ModelContext,
         viewModelProvider: WatchlistViewModelProvider
     ) -> WatchlistsViewModel {
         let useCases = makeWatchlistUseCases(context: context)
-        let persistence = makePersistenceService(context: context)
-        
+
         Logger.log("App started in \(mode) mode", category: "Startup")
         Logger.log("makeWatchlistsViewModel Factory callled.")
-        
+
         return WatchlistsViewModel(
             useCases: useCases,
-            persistenceService: persistence,
+            mode: mode,
             viewModelProvider: viewModelProvider
         )
     }

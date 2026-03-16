@@ -13,6 +13,7 @@ import Combine
 
 // MARK: - Mock Implementations
 
+@MainActor
 final class MockWatchlistViewModelProvider: WatchlistViewModelProvider {
     var allStocks: [iStocks.Stock]
     var watchlistDidUpdate: PassthroughSubject<iStocks.Watchlist, Never>
@@ -38,19 +39,41 @@ final class MockWatchlistViewModelProvider: WatchlistViewModelProvider {
     }
 }
 
+// MARK: - Mock Persistence Use Cases
+
+final class MockSaveWatchlistsUseCase: SaveWatchlistsUseCase {
+    private(set) var savedWatchlists: [Watchlist] = []
+    private(set) var savedStocks: [Stock] = []
+
+    func saveAll(_ watchlists: [Watchlist]) { savedWatchlists = watchlists }
+    func saveSingle(_ watchlist: Watchlist) { savedWatchlists.append(watchlist) }
+    func saveAllStocks(_ stocks: [Stock]) { savedStocks = stocks }
+}
+
+final class MockLoadWatchlistsUseCase: LoadWatchlistsUseCase {
+    var watchlistsToReturn: [Watchlist] = []
+    var stocksToReturn: [Stock] = []
+
+    func loadWatchlists() -> [Watchlist] { watchlistsToReturn }
+    func loadAllStocks() -> [Stock] { stocksToReturn }
+}
+
 // MARK: - Test Fixtures & Factories
 
+@MainActor
 func makeInMemoryModelContext() throws -> ModelContext {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try ModelContainer(for: WatchlistEntity.self, configurations: config)
     return ModelContext(container)
 }
 
+@MainActor
 func makeMockRepository() -> MockWatchlistRepository {
     Logger.log("makeMockRepository() called.")
     return MockStockRepositoryImpl(service: MockStockStreamingService())
 }
 
+@MainActor
 func makeWatchlistUseCases(mode: WatchlistAppMode, mockRepo: any MockWatchlistRepository) -> WatchlistUseCases {
     switch mode {
     case .mock:
@@ -58,43 +81,54 @@ func makeWatchlistUseCases(mode: WatchlistAppMode, mockRepo: any MockWatchlistRe
             observeMock: ObserveMockStocksUseCaseImpl(repository: mockRepo),
             observeTop50: ObserveTop50StocksUseCaseImpl(repository: mockRepo),
             observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: mockRepo),
-            observeWatchlist: ObserveWatchlistStocksUseCaseImpl(repository: mockRepo),
-            fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo)
+            fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo),
+            saveWatchlists: MockSaveWatchlistsUseCase(),
+            loadWatchlists: MockLoadWatchlistsUseCase()
         )
     default:
         fatalError("Only .mock mode is supported in tests for now")
     }
 }
 
+@MainActor
 func makeWatchlistsViewModel(mode: WatchlistAppMode = .mock) throws -> WatchlistsViewModel {
-    let context = try makeInMemoryModelContext()
-    let persistenceService = WatchlistPersistenceService(context: context)
     let mockRepo = makeMockRepository()
     let useCases = makeWatchlistUseCases(mode: .mock, mockRepo: mockRepo)
     let provider = MockWatchlistViewModelProvider(availableStocks: MockStockData.allStocks)
 
     return WatchlistsViewModel(
         useCases: useCases,
-        persistenceService: persistenceService,
+        mode: .mock,
         viewModelProvider: provider
     )
 }
 
+@MainActor
 func makeWatchlistsViewModelWithMockData() throws -> WatchlistsViewModel {
     let context = try makeInMemoryModelContext()
     let persistenceService = WatchlistPersistenceService(context: context)
 
-    // Inject mock watchlists
+    // Seed mock watchlists via real persistence service, then wrap in use cases
     let mockWatchlists = WatchlistFactory.createMockWatchlists()
     persistenceService.saveWatchlists(mockWatchlists)
 
     let mockRepo = makeMockRepository()
-    let useCases = makeWatchlistUseCases(mode: .mock, mockRepo: mockRepo)
+    let loadUseCase = LoadWatchlistsUseCaseImpl(persistenceService: persistenceService)
+    let saveUseCase = SaveWatchlistsUseCaseImpl(persistenceService: persistenceService)
     let provider = MockWatchlistViewModelProvider(availableStocks: MockStockData.allStocks)
+
+    let useCases = WatchlistUseCases(
+        observeMock: ObserveMockStocksUseCaseImpl(repository: mockRepo),
+        observeTop50: ObserveTop50StocksUseCaseImpl(repository: mockRepo),
+        observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: mockRepo),
+        fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: mockRepo),
+        saveWatchlists: saveUseCase,
+        loadWatchlists: loadUseCase
+    )
 
     return WatchlistsViewModel(
         useCases: useCases,
-        persistenceService: persistenceService,
+        mode: .mock,
         viewModelProvider: provider
     )
 }
@@ -106,6 +140,7 @@ let expectedNames = [
 
 // MARK: - WatchlistsViewModelTests
 
+@MainActor
 class WatchlistsViewModelTests: XCTestCase {
 
     private var cancellables = Set<AnyCancellable>()
@@ -284,7 +319,7 @@ class WatchlistsViewModelTests: XCTestCase {
         guard let toDelete = viewModel.watchlists.first else {
             return XCTFail("No watchlists found in mock setup.")
         }
-        viewModel.test_removeWatchlist(toDelete)
+        viewModel.removeWatchlist(toDelete)
         
 
         XCTAssertFalse(viewModel.watchlists.contains { $0.id == toDelete.id })
@@ -297,7 +332,7 @@ class WatchlistsViewModelTests: XCTestCase {
         guard let first = viewModel.watchlists.first else {
             return XCTFail("No watchlists found in mock setup.")
         }
-        viewModel.test_removeWatchlist(first)
+        viewModel.removeWatchlist(first)
 
         XCTAssertFalse(viewModel.watchlists.contains(first))
     }
@@ -307,7 +342,7 @@ class WatchlistsViewModelTests: XCTestCase {
         viewModel.loadWatchlists()
 
         let ghost = Watchlist(id: UUID(), name: "Ghost", stocks: [])
-        viewModel.test_removeWatchlist(ghost)
+        viewModel.removeWatchlist(ghost)
 
         XCTAssertTrue(viewModel.watchlists.allSatisfy { $0.id != ghost.id })
     }
@@ -346,7 +381,7 @@ class WatchlistsViewModelTests: XCTestCase {
             viewModel.watchlists.flatMap { $0.stocks }.first(where: { $0.symbol == symbol })?.withPriceIncremented(by: 2)
         }
 
-        viewModel.test_updateStockPrices(updates)
+        viewModel.updateStockPrices(updates)
 
         for updated in updates {
             let match = viewModel.watchlists.flatMap { $0.stocks }.first(where: { $0.symbol == updated.symbol })
@@ -367,7 +402,7 @@ class WatchlistsViewModelTests: XCTestCase {
         }
 
         let updated = before.withPriceIncremented(by: 10)
-        viewModel.test_updateStockPrices([updated])
+        viewModel.updateStockPrices([updated])
 
         guard let after = viewModel.watchlists.first?.stocks.first else {
             return XCTFail("No updated stock found.")
@@ -391,7 +426,7 @@ class WatchlistsViewModelTests: XCTestCase {
         
         let updates = firstwatchlist.stocks.map { $0.withPriceIncremented(by: 1) }
 
-        viewModel.test_replacePrices(updates)
+        viewModel.replacePrices(updates)
 
         XCTAssertEqual(firstwatchlist.stocks.count, beforeCount.stocks.count)
         XCTAssertTrue(firstwatchlist.stocks.allSatisfy { $0.price > 0 })

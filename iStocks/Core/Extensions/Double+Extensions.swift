@@ -8,11 +8,15 @@
 import Foundation
 
 extension Double {
-    var currencyFormatted: String {
+    private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencySymbol = "$" // or "₹", or use locale
+        formatter.currencySymbol = "$"
         formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
+        return formatter
+    }()
+
+    var currencyFormatted: String {
+        Double.currencyFormatter.string(from: NSNumber(value: self)) ?? "\(self)"
     }
 }

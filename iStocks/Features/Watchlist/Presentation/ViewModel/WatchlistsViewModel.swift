@@ -7,6 +7,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class WatchlistsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var watchlists: [Watchlist] = []
@@ -21,7 +22,7 @@ final class WatchlistsViewModel: ObservableObject {
     
     // MARK: - Dependencies
     let useCases: WatchlistUseCases
-    let persistenceService: WatchlistPersistenceService
+    let mode: WatchlistAppMode
     private var viewModelProvider: WatchlistViewModelProvider
     
     // MARK: - Private State
@@ -41,11 +42,11 @@ final class WatchlistsViewModel: ObservableObject {
     // MARK: - Init
     init(
         useCases: WatchlistUseCases,
-        persistenceService: WatchlistPersistenceService,
+        mode: WatchlistAppMode = AppConfiguration.watchlistMode,
         viewModelProvider: WatchlistViewModelProvider
     ) {
         self.useCases = useCases
-        self.persistenceService = persistenceService
+        self.mode = mode
         self.viewModelProvider = viewModelProvider
         setupBindings()
     }
@@ -59,14 +60,14 @@ final class WatchlistsViewModel: ObservableObject {
             .store(in: &cancellables)
         
         //  WebSocket Mode: Subscribe to current tab symbols only
-        if WatchlistDIContainer.mode == .websocket {
+        if mode == .websocket {
             guard !self.didSubscribeToWebSocket else { return }
             self.didSubscribeToWebSocket = true
             observeWebSocketPriceStream()
         }
         
         //  REST API Mode: Subscribe to rest batch call progress
-        if WatchlistDIContainer.mode == .restAPI {
+        if mode == .restAPI {
             if let restUseCase = useCases.observeTop50 as? ObserveTop50StocksUseCaseImpl,
                let restRepo = restUseCase.repository as? RestStockRepositoryImpl {
                 restRepo.progressPublisher
@@ -84,8 +85,8 @@ final class WatchlistsViewModel: ObservableObject {
         Logger.log("loadWatchlists() called.")
         isLoading = true
         
-        let savedWatchlists = persistenceService.loadWatchlists()
-        let savedStocks = persistenceService.loadAllStocks()
+        let savedWatchlists = useCases.loadWatchlists.loadWatchlists()
+        let savedStocks = useCases.loadWatchlists.loadAllStocks()
         
         if !savedWatchlists.isEmpty
         {
@@ -96,29 +97,30 @@ final class WatchlistsViewModel: ObservableObject {
                 rebuildWatchlistsFromMasterStocks()
             }
             
-            if(WatchlistDIContainer.mode == .restAPI){
+            if mode == .restAPI {
                 loadTop50StockPricesFromServer(preservingExisting: true)
             }
         }
         else {
             //First time run
-            if WatchlistDIContainer.mode == .mock {
+            if mode == .mock {
                 loadMockData()
-            } else if WatchlistDIContainer.mode == .restAPI {
+            } else if mode == .restAPI {
                 loadTop50StockPricesFromServer(preservingExisting: true)
             }
         }
         
-        if WatchlistDIContainer.mode == .websocket {
+        if mode == .websocket {
             Logger.log("WebSocket Mode enabled: First Run", category: "WebSocket")
             subscribeToBinanceSymbols()
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
             self.isLoading = false
         }
     }
-    
+
     deinit {
             Logger.log("[Deinit] WatchlistsViewModel deinitialized")
         }
@@ -130,7 +132,7 @@ extension WatchlistsViewModel {
     
     func startObservingGlobalPriceUpdates() {
         Logger.log("startObservingGlobalPriceUpdates() called but This will run only for Mock Mode.")
-        guard WatchlistDIContainer.mode == .mock  else { return }
+        guard mode == .mock else { return }
         useCases.observeMock.execute()
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] updatedStocks in
@@ -158,7 +160,8 @@ extension WatchlistsViewModel {
         self.allFetchedStocks = MockStockData.allStocks
         self.rebuildWatchlistsFromMasterStocks()
         self.saveAllWatchlists()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
             self.isLoading = false
         }
     }
@@ -184,7 +187,7 @@ extension WatchlistsViewModel {
                 self.allFetchedStocks = newStocks
             }
             
-            self.persistenceService.saveAllStocks(self.allFetchedStocks)
+            self.useCases.saveWatchlists.saveAllStocks(self.allFetchedStocks)
             
             let previousSelectedID = self.watchlists.indices.contains(self.selectedIndex)
             ? self.watchlists[self.selectedIndex].id : nil
@@ -214,7 +217,9 @@ extension WatchlistsViewModel {
             .sink(receiveCompletion: { [weak self] completionResult in
                 guard let self else { return }
                 if isManualRefresh { self.isRefreshing = false }
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                let delayNs = UInt64(delay * 1_000_000_000)
+                Task {
+                    try? await Task.sleep(nanoseconds: delayNs)
                     self.isLoading = false
                 }
                 if case .failure(let error) = completionResult {
@@ -292,7 +297,7 @@ extension WatchlistsViewModel {
     
     /// Save all watchlists to persistent storage
     func saveAllWatchlists() {
-        persistenceService.saveWatchlists(watchlists)
+        useCases.saveWatchlists.saveAll(watchlists)
     }
 }
 
@@ -304,8 +309,8 @@ extension WatchlistsViewModel {
         
         Logger.log("Subscribing to Binance symbols", category: "WebSocket")
         
-        guard WatchlistDIContainer.mode == .websocket else { return }
-        
+        guard mode == .websocket else { return }
+
         // Define the Binance stock
         let binanceSymbol = "BINANCE:BTCUSDT"
         let liveStock = Stock(
@@ -329,7 +334,7 @@ extension WatchlistsViewModel {
                 name: "Crypto",
                 stocks: [liveStock]
             )
-            persistenceService.saveWatchlist(newWatchlist)
+            useCases.saveWatchlists.saveSingle(newWatchlist)
             watchlists.append(newWatchlist)
             selectedIndex = 0
             self.isLoading = false
@@ -347,7 +352,7 @@ extension WatchlistsViewModel {
         // Add Binance stock if not already present
         if !selectedWatchlist.stocks.contains(where: { $0.symbol == binanceSymbol }) {
             selectedWatchlist.stocks.append(liveStock)
-            persistenceService.saveWatchlist(selectedWatchlist)
+            useCases.saveWatchlists.saveSingle(selectedWatchlist)
             watchlists[selectedIndex] = selectedWatchlist
             Logger.log("BINANCE:BTCUSDT added to watchlist \(selectedWatchlist.name)", category: "WebSocket")
         }
@@ -359,7 +364,7 @@ extension WatchlistsViewModel {
     
     func observeWebSocketPriceStream() {
         
-    guard WatchlistDIContainer.mode == .websocket else { return }
+    guard mode == .websocket else { return }
 
     useCases.observeLiveWebSocket
         .execute()
@@ -376,8 +381,8 @@ extension WatchlistsViewModel {
     ///This method we can use in future when we subscribe to non-crypto symbols in webSocket
     func subscribeToCurrentTabSymbols() {
         
-        guard WatchlistDIContainer.mode == .websocket else { return }
-        
+        guard mode == .websocket else { return }
+
         guard watchlists.indices.contains(selectedIndex) else {
             Logger.log("Invalid selectedIndex: \(selectedIndex). Watchlists count: \(watchlists.count)", category: "WebSocket")
             return
@@ -417,7 +422,7 @@ extension WatchlistsViewModel {
                 guard let self else { return }
                 
                 self.allFetchedStocks = stocks
-                self.persistenceService.saveAllStocks(stocks)
+                self.useCases.saveWatchlists.saveAllStocks(stocks)
                 self.rebuildWatchlistsFromMasterStocks()
                 self.saveAllWatchlists()
                 self.isLoading = false

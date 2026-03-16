@@ -11,12 +11,17 @@ enum MarketHoursHelper {
     
     static func isUSMarketOpen() -> Bool {
         let now = Date()
-        let calendar = Calendar(identifier: .gregorian)
-        let hour = calendar.component(.hour, from: now)
-        let weekday = calendar.component(.weekday, from: now) // 1 = Sunday ... 7 = Saturday
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York")!
 
+        let weekday = calendar.component(.weekday, from: now) // 1 = Sunday ... 7 = Saturday
         let isWeekday = weekday >= 2 && weekday <= 6
-        let isMarketHours = hour >= 8 && hour <= 16 // Rough EDT range
+
+        // NYSE hours: 9:30 AM – 4:00 PM Eastern = 570–960 minutes since midnight
+        let hour = calendar.component(.hour, from: now)
+        let minute = calendar.component(.minute, from: now)
+        let minutesSinceMidnight = hour * 60 + minute
+        let isMarketHours = minutesSinceMidnight >= 570 && minutesSinceMidnight < 960
 
         return isWeekday && isMarketHours
     }

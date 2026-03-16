@@ -24,15 +24,15 @@ enum AppStrings {
         static let lottie = "lottie"
     }
     
-    enum tabNames{
+    enum TabNames {
         static let watchlist = "Watchlist"
         static let orders = "Orders"
         static let portfolio = "Portfolio"
         static let bids = "Bids"
         static let settings = "Settings"
     }
-    
-    enum tabImageNames{
+
+    enum TabImageNames {
         static let watchlistImage = "house"
         static let ordersImage = "chart.line.uptrend.xyaxis"
         static let portfolioImage = "briefcase"

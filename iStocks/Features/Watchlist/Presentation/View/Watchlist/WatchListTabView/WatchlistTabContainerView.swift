@@ -9,11 +9,12 @@ import SwiftUI
 import SwiftData
 
 struct WatchlistTabContainerView: View {
-    
+
     @StateObject private var viewModel: WatchlistsViewModel
     var watchlistVmProvider: WatchlistViewModelProvider
     @State private var hasLoaded = false
-    
+
+    @MainActor
     init(context: ModelContext) {
         Logger.log("WatchlistTabContainerView() called.")
         let useCases = WatchlistDIContainer.makeWatchlistUseCases(context: context)
@@ -27,14 +28,14 @@ struct WatchlistTabContainerView: View {
             )
         )
     }
-    
+
     var body: some View {
         WatchlistTabView(viewModel: viewModel, viewModelProvider: watchlistVmProvider)
             .onAppear {
                 Logger.log("[Appear] WatchlistTabContainerView into view hierarchy")
                 if !hasLoaded {
-                    viewModel.loadWatchlists() // Load persisted data
-                    viewModel.startObservingGlobalPriceUpdates()//Start price-observation globally
+                    viewModel.loadWatchlists()
+                    viewModel.startObservingGlobalPriceUpdates()
                     hasLoaded = true
                 }
             }
@@ -42,5 +43,5 @@ struct WatchlistTabContainerView: View {
                 Logger.log("[Disappear] WatchlistTabContainerView removed from view hierarchy")
             }
     }
-    
+
 }

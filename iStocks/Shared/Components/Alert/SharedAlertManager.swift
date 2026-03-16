@@ -12,19 +12,17 @@ final class SharedAlertManager: ObservableObject {
 
     // MARK: - Combine Alert Publisher
     @Published var alert: SharedAlertData? = nil
-    
+
     var alertPublisher: AnyPublisher<SharedAlertData?, Never> {
         $alert.eraseToAnyPublisher()
     }
 
     func show(_ alert: SharedAlertData, autoDismissAfter seconds: Double? = 2.5) {
-        self.alert = alert // For tests or Combine-driven UI
-        GlobalAlertPresenter.present(alert)
+        self.alert = alert
         Logger.log("SharedAlertManager.show called", category: "SharedAlert")
 
         if let seconds = seconds {
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-                self.alert = nil  //Auto-dismiss should clear published alert too
                 self.dismiss()
             }
         }
@@ -33,8 +31,7 @@ final class SharedAlertManager: ObservableObject {
     }
 
     func dismiss() {
-        self.alert = nil// Clear published value
-        GlobalAlertPresenter.dismiss()
+        self.alert = nil
     }
 
     private func triggerHaptic() {

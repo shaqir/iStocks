@@ -15,24 +15,27 @@ struct WatchlistUseCases {
     let observeTop50: ObserveTop50StocksUseCase
     let observeLiveWebSocket: ObserveStockPricesUseCase
 
-    // MARK: - Shared Use Cases
-    let observeWatchlist: ObserveWatchlistStocksUseCase
-
     /// Fetch quotes for specific symbols (e.g. search bar, stock picker)
     let fetchQuotesBySymbols: FetchStocksBySymbolUseCase
+
+    // MARK: - Persistence Use Cases
+    let saveWatchlists: SaveWatchlistsUseCase
+    let loadWatchlists: LoadWatchlistsUseCase
 
     // MARK: - Init
     init(
         observeMock: ObserveMockStocksUseCase,
         observeTop50: ObserveTop50StocksUseCase,
         observeLiveWebSocket: ObserveStockPricesUseCase,
-        observeWatchlist: ObserveWatchlistStocksUseCase,
-        fetchQuotesBySymbols: FetchStocksBySymbolUseCase
+        fetchQuotesBySymbols: FetchStocksBySymbolUseCase,
+        saveWatchlists: SaveWatchlistsUseCase,
+        loadWatchlists: LoadWatchlistsUseCase
     ) {
         self.observeMock = observeMock
         self.observeTop50 = observeTop50
         self.observeLiveWebSocket = observeLiveWebSocket
-        self.observeWatchlist = observeWatchlist
         self.fetchQuotesBySymbols = fetchQuotesBySymbols
+        self.saveWatchlists = saveWatchlists
+        self.loadWatchlists = loadWatchlists
     }
 }

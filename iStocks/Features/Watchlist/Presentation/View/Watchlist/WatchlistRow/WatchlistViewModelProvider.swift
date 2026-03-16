@@ -9,6 +9,7 @@ import Foundation
 import Combine
 
 //main codebase
+@MainActor
 protocol WatchlistViewModelProvider {
     func makeWatchlistViewModel(for watchlist: Watchlist) -> WatchlistViewModel
     func viewModel(for watchlist: Watchlist) -> WatchlistViewModel
@@ -28,6 +29,7 @@ protocol WatchlistViewModelProvider {
 /// Provides cached WatchlistViewModels for each Watchlist.
 /// Manages structural change subscriptions and exposes updates downstream.
 
+@MainActor
 final class DefaultWatchlistViewModelProvider: WatchlistViewModelProvider {
    
     // Keeps references to Combine subscriptions for each ViewModel
@@ -61,10 +63,7 @@ final class DefaultWatchlistViewModelProvider: WatchlistViewModelProvider {
     func viewModel(for watchlist: Watchlist) -> WatchlistViewModel {
         // Reuse existing ViewModel if present
         if let existing = cache[watchlist.id] {
-            // Sync internal watchlist model if changed externally
-            //if existing.watchlist != watchlist {
             existing.updateWatchlist(watchlist)
-            //}
             return existing
         }
         
@@ -94,9 +93,7 @@ final class DefaultWatchlistViewModelProvider: WatchlistViewModelProvider {
         
         cancellables[watchlist.id] = merged
             .sink { [weak self] updated in
-                DispatchQueue.main.async {
-                    self?.watchlistDidUpdate.send(updated)
-                }
+                self?.watchlistDidUpdate.send(updated)
             }
         
         // Cache and return

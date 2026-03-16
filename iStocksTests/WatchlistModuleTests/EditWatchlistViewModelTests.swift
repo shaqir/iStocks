@@ -9,6 +9,7 @@ import Foundation
 import XCTest
 @testable import iStocks
 
+@MainActor
 final class EditWatchlistViewModelTests: XCTestCase {
 
     // MARK: - Setup

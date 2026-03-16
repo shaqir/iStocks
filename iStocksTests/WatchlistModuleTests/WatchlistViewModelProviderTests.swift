@@ -10,6 +10,7 @@ import XCTest
 @testable import iStocks
 import Combine
 
+@MainActor
 final class WatchlistViewModelProviderTests: XCTestCase {
     
     var provider: DefaultWatchlistViewModelProvider!
@@ -49,8 +50,9 @@ final class WatchlistViewModelProviderTests: XCTestCase {
             observeMock: MockObserveMockStocksUseCase(),
             observeTop50: MockObserveTop50StocksUseCase(),
             observeLiveWebSocket: MockObserveStockPricesUseCase(),
-            observeWatchlist: MockObserveWatchlistStocksUseCase(),
-            fetchQuotesBySymbols: MockFetchStocksBySymbolUseCase()
+            fetchQuotesBySymbols: MockFetchStocksBySymbolUseCase(),
+            saveWatchlists: MockSaveWatchlistsUseCase(),
+            loadWatchlists: MockLoadWatchlistsUseCase()
         )
     }
 }
@@ -94,17 +96,6 @@ final class MockObserveStockPricesUseCase: ObserveStockPricesUseCase {
     }
 }
 
-final class MockObserveWatchlistStocksUseCase: ObserveWatchlistStocksUseCase {
-    func execute(for watchlist: iStocks.Watchlist) -> AnyPublisher<[iStocks.Stock], Never> {
-        Just([])
-            .replaceError(with: [])
-            .eraseToAnyPublisher()
-    }
-    
-    func callAsFunction(_ watchlist: Watchlist) -> AnyPublisher<[Stock], Error> {
-        Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
-    }
-}
 
 final class MockFetchStocksBySymbolUseCase: FetchStocksBySymbolUseCase {
     func execute(for symbols: [String]) -> AnyPublisher<[iStocks.Stock], any Error> {

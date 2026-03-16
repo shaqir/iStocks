@@ -12,18 +12,13 @@ struct EditAllWatchlistsView: View {
     @State private var editMode: EditMode = .active
     var onSave: () -> Void
     
-    // Injected : SwiftData
-    let persistenceService: WatchlistPersistenceService
-    
     init(
-            watchlists: Binding<[Watchlist]>,
-            persistenceService: WatchlistPersistenceService,
-            onSave: @escaping () -> Void
-        ) {
-            self._watchlists = watchlists
-            self.persistenceService = persistenceService
-            self.onSave = onSave
-        }
+        watchlists: Binding<[Watchlist]>,
+        onSave: @escaping () -> Void
+    ) {
+        self._watchlists = watchlists
+        self.onSave = onSave
+    }
     
     var body: some View {
         NavigationStack {

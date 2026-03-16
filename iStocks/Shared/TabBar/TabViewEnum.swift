@@ -16,24 +16,24 @@ enum TabViewEnum: Identifiable, CaseIterable, Hashable {
     var tabItem: TabItem {
         switch self {
         case .watchlist:
-            .init(title: AppStrings.tabNames.watchlist,
-                  imageName: AppStrings.tabImageNames.watchlistImage,
+            .init(title: AppStrings.TabNames.watchlist,
+                  imageName: AppStrings.TabImageNames.watchlistImage,
                   color: .blue)
         case .orders:
-            .init(title: AppStrings.tabNames.orders,
-                  imageName: AppStrings.tabImageNames.ordersImage,
+            .init(title: AppStrings.TabNames.orders,
+                  imageName: AppStrings.TabImageNames.ordersImage,
                   color: .blue)
         case .portfolio:
-            .init(title: AppStrings.tabNames.portfolio,
-                  imageName: AppStrings.tabImageNames.portfolioImage,
+            .init(title: AppStrings.TabNames.portfolio,
+                  imageName: AppStrings.TabImageNames.portfolioImage,
                   color: .blue)
         case .bids:
-            .init(title: AppStrings.tabNames.bids,
-                  imageName: AppStrings.tabImageNames.bidImage,
+            .init(title: AppStrings.TabNames.bids,
+                  imageName: AppStrings.TabImageNames.bidImage,
                   color: .blue)
         case .settings:
-            .init(title: AppStrings.tabNames.settings,
-                  imageName: AppStrings.tabImageNames.profileImage,
+            .init(title: AppStrings.TabNames.settings,
+                  imageName: AppStrings.TabImageNames.profileImage,
                   color: .blue)
         }
     }

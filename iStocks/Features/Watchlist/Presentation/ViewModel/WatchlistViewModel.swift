@@ -8,6 +8,7 @@ import Foundation
 import Combine
 
 /// ViewModel for managing a single watchlist (stocks, search, updates, sync)
+@MainActor
 final class WatchlistViewModel: ObservableObject {
     
     // MARK: - Published Properties
@@ -67,8 +68,8 @@ final class WatchlistViewModel: ObservableObject {
         Logger.log("WatchlistViewModel created for \(watchlist.name)", category: "Watchlist")
     }
     
-    deinit {
-        Logger.log("DEINIT: WatchlistViewModel for \(watchlist.name)", category: "Watchlist")
+    nonisolated deinit {
+        Logger.log("DEINIT: WatchlistViewModel", category: "Watchlist")
     }
     // MARK: - Public API
     
@@ -81,10 +82,8 @@ final class WatchlistViewModel: ObservableObject {
     }
     
     func updateWatchlist(_ newValue: Watchlist) {
-        DispatchQueue.main.async {
-            if self.watchlist != newValue {
-                self.watchlist = newValue
-            }
+        if self.watchlist != newValue {
+            self.watchlist = newValue
         }
     }
     
@@ -98,10 +97,8 @@ final class WatchlistViewModel: ObservableObject {
         var updated = watchlist
         do {
             try updated.tryAddStock(stock)
-            DispatchQueue.main.async {
-                self.watchlist = updated
-                self.syncWithParent()
-            }
+            self.watchlist = updated
+            self.syncWithParent()
         } catch let error as StockValidationError {
             SharedAlertManager.shared.show(error.alert)
         } catch {
@@ -113,10 +110,8 @@ final class WatchlistViewModel: ObservableObject {
         var updated = watchlist
         do {
             try updated.tryRemoveStock(stock)
-            DispatchQueue.main.async {
-                self.watchlist = updated
-                self.syncWithParent()
-            }
+            self.watchlist = updated
+            self.syncWithParent()
         } catch {
             SharedAlertManager.shared.show(
                 StockValidationError.failedToDelete(error.localizedDescription).alert
@@ -134,12 +129,10 @@ final class WatchlistViewModel: ObservableObject {
 
         guard !updated.isEmpty else { return }
 
-        DispatchQueue.main.async {
-            self.isPriceOnlyUpdate = true
-            self.watchlist.replacePrices(from: updated)
-            self.isPriceOnlyUpdate = false
-            self.priceUpdate.send(updated)
-        }
+        self.isPriceOnlyUpdate = true
+        self.watchlist.replacePrices(from: updated)
+        self.isPriceOnlyUpdate = false
+        self.priceUpdate.send(updated)
     }
     
 }

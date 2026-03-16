@@ -7,6 +7,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class EditWatchlistViewModel: ObservableObject {
     @Published var name: String
     @Published var selectedStocks: [Stock]

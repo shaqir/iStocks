@@ -10,6 +10,7 @@ import XCTest
 import Combine
 @testable import iStocks
 
+@MainActor
 final class WatchlistViewModelTests: XCTestCase {
 
     private var cancellables: Set<AnyCancellable> = []

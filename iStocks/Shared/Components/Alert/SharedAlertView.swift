@@ -46,3 +46,27 @@ struct SharedAlertView: View {
         }
     }
 }
+
+// MARK: - Alert Overlay Modifier
+
+private struct AlertOverlayModifier: ViewModifier {
+    @ObservedObject var alertManager: SharedAlertManager
+
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+            if let alertData = alertManager.alert {
+                SharedAlertView(data: alertData) {
+                    alertManager.dismiss()
+                }
+                .zIndex(999)
+            }
+        }
+    }
+}
+
+extension View {
+    func withAlertOverlay(using alertManager: SharedAlertManager = .shared) -> some View {
+        modifier(AlertOverlayModifier(alertManager: alertManager))
+    }
+}

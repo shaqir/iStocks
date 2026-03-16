@@ -9,6 +9,7 @@ import Foundation
 import Combine
 @testable import iStocks
 
+@MainActor
 final class WatchlistTabViewModel: ObservableObject {
     
     // MARK: - Published Properties

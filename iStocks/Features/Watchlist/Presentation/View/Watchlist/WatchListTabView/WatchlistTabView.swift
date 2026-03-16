@@ -76,7 +76,6 @@ struct WatchlistTabView: View {
         .sheet(isPresented: $isEditingAllWatchlists) {
             EditAllWatchlistsView(
                 watchlists: $viewModel.watchlists,
-                persistenceService: viewModel.persistenceService,
                 onSave: {
                     viewModel.saveAllWatchlists()
                 }
