@@ -69,7 +69,7 @@ extension StockEntity {
               stock.qty.isFinite,
               stock.averageBuyPrice.isFinite else {
              
-            Logger.log("Skipping invalid stock:: \(stock))", category: "StockEntity")
+            AppLogger.warning("Skipping invalid stock: \(stock.symbol)", category: AppLogger.persistence)
             
             return nil
         }

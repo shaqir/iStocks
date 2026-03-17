@@ -34,7 +34,7 @@ extension WatchlistEntity {
         _ = watchlist.stocks.compactMap { StockEntity.from($0) }
         
         guard !watchlist.name.isEmpty else {
-            Logger.log("Skipping watchlist with empty name: \(watchlist))", category: "StockEntity")
+            AppLogger.warning("Skipping watchlist with empty name: \(watchlist.id)", category: AppLogger.persistence)
             return nil
         }
         

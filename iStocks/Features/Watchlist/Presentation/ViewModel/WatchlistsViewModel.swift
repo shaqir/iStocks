@@ -82,7 +82,6 @@ final class WatchlistsViewModel: ObservableObject {
     }
     
     func loadWatchlists() {
-        Logger.log("loadWatchlists() called.")
         isLoading = true
         
         let savedWatchlists = useCases.loadWatchlists.loadWatchlists()
@@ -111,7 +110,7 @@ final class WatchlistsViewModel: ObservableObject {
         }
         
         if mode == .websocket {
-            Logger.log("WebSocket Mode enabled: First Run", category: "WebSocket")
+            AppLogger.info("WebSocket mode: first run", category: AppLogger.webSocket)
             subscribeToBinanceSymbols()
         }
         
@@ -121,9 +120,7 @@ final class WatchlistsViewModel: ObservableObject {
         }
     }
 
-    deinit {
-            Logger.log("[Deinit] WatchlistsViewModel deinitialized")
-        }
+    deinit {}
     
 }
 
@@ -131,7 +128,6 @@ final class WatchlistsViewModel: ObservableObject {
 extension WatchlistsViewModel {
     
     func startObservingGlobalPriceUpdates() {
-        Logger.log("startObservingGlobalPriceUpdates() called but This will run only for Mock Mode.")
         guard mode == .mock else { return }
         useCases.observeMock.execute()
             .sink(receiveCompletion: { _ in },
@@ -148,8 +144,6 @@ extension WatchlistsViewModel {
         
         let selected = watchlists[selectedIndex]
         let relevantStocks = selected.stocks.compactMap { stockLookup[$0.symbol] }
-        
-        Logger.log("Sent price updates to \(selected.name): \(relevantStocks.map(\.symbol).joined(separator: ", "))", category: "MockUpdate")
         
         if let vm = viewModelProvider.cachedViewModels.first(where: { $0.watchlist.id == selected.id }) {
             vm.replaceStocks(relevantStocks)
@@ -244,11 +238,7 @@ extension WatchlistsViewModel {
     func rebuildWatchlistsFromMasterStocks() {
         
         let grouped = Dictionary(grouping: allFetchedStocks, by: { stock in
-            let sector = stock.sector.isEmpty ? "Technology" : stock.sector
-            if stock.sector.isEmpty {
-                Logger.log("Stock \(stock.symbol) has empty sector — defaulting to Technology", category: "Watchlist")
-            }
-            return sector
+            stock.sector.isEmpty ? "Technology" : stock.sector
         })
         
         var updated: [Watchlist] = []
@@ -306,9 +296,6 @@ extension WatchlistsViewModel {
 extension WatchlistsViewModel {
     
     func subscribeToBinanceSymbols() {
-        
-        Logger.log("Subscribing to Binance symbols", category: "WebSocket")
-        
         guard mode == .websocket else { return }
 
         // Define the Binance stock
@@ -338,12 +325,11 @@ extension WatchlistsViewModel {
             watchlists.append(newWatchlist)
             selectedIndex = 0
             self.isLoading = false
-            Logger.log(" Created new watchlist 'Crypto' with Binance stock", category: "WebSocket")
         }
         
         //  Now get the selected watchlist
         guard watchlists.indices.contains(selectedIndex) else {
-            Logger.log("Invalid selectedIndex: \(selectedIndex). Watchlists count: \(watchlists.count)", category: "WebSocket")
+            AppLogger.warning("Invalid selectedIndex \(selectedIndex), count: \(watchlists.count)", category: AppLogger.webSocket)
             return
         }
         
@@ -354,12 +340,10 @@ extension WatchlistsViewModel {
             selectedWatchlist.stocks.append(liveStock)
             useCases.saveWatchlists.saveSingle(selectedWatchlist)
             watchlists[selectedIndex] = selectedWatchlist
-            Logger.log("BINANCE:BTCUSDT added to watchlist \(selectedWatchlist.name)", category: "WebSocket")
         }
         
         // Subscribe to Binance
         useCases.observeLiveWebSocket.subscribe(to: [binanceSymbol])
-        Logger.log(" Subscribed to \(binanceSymbol)", category: "WebSocket")
     }
     
     func observeWebSocketPriceStream() {
@@ -372,7 +356,6 @@ extension WatchlistsViewModel {
         .sink(receiveCompletion: { _ in },
                 receiveValue: { [weak self] updatedStocks in
             guard let self else { return }
-            Logger.log("WebSocket updated \(updatedStocks.count) stocks", category: "WebSocket")
             broadcastPricesToAllWatchlists(updatedStocks)
         })
         .store(in: &cancellables)
@@ -384,7 +367,7 @@ extension WatchlistsViewModel {
         guard mode == .websocket else { return }
 
         guard watchlists.indices.contains(selectedIndex) else {
-            Logger.log("Invalid selectedIndex: \(selectedIndex). Watchlists count: \(watchlists.count)", category: "WebSocket")
+            AppLogger.warning("Invalid selectedIndex \(selectedIndex), count: \(watchlists.count)", category: AppLogger.webSocket)
             return
         }
         
@@ -398,11 +381,10 @@ extension WatchlistsViewModel {
         let symbols = ["BINANCE:BTCUSDT"]
         
         guard !symbols.isEmpty else {
-            Logger.log("No symbols in watchlist: \(selectedWatchlist.name) [\(selectedWatchlist.id)]", category: "WebSocket")
+            AppLogger.warning("No symbols in watchlist: \(selectedWatchlist.name)", category: AppLogger.webSocket)
             return
         }
         
-        Logger.log("Subscribing to \(symbols.count) symbols for tab \(selectedWatchlist.name)", category: "WebSocket")
         useCases.observeLiveWebSocket.subscribe(to: symbols)
     }
     

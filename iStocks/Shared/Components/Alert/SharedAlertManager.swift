@@ -19,7 +19,6 @@ final class SharedAlertManager: ObservableObject {
 
     func show(_ alert: SharedAlertData, autoDismissAfter seconds: Double? = 2.5) {
         self.alert = alert
-        Logger.log("SharedAlertManager.show called", category: "SharedAlert")
 
         if let seconds = seconds {
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {

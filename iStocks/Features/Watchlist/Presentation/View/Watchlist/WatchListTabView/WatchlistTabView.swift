@@ -63,11 +63,9 @@ struct WatchlistTabView: View {
             .animation(.easeInOut(duration: 0.3), value: viewModel.isLoading)
              
             .onAppear {
-                Logger.log("WatchlistTabView() just loaded.")
                 viewModelProvider.watchlistDidUpdate
                     .receive(on: DispatchQueue.main)
                     .sink { updated in
-                        Logger.log("watchlistDidUpdate received for: \(updated.name).", category: "WatchlistTabView")
                         viewModel.updateWatchlist(updated)
                     }
                     .store(in: &combineCancellables)

@@ -34,10 +34,8 @@ final class WatchlistDIContainer {
     
     private static func makeMockRepository() -> MockWatchlistRepository {
             if let cached = cachedMockRepository {
-                Logger.log("cachedMockRepository instance returned.")
                 return cached
             }
-            Logger.log("makeMockRepository() called.")
             let mockRepo = MockStockRepositoryImpl()
             cachedMockRepository = mockRepo
             return mockRepo
@@ -45,10 +43,8 @@ final class WatchlistDIContainer {
     
     private static func makeRestRepository(context: ModelContext) -> RestStockRepository {
         if let cached = cachedRestRepository {
-            Logger.log("cachedRestRepository instance returned.")
             return cached
         }
-        Logger.log("makeRestRepository() called.")
         let client = URLSessionNetworkClient()
         let apiService = StockRemoteDataSource(networkClient: client)
         let persistence = WatchlistPersistenceService(context: context)
@@ -59,10 +55,8 @@ final class WatchlistDIContainer {
     
     private static func makeWebSocketRepository() -> StockLiveRepository {
            if let cached = cachedWebSocketRepository {
-               Logger.log("cachedWebSocketRepository instance returned.")
                return cached
            }
-           Logger.log("makeWebSocketRepository() called.")
            let webSocketClient = FinnhubWebSocketClient.shared
            let webSocketRepo = WebSocketStockRepositoryImpl(webSocket: webSocketClient)
            cachedWebSocketRepository = webSocketRepo
@@ -75,12 +69,9 @@ final class WatchlistDIContainer {
 
     // MARK: - Use Case Assembly
     static func makeWatchlistUseCases(context: ModelContext) -> WatchlistUseCases {
-        Logger.log("makeWatchlistUseCases() called.")
-        
         if let existing = cachedUseCases {
-                    Logger.log("Returning cached WatchlistUseCases instance", category: "DI")
-                    return existing
-                }
+            return existing
+        }
 
                 let useCases: WatchlistUseCases
 
@@ -124,7 +115,6 @@ final class WatchlistDIContainer {
         }
         
         cachedUseCases = useCases
-        Logger.log("Caching WatchlistUseCases instance", category: "DI")
         return useCases
     }
 
@@ -137,8 +127,7 @@ final class WatchlistDIContainer {
     ) -> WatchlistsViewModel {
         let useCases = makeWatchlistUseCases(context: context)
 
-        Logger.log("App started in \(mode) mode", category: "Startup")
-        Logger.log("makeWatchlistsViewModel Factory callled.")
+        AppLogger.info("App started in \(mode) mode", category: AppLogger.startup)
 
         return WatchlistsViewModel(
             useCases: useCases,

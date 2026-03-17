@@ -69,7 +69,6 @@ func makeInMemoryModelContext() throws -> ModelContext {
 
 @MainActor
 func makeMockRepository() -> MockWatchlistRepository {
-    Logger.log("makeMockRepository() called.")
     return MockStockRepositoryImpl(service: MockStockStreamingService())
 }
 

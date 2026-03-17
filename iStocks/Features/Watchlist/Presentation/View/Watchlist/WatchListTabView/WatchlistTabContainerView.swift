@@ -16,7 +16,6 @@ struct WatchlistTabContainerView: View {
 
     @MainActor
     init(context: ModelContext) {
-        Logger.log("WatchlistTabContainerView() called.")
         let useCases = WatchlistDIContainer.makeWatchlistUseCases(context: context)
         let provider = DefaultWatchlistViewModelProvider(useCases: useCases)
         self.watchlistVmProvider = provider
@@ -32,16 +31,13 @@ struct WatchlistTabContainerView: View {
     var body: some View {
         WatchlistTabView(viewModel: viewModel, viewModelProvider: watchlistVmProvider)
             .onAppear {
-                Logger.log("[Appear] WatchlistTabContainerView into view hierarchy")
                 if !hasLoaded {
                     viewModel.loadWatchlists()
                     viewModel.startObservingGlobalPriceUpdates()
                     hasLoaded = true
                 }
             }
-            .onDisappear {
-                Logger.log("[Disappear] WatchlistTabContainerView removed from view hierarchy")
-            }
+
     }
 
 }

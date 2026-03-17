@@ -87,9 +87,6 @@ final class DefaultWatchlistViewModelProvider: WatchlistViewModelProvider {
         
         // Merge both and send to parent
         let merged = Publishers.Merge(structuralChanges, semanticChanges)
-            .handleEvents(receiveOutput: { updated in
-                Logger.log("Structural change received for \(updated.name)", category: "WatchlistVMProvider")
-            })
         
         cancellables[watchlist.id] = merged
             .sink { [weak self] updated in

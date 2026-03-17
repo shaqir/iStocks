@@ -64,12 +64,6 @@ final class WatchlistViewModel: ObservableObject {
     ) {
         self.watchlist = watchlist
         self.availableStocks = availableStocks
-
-        Logger.log("WatchlistViewModel created for \(watchlist.name)", category: "Watchlist")
-    }
-    
-    nonisolated deinit {
-        Logger.log("DEINIT: WatchlistViewModel", category: "Watchlist")
     }
     // MARK: - Public API
     
