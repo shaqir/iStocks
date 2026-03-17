@@ -49,38 +49,6 @@ final class URLSessionNetworkClient: NetworkClient {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
-    /*
-    // MARK: - Closure
-    func request<T: Decodable>(_ endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
-        // Verbose logging removed
-        
-        guard let url = endpoint.url else {
-            completion(.failure(NetworkError.invalidURL))
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = endpoint.method.rawValue
-
-        session.dataTask(with: request) { [decoder = self.decoder] data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-
-                do {
-                    let validData = try self.validate(data: data, response: response)
-                    let decoded = try decoder.decode(T.self, from: validData)
-                    completion(.success(decoded))
-                } catch {
-                    completion(.failure(error))
-                }
-            }
-        }.resume()
-    }
-    */
-
     // MARK: - Async/Await
     func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         // Verbose logging removed
@@ -118,10 +86,6 @@ final class URLSessionNetworkClient: NetworkClient {
             throw NetworkError.invalidResponse
         }
 
-        #if DEBUG
-        self.debugPrintJSON(data: data)
-        #endif
-
         // Optional: decode application-level errors
         if let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            jsonObject["status"] as? String == "error" {
@@ -132,11 +96,4 @@ final class URLSessionNetworkClient: NetworkClient {
         return data
     }
 
-    private func debugPrintJSON(data: Data) {
-        if let json = try? JSONSerialization.jsonObject(with: data),
-           let prettyData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
-           let jsonString = String(data: prettyData, encoding: .utf8) {
-            // Raw JSON logging removed - too verbose
-        }
-    }
 }

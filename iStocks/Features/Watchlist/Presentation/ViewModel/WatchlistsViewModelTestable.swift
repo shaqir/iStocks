@@ -11,6 +11,7 @@ import Foundation
 
 /// Protocol for testing WatchlistsViewModel
 /// Only available in debug builds to keep production code clean
+@MainActor
 protocol WatchlistsViewModelTestable {
     func removeWatchlist(_ watchlist: Watchlist)
     func updateStockPrices(_ updated: [Stock])

@@ -61,8 +61,6 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
             AppLogger.warning("Missing symbol in DTO, skipping", category: AppLogger.webSocket)
             return
         }
-        let price = dto.price
-        // Debug logging removed - only log errors
         stocksQueue.sync {
             let oldPrice = currentStocks[symbol]?.price ?? 0
             if let stock = dto.toDomainModel(invested: oldPrice) {
