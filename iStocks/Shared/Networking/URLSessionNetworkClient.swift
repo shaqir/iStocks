@@ -26,6 +26,10 @@ final class URLSessionNetworkClient: NetworkClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
+        request.httpBody = endpoint.httpBody
+        if endpoint.httpBody != nil {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
 
         return session.dataTaskPublisher(for: request)
             .tryMap { try self.validate(data: $0.data, response: $0.response) }
@@ -42,6 +46,10 @@ final class URLSessionNetworkClient: NetworkClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
+        request.httpBody = endpoint.httpBody
+        if endpoint.httpBody != nil {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
 
         return session.dataTaskPublisher(for: request)
             .tryMap { try self.validate(data: $0.data, response: $0.response) }
@@ -59,6 +67,10 @@ final class URLSessionNetworkClient: NetworkClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
+        request.httpBody = endpoint.httpBody
+        if endpoint.httpBody != nil {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
 
         let (data, response) = try await session.data(for: request)
         let validData = try validate(data: data, response: response)
