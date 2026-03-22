@@ -14,10 +14,14 @@ struct EmptyWatchlistView: View {
                 .resizable()
                 .frame(width: 60, height: 40)
                 .foregroundColor(.gray)
+                .accessibilityHidden(true)
             Text("No stocks in this watchlist")
                 .font(.subheadline)
                 .foregroundColor(.gray)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No stocks in this watchlist")
+        .accessibilityIdentifier(AccessibilityID.General.emptyState)
     }
 }

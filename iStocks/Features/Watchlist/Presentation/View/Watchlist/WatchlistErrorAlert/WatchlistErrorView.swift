@@ -26,6 +26,7 @@ struct WatchlistErrorView: View {
                     .font(.system(size: 42, weight: .bold))
                     .foregroundColor(.white)
             }
+            .accessibilityHidden(true)
 
             VStack(spacing: 10) {
                 Text("Oops! Something went wrong")
@@ -33,6 +34,7 @@ struct WatchlistErrorView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(errorMessage)
                     .font(.body)
@@ -54,6 +56,9 @@ struct WatchlistErrorView: View {
                     .shadow(color: .gray.opacity(0.4), radius: 4, x: 0, y: 2)
             }
             .padding(.horizontal)
+            .accessibilityLabel("Try again")
+            .accessibilityHint("Double tap to retry loading")
+            .accessibilityIdentifier(AccessibilityID.General.retryButton)
         }
         .padding()
         .background(
@@ -64,6 +69,11 @@ struct WatchlistErrorView: View {
         .padding()
         .transition(.scale)
         .animation(.easeInOut, value: error)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.General.errorView)
+        .onAppear {
+            AccessibilityNotification.Announcement("Error: \(errorMessage)").post()
+        }
     }
 
     private var errorMessage: String {

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct PortfolioView: View {
     var body: some View {
-        Text("OrderView")
+        Text("Portfolio")
+            .accessibilityLabel("Portfolio")
+            .accessibilityAddTraits(.isHeader)
     }
 }
