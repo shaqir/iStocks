@@ -1,8 +1,8 @@
 # iStocks — Codebase Analysis & Architecture Reference
 
 > **Last updated:** March 2026
-> **Analyzed by:** Claude Code (Senior iOS Architect review)
-> **Purpose:** Persistent architectural reference. Read this document at the start of any Claude session to get full project context without re-crawling source files.
+> **Analyzed by:** Senior iOS Architect review
+> **Purpose:** Persistent architectural reference for full project context without re-crawling source files.
 
 ---
 

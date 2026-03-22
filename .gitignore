@@ -51,6 +51,4 @@ playground.xcworkspace
 *.pem
 
 # AI assistant config
-CLAUDE.md
 AGENTS.md
-.claude/
