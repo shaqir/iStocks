@@ -140,6 +140,12 @@ struct WatchlistTabBar: View {
                                 .id(index)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("\(viewModel.watchlists[index].name) watchlist, tab \(index + 1) of \(viewModel.watchlists.count)")
+                            .accessibilityAddTraits(isSelected ? .isSelected : [])
+                            .accessibilityHint("Double tap to switch. Long press to edit all watchlists")
+                            .accessibilityAction(named: "Edit watchlists") {
+                                isEditingAllWatchlists = true
+                            }
                             .simultaneousGesture(
                                 LongPressGesture(minimumDuration: 0.5).onEnded { _ in
                                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -169,10 +175,14 @@ struct WatchlistTabBar: View {
                     .foregroundColor(.blue)
                     .padding(.trailing, 16)
             }
+            .accessibilityLabel("Add new watchlist")
+            .accessibilityHint("Creates a new watchlist tab")
+            .accessibilityIdentifier(AccessibilityID.Watchlist.addWatchlistButton)
         }
         .frame(height: 48)
         .background(.ultraThinMaterial)
         .overlay(Rectangle().fill(Color.gray.opacity(0.15)).frame(height: 0.5), alignment: .bottom)
+        .accessibilityIdentifier(AccessibilityID.Watchlist.tabBar)
     }
 }
 
@@ -202,6 +212,9 @@ struct WatchlistTabContent: View {
                 WatchlistLoadedView(viewModel: tabViewModel, scrollOffset: offsetBinding)
                     .id(watchlist.id)
                     .tag(index)
+                    .accessibilityAction(named: "Edit this watchlist") {
+                        self.watchlistToEdit = watchlist
+                    }
                     .onLongPressGesture {
                         self.watchlistToEdit = watchlist
                     }

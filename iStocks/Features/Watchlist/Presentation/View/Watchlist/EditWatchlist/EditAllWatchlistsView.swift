@@ -44,6 +44,8 @@ struct EditAllWatchlistsView: View {
                                 .foregroundColor(.red)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Delete \(watchlist.name)")
+                        .accessibilityHint("Removes this watchlist")
                     }
                     .padding(.vertical, 6)
                 }

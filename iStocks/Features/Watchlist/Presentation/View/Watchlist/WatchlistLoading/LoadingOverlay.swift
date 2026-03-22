@@ -41,6 +41,13 @@ struct LoadingOverlay: View {
             )
             .padding(.horizontal, 40)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(message)
+        .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityIdentifier(AccessibilityID.General.loadingOverlay)
+        .onAppear {
+            AccessibilityNotification.Announcement(message).post()
+        }
     }
 }
 

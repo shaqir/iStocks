@@ -9,6 +9,8 @@ import SwiftUI
 
 struct OrderView: View {
     var body: some View {
-        Text("OrderView")
+        Text("Orders")
+            .accessibilityLabel("Orders")
+            .accessibilityAddTraits(.isHeader)
     }
 }

@@ -21,11 +21,13 @@ struct EmptyStateView: View {
                     .scaledToFit()
                     .frame(width: 64, height: 64)
                     .foregroundColor(.gray)
+                    .accessibilityHidden(true)
             }
 
             Text(title)
                 .font(.headline)
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
 
             Text(message)
                 .font(.subheadline)
@@ -39,9 +41,13 @@ struct EmptyStateView: View {
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(8)
+                    .accessibilityHint("Double tap to try again")
+                    .accessibilityIdentifier(AccessibilityID.General.retryButton)
             }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.General.emptyState)
     }
 }
