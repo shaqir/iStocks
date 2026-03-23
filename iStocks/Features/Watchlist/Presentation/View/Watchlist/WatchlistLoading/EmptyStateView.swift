@@ -41,7 +41,7 @@ struct EmptyStateView: View {
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(8)
-                    .accessibilityHint("Double tap to try again")
+                    .accessibilityHint("Retries loading the content")
                     .accessibilityIdentifier(AccessibilityID.General.retryButton)
             }
         }

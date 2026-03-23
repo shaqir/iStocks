@@ -57,7 +57,7 @@ struct WatchlistErrorView: View {
             }
             .padding(.horizontal)
             .accessibilityLabel("Try again")
-            .accessibilityHint("Double tap to retry loading")
+            .accessibilityHint("Retries loading the watchlist data")
             .accessibilityIdentifier(AccessibilityID.General.retryButton)
         }
         .padding()
@@ -77,9 +77,6 @@ struct WatchlistErrorView: View {
     }
 
     private var errorMessage: String {
-        if let localizedError = error as? LocalizedError {
-            return localizedError.errorDescription ?? "Unknown error occurred."
-        }
-        return error
+        error
     }
 }

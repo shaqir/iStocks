@@ -209,7 +209,7 @@ struct WatchlistStickySearchBar: View {
                 .transition(.opacity)
                 .animation(.easeInOut, value: isAddButtonVisible)
                 .accessibilityLabel("Add stocks to watchlist")
-                .accessibilityHint("Opens stock picker to add stocks")
+                .accessibilityHint("Opens stock picker to select stocks for this watchlist")
                 .accessibilityIdentifier(AccessibilityID.Watchlist.addStocksButton)
             }
         }

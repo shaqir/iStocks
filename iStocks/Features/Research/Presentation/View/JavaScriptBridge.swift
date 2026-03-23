@@ -51,11 +51,27 @@ enum JavaScriptBridge {
                     if (!node.nodeValue.match(tickerRegex)) return;
                     if (node.parentElement && node.parentElement.classList.contains('istocks-ticker')) return;
 
-                    var span = document.createElement('span');
-                    span.innerHTML = node.nodeValue.replace(tickerRegex, function(match, symbol) {
-                        return '<span class="istocks-ticker" style="color:#007AFF;font-weight:600;cursor:pointer;text-decoration:underline;" data-symbol="' + symbol + '">' + match + '</span>';
-                    });
-                    node.parentNode.replaceChild(span, node);
+                    var parts = node.nodeValue.split(tickerRegex);
+                    if (parts.length <= 1) return;
+
+                    var fragment = document.createDocumentFragment();
+                    var matches = node.nodeValue.match(tickerRegex);
+                    var matchIndex = 0;
+
+                    for (var i = 0; i < parts.length; i++) {
+                        if (i % 2 === 0) {
+                            if (parts[i]) fragment.appendChild(document.createTextNode(parts[i]));
+                        } else {
+                            var tickerSpan = document.createElement('span');
+                            tickerSpan.className = 'istocks-ticker';
+                            tickerSpan.style.cssText = 'color:#007AFF;font-weight:600;cursor:pointer;text-decoration:underline;';
+                            tickerSpan.dataset.symbol = parts[i];
+                            tickerSpan.textContent = matches[matchIndex] || ('$' + parts[i]);
+                            matchIndex++;
+                            fragment.appendChild(tickerSpan);
+                        }
+                    }
+                    node.parentNode.replaceChild(fragment, node);
                 });
 
                 document.querySelectorAll('.istocks-ticker').forEach(function(el) {

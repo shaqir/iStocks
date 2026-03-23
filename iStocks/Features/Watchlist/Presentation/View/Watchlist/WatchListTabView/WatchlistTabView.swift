@@ -142,7 +142,7 @@ struct WatchlistTabBar: View {
                             .buttonStyle(.plain)
                             .accessibilityLabel("\(viewModel.watchlists[index].name) watchlist, tab \(index + 1) of \(viewModel.watchlists.count)")
                             .accessibilityAddTraits(isSelected ? .isSelected : [])
-                            .accessibilityHint("Double tap to switch. Long press to edit all watchlists")
+                            .accessibilityHint("Switches to this watchlist. Use actions menu to edit all watchlists")
                             .accessibilityAction(named: "Edit watchlists") {
                                 isEditingAllWatchlists = true
                             }

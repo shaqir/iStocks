@@ -67,7 +67,7 @@ struct WatchlistRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(stockAccessibilityLabel)
         .accessibilityValue("Price \(stock.price.currencyFormatted)")
-        .accessibilityHint("Double tap to view stock details")
+        .accessibilityHint("Opens detailed view of this stock")
         .accessibilityIdentifier(AccessibilityID.Watchlist.stockRow)
         .background(
             RoundedRectangle(cornerRadius: 12)

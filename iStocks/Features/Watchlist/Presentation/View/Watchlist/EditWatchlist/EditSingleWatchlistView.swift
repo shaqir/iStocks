@@ -116,7 +116,7 @@ struct EditSingleWatchlistView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(stock.symbol), \(stock.name)")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
-        .accessibilityHint(isDisabled ? "Maximum stocks reached" : (isSelected ? "Double tap to remove" : "Double tap to add"))
+        .accessibilityHint(isDisabled ? "Maximum stocks reached" : (isSelected ? "Removes stock from watchlist" : "Adds stock to watchlist"))
         .accessibilityAddTraits(.isButton)
     }
 

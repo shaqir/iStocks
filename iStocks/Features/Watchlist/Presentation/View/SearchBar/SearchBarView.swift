@@ -39,7 +39,6 @@ struct SearchBarView: View {
             Text(countText)
                 .foregroundColor(.gray)
                 .font(.system(size: 12))
-                .accessibilityLabel(countText)
 
             Button(action: onFilterTapped) {
                 Image(systemName: "line.horizontal.3.decrease.circle")

@@ -145,10 +145,13 @@ final class StockResearchViewModel: ObservableObject {
 
         switch type {
         case .tickerTapped:
-            if let symbol = message["symbol"] as? String {
+            if let symbol = message["symbol"] as? String,
+               symbol.range(of: #"^[A-Z]{1,5}$"#, options: .regularExpression) != nil {
                 AppLogger.info("Ticker tapped: \(symbol)", category: AppLogger.ui)
                 detectedTicker = symbol
                 showTickerAlert = true
+            } else {
+                AppLogger.warning("Invalid ticker symbol received from JS bridge", category: AppLogger.ui)
             }
 
         case .pageLoaded:

@@ -47,7 +47,7 @@ struct StockWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
 
-        private let viewModel: StockResearchViewModel
+        private weak var viewModel: StockResearchViewModel?
         weak var webView: WKWebView?
         private var cancellables = Set<AnyCancellable>()
         private var progressObservation: NSKeyValueObservation?
@@ -63,6 +63,17 @@ struct StockWebView: UIViewRepresentable {
         }
 
         deinit {
+            // Invalidate KVO observations
+            progressObservation?.invalidate()
+            titleObservation?.invalidate()
+            urlObservation?.invalidate()
+            loadingObservation?.invalidate()
+            canGoBackObservation?.invalidate()
+            canGoForwardObservation?.invalidate()
+
+            // Cancel Combine subscriptions
+            cancellables.removeAll()
+
             // Remove script message handler to break the retain cycle
             webView?.configuration.userContentController.removeScriptMessageHandler(
                 forName: JavaScriptBridge.handlerName
@@ -121,8 +132,8 @@ struct StockWebView: UIViewRepresentable {
         }
 
         private func syncNavigationState(_ webView: WKWebView) {
-            Task { @MainActor in
-                viewModel.updateNavigationState(
+            Task { @MainActor [weak self] in
+                self?.viewModel?.updateNavigationState(
                     canGoBack: webView.canGoBack,
                     canGoForward: webView.canGoForward,
                     isLoading: webView.isLoading,
@@ -136,6 +147,8 @@ struct StockWebView: UIViewRepresentable {
         // MARK: - ViewModel Bindings
 
         func bindViewModelActions() {
+            guard let viewModel = viewModel else { return }
+
             viewModel.goBackSubject
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] in self?.webView?.goBack() }
@@ -191,15 +204,8 @@ struct StockWebView: UIViewRepresentable {
 
             // Record in history
             if let url = webView.url {
-                Task { @MainActor in
-                    viewModel.recordHistory(title: webView.title, url: url)
-                }
-            }
-
-            // Re-inject ticker script after page load to catch dynamically loaded content
-            webView.evaluateJavaScript(JavaScriptBridge.extractTickerScript.source) { _, error in
-                if let error = error {
-                    AppLogger.debug("Ticker re-injection note: \(error.localizedDescription)", category: AppLogger.ui)
+                Task { @MainActor [weak self] in
+                    self?.viewModel?.recordHistory(title: webView.title, url: url)
                 }
             }
         }
@@ -245,8 +251,8 @@ struct StockWebView: UIViewRepresentable {
                 return
             }
 
-            Task { @MainActor in
-                viewModel.handleJavaScriptMessage(body)
+            Task { @MainActor [weak self] in
+                self?.viewModel?.handleJavaScriptMessage(body)
             }
         }
     }
