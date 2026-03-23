@@ -1,6 +1,6 @@
 # iStocks — Codebase Analysis & Architecture Reference
 
-> **Last updated:** March 2026
+> **Last updated:** March 22, 2026
 > **Analyzed by:** Senior iOS Architect review
 > **Purpose:** Persistent architectural reference for full project context without re-crawling source files.
 
@@ -20,11 +20,13 @@
 10. [State Management](#10-state-management)
 11. [Error Handling](#11-error-handling)
 12. [Testing Strategy](#12-testing-strategy)
-13. [Code Quality Findings](#13-code-quality-findings)
-14. [Security Considerations](#14-security-considerations)
-15. [Performance Notes](#15-performance-notes)
-16. [Improvement Roadmap](#16-improvement-roadmap)
-17. [File-Level Reference](#17-file-level-reference)
+13. [Accessibility (VoiceOver)](#13-accessibility-voiceover)
+14. [Stock Research Module (WKWebView)](#14-stock-research-module-wkwebview)
+15. [Code Quality Findings](#15-code-quality-findings)
+16. [Security Considerations](#16-security-considerations)
+17. [Performance Notes](#17-performance-notes)
+18. [Improvement Roadmap](#18-improvement-roadmap)
+19. [File-Level Reference](#19-file-level-reference)
 
 ---
 
@@ -61,6 +63,7 @@
 | **URLSession** | HTTP networking |
 | **URLSessionWebSocketTask** | WebSocket connection (Finnhub) |
 | **XCTest / Swift Testing** | Unit + integration tests |
+| **WebKit / WKWebView** | Stock Research web view (UIViewRepresentable) |
 
 ---
 
@@ -83,7 +86,7 @@
                      │ Repository implementations
 ┌────────────────────▼────────────────────────┐
 │                Data Layer                    │
-│   Repositories (REST, WebSocket, Mock)      │
+│   Repositories (REST, WebSocket, GraphQL, Mock) │
 │   Data Sources (Remote, Local, WebSocket)   │
 │   DTOs + Mappers                            │
 └─────────────────────────────────────────────┘
@@ -103,6 +106,8 @@ iStocks/
 │   └── iStocksApp.swift              # @main entry, SwiftData container, TabBarContainer
 │
 ├── Core/
+│   ├── Accessibility/
+│   │   └── AccessibilityIdentifiers.swift  # Centralized AccessibilityID enum for UI testing
 │   ├── Constants/
 │   │   ├── AppConstants.swift        # maxStocksPerWatchlist, maxWatchlists
 │   │   ├── AppFonts.swift            # Inter font family constants
@@ -120,7 +125,21 @@ iStocks/
 │       └── SecureAPIKeyManager.swift # Reads API keys from env vars / Info.plist
 │
 ├── Features/
-│   ├── Watchlist/                    # ← Only fully-implemented feature
+│   ├── Research/                     # Stock Research — WKWebView integration
+│   │   ├── Domain/
+│   │   │   └── Entities/
+│   │   │       ├── WebBookmark.swift              # Bookmark model (Identifiable, Codable)
+│   │   │       └── WebNavigationState.swift       # Navigation state value type
+│   │   └── Presentation/
+│   │       ├── View/
+│   │       │   ├── StockResearchView.swift        # Main research view with toolbar
+│   │       │   ├── StockWebView.swift             # UIViewRepresentable WKWebView wrapper
+│   │       │   ├── WebViewToolbar.swift           # Back/forward/reload/bookmark toolbar
+│   │       │   └── JavaScriptBridge.swift          # JS↔Swift message handlers + scripts
+│   │       └── ViewModel/
+│   │           └── StockResearchViewModel.swift   # Navigation, bookmarks, JS callbacks
+│   │
+│   ├── Watchlist/                    # Primary fully-implemented feature
 │   │   ├── Presentation/
 │   │   │   ├── DI/
 │   │   │   │   └── WatchlistDIContainer.swift       # Manual DI factory (static cached)
@@ -180,8 +199,14 @@ iStocks/
 │   │       │   │   │   ├── QuoteEndPoint.swift      # TwelveData quote endpoint
 │   │       │   │   │   ├── PriceEndPoint.swift      # TwelveData price endpoint
 │   │       │   │   │   ├── NYSETop50Symbols.swift   # Hardcoded 50 NYSE symbols
-│   │       │   │   │   └── Meta/
-│   │       │   │   │       └── StockMetaData.swift  # Static symbol → name mapping
+│   │       │   │   │   ├── Meta/
+│   │       │   │   │   │   └── StockMetaData.swift  # Static symbol → name mapping
+│   │       │   │   │   └── GraphQL/
+│   │       │   │   │       ├── GraphQLClient.swift        # Lightweight GraphQL client (URLSession)
+│   │       │   │   │       ├── GraphQLQuery.swift          # Query struct + variable encoding
+│   │       │   │   │       ├── GraphQLError.swift          # GraphQL-specific error types
+│   │       │   │   │       ├── StockGraphQLQueries.swift   # Predefined stock queries
+│   │       │   │   │       └── StockGraphQLDataSource.swift # GraphQL data source impl
 │   │       │   │   └── Error/
 │   │       │   │       ├── RepositoryError.swift
 │   │       │   │       └── TwelveDataAPIError.swift
@@ -195,15 +220,19 @@ iStocks/
 │   │       │   ├── StockDTO.swift          # TwelveData quote response
 │   │       │   ├── StockFinnPriceDTO.swift # Finnhub WebSocket trade message
 │   │       │   ├── StockPriceDTO.swift     # TwelveData price response
-│   │       │   └── StockQuoteDTO.swift     # TwelveData quote fields
+│   │       │   ├── StockQuoteDTO.swift     # TwelveData quote fields
+│   │       │   └── GraphQL/
+│   │       │       └── StockGraphQLDTO.swift  # GraphQL response DTOs
 │   │       ├── Mappers/
 │   │       │   ├── FinnhubResponseMapper.swift
 │   │       │   ├── PriceResponseMapper.swift
 │   │       │   ├── QuoteResponseMapper.swift
-│   │       │   └── StockResponseWrapper.swift
+│   │       │   ├── StockResponseWrapper.swift
+│   │       │   └── GraphQLResponseMapper.swift  # GraphQL DTO → Domain mapper
 │   │       └── Repositories/
 │   │           ├── RestStockRepositoryImpl.swift        # TwelveData REST
 │   │           ├── WebSocketStockRepositoryImpl.swift   # Finnhub WebSocket
+│   │           ├── GraphQLStockRepositoryImpl.swift     # GraphQL data source
 │   │           └── MockStockRepositoryImpl.swift        # Test/preview data
 │   │
 │   ├── Dashboard/
@@ -212,18 +241,16 @@ iStocks/
 │   │   └── PortfolioView.swift       # STUB — placeholder only
 │   ├── Orders/
 │   │   └── OrderView.swift           # STUB — placeholder only
-│   ├── Positions/
-│   │   └── BidsView.swift            # STUB — placeholder only
 │   └── Settings/
 │       └── SettingsView.swift        # STUB — minimal (API key entry)
 │
 ├── Shared/
 │   ├── Networking/
-│   │   ├── Endpoint.swift            # Value type: path, method, queryItems
+│   │   ├── Endpoint.swift            # Value type: path, method, queryItems, httpBody
 │   │   ├── NetworkClient.swift       # Protocol (Combine + async/await)
-│   │   ├── NetworkConstants.swift    # Base URLs
+│   │   ├── NetworkConstants.swift    # Base URLs (REST + GraphQL)
 │   │   ├── NetworkError.swift        # HTTP-level errors
-│   │   └── URLSessionNetworkClient.swift  # Concrete URLSession impl
+│   │   └── URLSessionNetworkClient.swift  # Concrete URLSession impl (GET + POST)
 │   ├── Components/
 │   │   ├── Alert/
 │   │   │   ├── GlobalAlertPresenter.swift     # Static presenter helper
@@ -237,7 +264,7 @@ iStocks/
 │       ├── TabBarContainer.swift     # ZStack: content + custom tab bar
 │       ├── TabItem.swift             # Individual tab item view
 │       ├── TabRouterView.swift       # Routes tab enum → feature view
-│       └── TabViewEnum.swift         # Enum: watchlist/orders/portfolio/bids/settings
+│       └── TabViewEnum.swift         # Enum: watchlist/orders/portfolio/research/settings
 │
 └── Resources/
     ├── Assets.xcassets
@@ -249,13 +276,14 @@ iStocks/
 
 ## 5. Data Flow & App Modes
 
-### Three Operating Modes (set via `AppConfiguration.watchlistMode`)
+### Four Operating Modes (set via `AppConfiguration.watchlistMode`)
 
 ```swift
 enum WatchlistAppMode {
     case mock       // DEBUG default — no API calls
     case restAPI    // RELEASE default — TwelveData REST
     case webSocket  // Opt-in — Finnhub WebSocket
+    case graphQL    // Opt-in — GraphQL endpoint
 }
 ```
 
@@ -304,6 +332,17 @@ Finnhub WSS
     → WatchlistsViewModel.updatePrices()
     → WatchlistViewModel.replaceStocks(priceOnly: true)
     → SwiftUI re-render (price cells only)
+```
+
+### GraphQL Mode Flow
+```
+GraphQL API (HTTPS POST)
+    → GraphQLClient.execute(query:)
+    → StockGraphQLDataSource.fetchStockQuotes()
+    → GraphQLResponseMapper → [Stock]
+    → GraphQLStockRepositoryImpl (conforms to RestStockRepository)
+    → Use Cases (same as REST)
+    → SwiftUI re-render
 ```
 
 ### Price-Only vs Structural Update Distinction
@@ -484,7 +523,8 @@ Both Combine and async/await variants available. In practice, only the Combine v
 struct Endpoint {
     let path: String
     let method: HTTPMethod
-    let queryItems: [URLQueryItem]
+    let queryItems: [URLQueryItem]?
+    let httpBody: Data?   // Optional — used for GraphQL POST requests
 }
 ```
 
@@ -505,6 +545,10 @@ struct Endpoint {
 - **TwelveData Quote:** `GET /quote?symbol=AAPL&apikey=...`
 - **TwelveData Price:** `GET /price?symbol=AAPL&apikey=...`
 - **Finnhub WebSocket:** `wss://ws.finnhub.io?token=...`
+- **GraphQL:** `POST /graphql` with JSON body `{ query, variables, operationName }`
+
+### GraphQL Client
+A lightweight, protocol-based GraphQL client (`GraphQLClientProtocol`) built on pure URLSession — no Apollo or third-party dependencies. Supports both Combine (`AnyPublisher<T, Error>`) and async/await. Constructs HTTP POST requests with JSON-encoded `GraphQLQuery` structs containing type-safe `GraphQLVariable` values.
 
 ---
 
@@ -580,32 +624,98 @@ Separate typed errors for different validation contexts:
 ## 12. Testing Strategy
 
 ### Test Targets
-- `iStocksTests` — Unit tests (`WatchlistModuleTests/`)
+- `iStocksTests` — Unit tests (`WatchlistModuleTests/` + `NetworkingTests/`)
 - `iStocksIntegrationTests` — Integration tests
 
-### What's Tested
-- `EditWatchlistViewModel` — validation logic, add/remove stocks
-- `AppConstants` — configuration values
-- Array extension helpers
+### What's Tested (155 tests, all passing)
+
+**WatchlistModuleTests/ (87 tests):**
+- `WatchlistsViewModelTests` — CRUD, validation, price updates, persistence
+- `WatchlistViewModelTests` — add/remove stocks, filtered search, price updates
+- `WatchlistViewModelProviderTests` — ViewModel caching, independence
+- `WatchlistTabViewModelTests` — tab operations, refresh, replace
+- `EditWatchlistViewModelTests` — validation logic, add/remove stocks
+- `RestStockRepositoryImplTests` — API calls, caching, progress updates
+- `MockStockRepositoryTests` — mock data flow
+- `QuoteResponseMapperTests` — DTO→Domain mapping
+- `WatchlistPersistenceServiceTests` — SwiftData CRUD
+- `SharedAlertManagerTests` — alert presentation
+- `AppConstantsTests` — configuration values
+- `StockPickerViewTests` — ViewModel interaction
+
+**NetworkingTests/ (68 tests):**
+- `URLSessionNetworkClientTests` — Combine Decodable/Raw Data, async/await, HTTP status codes (200/401/429/500/503), TwelveDataAPIError detection, JSON decode failures, HTTP method forwarding
+- `EndpointTests` — URL construction, query items, HTTP methods
+- `NetworkErrorTests` — errorDescription, failureReason, recoverySuggestion, isRetryable for all 11 cases
+- `StockRemoteDataSourceTests` — success/error mapping with MockNetworkClient
+- `QuoteEndpointTests` — QuoteEndPoint and PriceEndpoint URL construction
+- `QuoteResponseMapperExtendedTests` — edge cases: single stock, mixed valid/errors, all-invalid
 
 ### Test Infrastructure
-- `MockStockRepositoryImpl` — in-tree mock, reusable for tests
-- `FailingNetworkClient` — tests error propagation
-- `Array+Extensions` test helper in `WatchlistModuleTests/Helpers/`
+- `MockURLProtocol` — URLProtocol subclass for intercepting URLSession requests
+- `MockNetworkClient` — protocol-based mock with configurable responses + call tracking
+- `MockRemoteDataSource` — mock StockRemoteDataSourceProtocol
+- `MockStock` — helper for constructing test Stock objects
+- `MockWatchlistPersistenceService` — mock persistence layer
 - `WatchlistsViewModelTestable` protocol — abstracts ViewModel for testing
 
-### What's Missing (Testing Gaps)
-- `WatchlistsViewModel` has no unit tests
-- `WatchlistViewModel` has no unit tests
-- `RestStockRepositoryImpl` batch logic untested
+### Remaining Test Gaps
 - `WebSocketStockRepositoryImpl` has no tests
-- `WatchlistPersistenceService` has no tests
+- GraphQL client/data source/mapper not yet tested
 - No snapshot tests for SwiftUI views
-- No UI automation tests
+- No UI automation tests (AccessibilityID enum is ready for this)
 
 ---
 
-## 13. Code Quality Findings
+## 13. Accessibility (VoiceOver)
+
+All views have comprehensive VoiceOver support:
+
+### Approach
+- **Semantic grouping** via `.accessibilityElement(children: .combine)` for stock rows, loading overlays
+- **Descriptive labels** — WatchlistRow reads: "Apple, AAPL, price up, profit 50, 2.5 percent, quantity 10, average 145"
+- **Dynamic values** — `.accessibilityValue("Price $150.00")` updates with live price changes
+- **Outcome-based hints** — e.g. "Opens stock picker to select stocks" (not gesture descriptions)
+- **Traits** — `.isSelected` on active tab, `.isHeader` on titles, `.updatesFrequently` on loading
+- **Announcements** — `AccessibilityNotification.Announcement` for batch progress, errors, loading
+
+### AccessibilityID Enum
+Centralized identifiers in `Core/Accessibility/AccessibilityIdentifiers.swift` for UI automation:
+```swift
+enum AccessibilityID {
+    enum Watchlist { static let stockRow, searchField, addStocksButton, addWatchlistButton, stockPicker, progressBar, tabBar }
+    enum General { static let loadingOverlay, emptyState, errorView, retryButton }
+}
+```
+
+### Covered Views
+WatchlistRow, WatchlistTabView, WatchlistLoadedView, SearchBarView, BatchProgressView, EmptyStateView, WatchlistErrorView, StockPickerView, EditSingleWatchlistView, EditAllWatchlistsView, LoadingOverlay, EmptyWatchlistView, DashboardView, PortfolioView, OrderView
+
+---
+
+## 14. Stock Research Module (WKWebView)
+
+### Architecture
+Follows Clean Architecture — Domain entities (`WebBookmark`, `WebNavigationState`), ViewModel (`StockResearchViewModel`), Views (`StockWebView`, `StockResearchView`, `WebViewToolbar`).
+
+### Key Components
+- **StockWebView** — `UIViewRepresentable` wrapping `WKWebView` with `Coordinator` implementing `WKNavigationDelegate`, `WKScriptMessageHandler`, `WKUIDelegate`
+- **JavaScriptBridge** — Injects scripts to detect `$TICKER` patterns on web pages, wraps them in tappable spans, sends messages to native via `window.webkit.messageHandlers.iStocksHandler.postMessage()`
+- **StockResearchViewModel** — `@MainActor ObservableObject` managing navigation state, bookmarks (in-memory), browsing history, and JS bridge callbacks
+- **WebViewToolbar** — Back/forward/reload/bookmark/share buttons with progress bar
+
+### Security
+- Ticker symbols validated against `^[A-Z]{1,5}$` regex before processing
+- DOM manipulation uses `textContent` and `createDocumentFragment` (no `innerHTML`) to prevent XSS
+- Non-HTTP schemes (tel:, mailto:) blocked from WebView and opened externally
+- JavaScript cannot open windows automatically
+
+### Tab Integration
+Research tab replaces the former Bids placeholder tab in the app's tab bar.
+
+---
+
+## 15. Code Quality Findings
 
 ### Issues by Severity
 
@@ -675,7 +785,7 @@ Separate typed errors for different validation contexts:
 
 ---
 
-## 14. Security Considerations
+## 16. Security Considerations
 
 ### API Key Handling
 - Keys are read from environment variables (good) and Info.plist fallback (risky if plist is committed)
@@ -693,7 +803,7 @@ Separate typed errors for different validation contexts:
 
 ---
 
-## 15. Performance Notes
+## 17. Performance Notes
 
 ### Good
 - Price update batching (1-second WebSocket collect window) prevents UI thrashing
@@ -709,7 +819,7 @@ Separate typed errors for different validation contexts:
 
 ---
 
-## 16. Improvement Roadmap
+## 18. Improvement Roadmap
 
 ### Priority 1 — Architecture / Correctness
 - [ ] Mark all ViewModels with `@MainActor` to enforce main-thread UI updates
@@ -726,11 +836,15 @@ Separate typed errors for different validation contexts:
 - [ ] Add `@MainActor` to `WatchlistViewModel` and `WatchlistsViewModel`
 
 ### Priority 3 — Testing
-- [ ] Add unit tests for `WatchlistsViewModel`
-- [ ] Add unit tests for `WatchlistViewModel`
-- [ ] Add unit tests for `WatchlistPersistenceService`
+- [x] Add comprehensive networking layer tests (68 tests — URLSessionNetworkClient, Endpoint, NetworkError, StockRemoteDataSource, QuoteResponseMapper)
+- [x] Add unit tests for `WatchlistsViewModel` (18 tests)
+- [x] Add unit tests for `WatchlistViewModel` (10 tests)
+- [x] Add unit tests for `WatchlistPersistenceService`
+- [x] Add unit tests for `RestStockRepositoryImpl` (4 tests)
+- [ ] Add unit tests for GraphQL client/data source/mapper
 - [ ] Add integration tests for `RestStockRepositoryImpl` batch loading
 - [ ] Add snapshot tests for key views (WatchlistRow, BatchProgressView)
+- [ ] Add UI automation tests using AccessibilityID identifiers
 
 ### Priority 4 — Code Cleanup
 - [ ] Remove commented-out guard in `WatchlistViewModelProvider.viewModel(for:)`
@@ -738,7 +852,15 @@ Separate typed errors for different validation contexts:
 - [ ] Expand `AppSizes` to capture all hardcoded layout values
 - [ ] Remove verbose logging marked as "too verbose" in comments
 
-### Priority 5 — Portfolio / GitHub Quality
+### Priority 5 — New Features (Completed March 2026)
+- [x] VoiceOver accessibility — all views annotated with labels, hints, traits, identifiers
+- [x] GraphQL data source — lightweight client, DTOs, mapper, repository, DI wiring
+- [x] XCTest networking coverage — 68 tests, MockURLProtocol, MockNetworkClient
+- [x] WKWebView Research module — UIViewRepresentable, JS↔Swift bridge, ticker detection
+- [ ] Persist bookmarks in Research module (currently in-memory)
+- [ ] Preserve Research tab state across tab switches
+
+### Priority 6 — Portfolio / GitHub Quality
 - [ ] Write `README.md` with screenshots, architecture diagram, setup instructions
 - [ ] Add architecture diagram (draw.io or Mermaid in README)
 - [ ] Add `CONTRIBUTING.md`
@@ -748,7 +870,7 @@ Separate typed errors for different validation contexts:
 
 ---
 
-## 17. File-Level Reference
+## 19. File-Level Reference
 
 Quick lookup table for any file in the project:
 
@@ -813,7 +935,23 @@ Quick lookup table for any file in the project:
 | `CustomTabBar.swift` | Shared | Custom bottom tab bar UI |
 | `TabBarContainer.swift` | Shared | ZStack content + tab bar |
 | `TabRouterView.swift` | Shared | Tab enum → feature view router |
-| `TabViewEnum.swift` | Shared | Tab cases: watchlist/orders/portfolio/bids/settings |
+| `TabViewEnum.swift` | Shared | Tab cases: watchlist/orders/portfolio/research/settings |
+| `AccessibilityIdentifiers.swift` | Core | Centralized AccessibilityID enum for UI testing |
+| `GraphQLClient.swift` | Data | Lightweight GraphQL client (URLSession, Combine + async) |
+| `GraphQLQuery.swift` | Data | GraphQL query struct + variable encoding |
+| `GraphQLError.swift` | Data | GraphQL-specific error types |
+| `StockGraphQLQueries.swift` | Data | Predefined stock queries |
+| `StockGraphQLDataSource.swift` | Data | GraphQL data source implementation |
+| `StockGraphQLDTO.swift` | Data | GraphQL response DTOs |
+| `GraphQLResponseMapper.swift` | Data | GraphQL DTO → Domain mapper |
+| `GraphQLStockRepositoryImpl.swift` | Data | GraphQL repository (RestStockRepository) |
+| `StockResearchView.swift` | View | Main research view with bookmarks/toolbar |
+| `StockWebView.swift` | View | UIViewRepresentable WKWebView wrapper |
+| `WebViewToolbar.swift` | View | Navigation toolbar + progress bar |
+| `JavaScriptBridge.swift` | View | JS↔Swift message handlers + ticker scripts |
+| `StockResearchViewModel.swift` | Presentation | Research navigation, bookmarks, JS callbacks |
+| `WebBookmark.swift` | Domain | Bookmark entity (Identifiable, Codable) |
+| `WebNavigationState.swift` | Domain | WebView navigation state value type |
 
 ---
 
