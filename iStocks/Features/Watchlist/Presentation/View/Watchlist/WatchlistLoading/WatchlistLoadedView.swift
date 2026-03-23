@@ -101,7 +101,7 @@ struct WatchlistStockListView: View {
                 .padding(.top, index == 0 ? 4 : 0)
             }
         }
-         
+        .accessibilityLabel("Stock list, \(viewModel.filteredStocks.count) stocks")
     }
 }
 
@@ -171,7 +171,9 @@ struct WatchlistStickySearchBar: View {
                     .font(.system(size: 14))
                     .disableAutocorrection(true)
                     .frame(maxWidth: .infinity)
-                
+                    .accessibilityLabel("Search stocks")
+                    .accessibilityIdentifier(AccessibilityID.Watchlist.searchField)
+
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -179,6 +181,7 @@ struct WatchlistStickySearchBar: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.gray.opacity(0.6))
                     }
+                    .accessibilityLabel("Clear search")
                 }
             }
             .padding(.horizontal, 12)
@@ -205,6 +208,9 @@ struct WatchlistStickySearchBar: View {
                 .frame(height: 44)
                 .transition(.opacity)
                 .animation(.easeInOut, value: isAddButtonVisible)
+                .accessibilityLabel("Add stocks to watchlist")
+                .accessibilityHint("Opens stock picker to select stocks for this watchlist")
+                .accessibilityIdentifier(AccessibilityID.Watchlist.addStocksButton)
             }
         }
         .padding(.horizontal, 16)

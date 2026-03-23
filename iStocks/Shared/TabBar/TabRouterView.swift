@@ -15,19 +15,19 @@ struct TabRouterView: View {
     
     var body: some View {
         switch tab {
-            
+
         case .watchlist:
             WatchlistTabContainerView(context: context)
-            
+
         case .orders:
             OrderView()
-            
+
         case .portfolio:
             PortfolioView()
-            
-        case .bids:
-            BidsView()
-            
+
+        case .research:
+            StockResearchView()
+
         case .settings:
             SettingsView()
         }

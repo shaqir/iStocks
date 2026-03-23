@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 enum TabViewEnum: Identifiable, CaseIterable, Hashable {
-    case watchlist, orders, portfolio, bids, settings
+    case watchlist, orders, portfolio, research, settings
 
     var id: Self { self }
 
@@ -27,9 +27,9 @@ enum TabViewEnum: Identifiable, CaseIterable, Hashable {
             .init(title: AppStrings.TabNames.portfolio,
                   imageName: AppStrings.TabImageNames.portfolioImage,
                   color: .blue)
-        case .bids:
-            .init(title: AppStrings.TabNames.bids,
-                  imageName: AppStrings.TabImageNames.bidImage,
+        case .research:
+            .init(title: AppStrings.TabNames.research,
+                  imageName: AppStrings.TabImageNames.researchImage,
                   color: .blue)
         case .settings:
             .init(title: AppStrings.TabNames.settings,

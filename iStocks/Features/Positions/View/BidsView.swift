@@ -9,6 +9,8 @@ import SwiftUI
 
 struct BidsView: View {
     var body: some View {
-        Text("OrderView")
+        Text("Bids")
+            .accessibilityLabel("Bids")
+            .accessibilityAddTraits(.isHeader)
     }
 }

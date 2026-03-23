@@ -28,6 +28,7 @@ enum AppStrings {
         static let watchlist = "Watchlist"
         static let orders = "Orders"
         static let portfolio = "Portfolio"
+        static let research = "Research"
         static let bids = "Bids"
         static let settings = "Settings"
     }
@@ -36,6 +37,7 @@ enum AppStrings {
         static let watchlistImage = "house"
         static let ordersImage = "chart.line.uptrend.xyaxis"
         static let portfolioImage = "briefcase"
+        static let researchImage = "globe"
         static let bidImage = "doc.plaintext"
         static let profileImage = "person"
     }

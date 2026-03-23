@@ -10,6 +10,7 @@ import XCTest
 import Combine
 @testable import iStocks
  
+@MainActor
 final class WatchlistTabViewModelTests: XCTestCase {
 
     var sut: WatchlistTabViewModel!

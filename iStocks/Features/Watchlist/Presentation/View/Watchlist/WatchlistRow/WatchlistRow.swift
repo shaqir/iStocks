@@ -64,6 +64,11 @@ struct WatchlistRow: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(stockAccessibilityLabel)
+        .accessibilityValue("Price \(stock.price.currencyFormatted)")
+        .accessibilityHint("Opens detailed view of this stock")
+        .accessibilityIdentifier(AccessibilityID.Watchlist.stockRow)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isAnimated ? flashColor() : Color.white)
@@ -95,5 +100,15 @@ struct WatchlistRow: View {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.prepare()
         generator.impactOccurred()
+    }
+
+    // MARK: - Accessibility
+
+    private var stockAccessibilityLabel: String {
+        let direction = stock.pnl >= 0 ? "profit" : "loss"
+        let pnlText = String(format: "%.2f", abs(stock.pnl))
+        let pnlPctText = String(format: "%.2f", abs(stock.pnlPercentage))
+        let priceDirection = stock.isPriceUp ? "price up" : "price down"
+        return "\(stock.name), \(stock.symbol), \(priceDirection), \(direction) \(pnlText), \(pnlPctText) percent, quantity \(Int(stock.qty)), average \(String(format: "%.2f", stock.averageBuyPrice))"
     }
 }

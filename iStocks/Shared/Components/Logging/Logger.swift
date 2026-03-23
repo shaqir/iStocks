@@ -34,6 +34,7 @@ enum AppLogger {
     static let di = OSLog(subsystem: subsystem, category: "DI")
     static let startup = OSLog(subsystem: subsystem, category: "Startup")
     static let ui = OSLog(subsystem: subsystem, category: "UI")
+    static let webView = OSLog(subsystem: subsystem, category: "WebView")
     
     // MARK: - Logging Methods
     

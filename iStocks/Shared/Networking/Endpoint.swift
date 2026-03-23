@@ -17,6 +17,14 @@ struct Endpoint {
     let path: String
     let method: HTTPMethod
     let queryItems: [URLQueryItem]?
+    let httpBody: Data?
+
+    init(path: String, method: HTTPMethod = .get, queryItems: [URLQueryItem]? = nil, httpBody: Data? = nil) {
+        self.path = path
+        self.method = method
+        self.queryItems = queryItems
+        self.httpBody = httpBody
+    }
 
     var url: URL? {
         var components = URLComponents(string: API.baseURL)
