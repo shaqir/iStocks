@@ -18,6 +18,7 @@ enum NetworkError: LocalizedError {
     case timeout
     case noInternetConnection
     case cancelled
+    case httpError(statusCode: Int, data: Data)
     case decodingFailed(Error)
     case unknown(Error)
 
@@ -41,13 +42,15 @@ enum NetworkError: LocalizedError {
             return "No internet connection available"
         case .cancelled:
             return "Request was cancelled"
+        case .httpError(let statusCode, _):
+            return "HTTP error (\(statusCode))"
         case .decodingFailed(let error):
             return "Failed to decode response: \(error.localizedDescription)"
         case .unknown(let error):
             return "Network error: \(error.localizedDescription)"
         }
     }
-    
+
     var failureReason: String? {
         switch self {
         case .invalidURL:
@@ -68,13 +71,15 @@ enum NetworkError: LocalizedError {
             return "Device is not connected to the internet"
         case .cancelled:
             return "User or system cancelled the request"
+        case .httpError(let statusCode, _):
+            return "Server returned HTTP status code \(statusCode)"
         case .decodingFailed:
             return "Response data format is invalid"
         case .unknown:
             return "An unexpected error occurred"
         }
     }
-    
+
     var recoverySuggestion: String? {
         switch self {
         case .invalidURL:
@@ -93,17 +98,19 @@ enum NetworkError: LocalizedError {
             return "Connect to the internet and try again"
         case .cancelled:
             return nil
+        case .httpError:
+            return "Try again later or contact support"
         case .decodingFailed:
             return "Update the app to the latest version"
         case .unknown:
             return "Try again later"
         }
     }
-    
+
     /// Whether this error should be retried automatically
     var isRetryable: Bool {
         switch self {
-        case .timeout, .serverError, .rateLimited, .noInternetConnection:
+        case .timeout, .serverError, .rateLimited, .noInternetConnection, .httpError:
             return true
         case .invalidURL, .invalidResponse, .noData, .unauthorized, .cancelled, .decodingFailed, .unknown:
             return false
