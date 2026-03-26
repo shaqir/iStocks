@@ -187,21 +187,127 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
 }
 
 
-//MARK : Only For Testing
-extension StockRemoteDataSource{
-    
+// MARK: - Structured Concurrency (Migration)
+//
+// This extension adds a TaskGroup-based alternative to fetchSequentiallyWithRetry.
+// The Combine version above uses recursive closures + DispatchQueue.global().asyncAfter,
+// which is functional but hard to follow. This version reads top-to-bottom with:
+//   - Automatic cancellation via structured concurrency
+//   - Simple for-loop retry logic (no recursive parameter threading)
+//   - Task.sleep instead of DispatchQueue.asyncAfter (cancellable!)
+//
+// Both versions coexist during migration — the Combine version remains the
+// production path while this is integrated incrementally.
+
+extension StockRemoteDataSource {
+
+    /// Bridges the Combine `fetchRealtimePrices` to async/await for a single call.
     func fetchRealtimePricesAsync(for symbols: [String]) async throws -> [Stock] {
         try await withCheckedThrowingContinuation { continuation in
+            var didResume = false
             self.fetchRealtimePrices(for: symbols)
                 .sink(receiveCompletion: { completion in
+                    guard !didResume else { return }
                     if case let .failure(error) = completion {
+                        didResume = true
                         continuation.resume(throwing: error)
                     }
                 }, receiveValue: { stocks in
+                    guard !didResume else { return }
+                    didResume = true
                     continuation.resume(returning: stocks)
                 })
                 .store(in: &self.cancellables)
         }
     }
-    
+
+    /// Fetches stock prices for a single batch using async/await.
+    /// Bridges the existing Combine `fetchPrices` via continuation.
+    private func fetchBatchAsync(symbols: [String]) async throws -> [Stock] {
+        try await withCheckedThrowingContinuation { continuation in
+            var didResume = false
+            self.fetchPrices(for: symbols)
+                .sink(receiveCompletion: { completion in
+                    guard !didResume else { return }
+                    if case let .failure(error) = completion {
+                        didResume = true
+                        continuation.resume(throwing: error)
+                    }
+                }, receiveValue: { stocks in
+                    guard !didResume else { return }
+                    didResume = true
+                    continuation.resume(returning: stocks)
+                })
+                .store(in: &self.cancellables)
+        }
+    }
+
+    /// Fetches prices for all symbols in sequential batches using structured concurrency.
+    ///
+    /// Compared to `fetchSequentiallyWithRetry` (Combine version):
+    /// - Control flow is linear — no recursion, no closure nesting
+    /// - Cancellation is automatic — if the parent Task is cancelled,
+    ///   `Task.checkCancellation()` throws and all work stops
+    /// - Retry is a simple for-loop, not recursive parameter threading
+    /// - `Task.sleep` is cancellable; `DispatchQueue.asyncAfter` is not
+    ///
+    /// Returns all successfully fetched stocks. Failed batches (after retries)
+    /// are skipped — partial results are better than total failure.
+    func fetchTop50InBatchesAsync(
+        _ symbols: [String],
+        batchSize: Int = 8,
+        maxRetries: Int = 2,
+        onProgress: BatchProgressHandler? = nil
+    ) async throws -> [Stock] {
+        let batches = symbols.chunked(into: batchSize)
+        let totalBatches = batches.count
+        var allStocks: [Stock] = []
+
+        AppLogger.info("Starting async batch fetch: \(totalBatches) batches", category: AppLogger.network)
+
+        for (index, batch) in batches.enumerated() {
+            // Cooperative cancellation — if the user navigates away and
+            // the parent Task is cancelled, this throws immediately.
+            try Task.checkCancellation()
+
+            var batchResult: [Stock]?
+
+            // Retry loop — replaces recursive fetchSequentiallyWithRetry
+            for attempt in 0...maxRetries {
+                do {
+                    batchResult = try await fetchBatchAsync(symbols: batch)
+                    onProgress?(index + 1, totalBatches, attempt, true)
+                    break
+                } catch {
+                    if attempt < maxRetries {
+                        AppLogger.warning(
+                            "Retrying batch \(index + 1) in \(Int(batchDelay))s (Attempt \(attempt + 2))",
+                            category: AppLogger.network
+                        )
+                        onProgress?(index + 1, totalBatches, attempt + 1, false)
+                        // Task.sleep is cancellable — unlike DispatchQueue.asyncAfter,
+                        // if the Task is cancelled during the sleep, it throws immediately.
+                        try await Task.sleep(for: .seconds(batchDelay))
+                    } else {
+                        AppLogger.error(
+                            "Failed batch \(index + 1) after \(maxRetries + 1) tries — skipping",
+                            category: AppLogger.network
+                        )
+                        onProgress?(index + 1, totalBatches, attempt, false)
+                    }
+                }
+            }
+
+            if let stocks = batchResult {
+                allStocks.append(contentsOf: stocks)
+            }
+
+            // Rate-limit delay between batches (skip after last batch)
+            if index < batches.count - 1 {
+                try await Task.sleep(for: .seconds(batchDelay))
+            }
+        }
+
+        return allStocks
+    }
 }

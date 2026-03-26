@@ -13,8 +13,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
 
     private var webSocket: WebSocketClient
     private var subject = PassthroughSubject<[Stock], Never>()
-    private var currentStocks: [String: Stock] = [:]
-    private let stocksQueue = DispatchQueue(label: "com.istocks.currentStocks")
+    private let stateActor = StockStateActor()
     private var cancellables = Set<AnyCancellable>()
     
     init(webSocket: WebSocketClient) {
@@ -56,16 +55,22 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
     }
     
     private func handle(_ dto: StockFinnPriceDTO) {
-        
+
         guard let symbol = dto.symbol else {
             AppLogger.warning("Missing symbol in DTO, skipping", category: AppLogger.webSocket)
             return
         }
-        stocksQueue.sync {
-            let oldPrice = currentStocks[symbol]?.price ?? 0
+
+        // Actor replaces the previous stocksQueue.sync { } pattern.
+        // The compiler enforces that all access to stateActor's state
+        // goes through `await`, eliminating data races at compile time.
+        Task { [weak self] in
+            guard let self else { return }
+            let snapshot = await self.stateActor.snapshot()
+            let oldPrice = snapshot.first(where: { $0.symbol == symbol })?.price ?? 0
             if let stock = dto.toDomainModel(invested: oldPrice) {
-                currentStocks[symbol] = stock
-                subject.send(Array(currentStocks.values))
+                let allStocks = await self.stateActor.update(symbol: symbol, stock: stock)
+                self.subject.send(allStocks)
             } else {
                 AppLogger.error("Invalid StockDTO, could not convert to Stock: \(symbol)", category: AppLogger.webSocket)
             }
