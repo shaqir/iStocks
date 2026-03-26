@@ -142,13 +142,45 @@ iStocksIntegrationTests/              Integration suite
 
 ## Key Implementations
 
-**Strategy Pattern** — 4 data source implementations behind `WatchlistRepository` protocol, selected at build time via `AppConfiguration.watchlistMode`.
+### Strategy Pattern — Data Source Swapping
+4 interchangeable repository implementations behind a single `WatchlistRepository` protocol. Selected at build time via `AppConfiguration.watchlistMode` — swap between Mock, REST, WebSocket, or GraphQL without changing a single line of ViewModel or View code.
 
-**WebSocket Resilience** — `FinnhubWebSocketClient` with state machine (disconnected → connecting → connected → reconnecting), `ConnectionRetryManager` (exponential backoff, max 5 attempts), heartbeat keep-alive, message queuing across reconnections, `collect(.byTime())` for UI batching.
+### WebSocket Resilience
+`FinnhubWebSocketClient` manages real-time price streaming with multiple layers of fault tolerance:
 
-**Typed Error Hierarchy** — `AppError` wraps `NetworkError`, `PersistenceError`, `ValidationError`, `WebSocketError`, `ConfigurationError` — each with `errorDescription`, `failureReason`, `recoverySuggestion`, and `isRetryable`.
+| Layer | Mechanism |
+|-------|-----------|
+| **Connection** | State machine: disconnected → connecting → connected → reconnecting |
+| **Retry** | `ConnectionRetryManager` with exponential backoff (max 5 attempts, 60s cap) |
+| **Keep-alive** | Heartbeat ping every 10 seconds |
+| **Recovery** | Message queue — subscriptions sent while disconnected are flushed on reconnect |
+| **Performance** | `collect(.byTime(1s))` batches updates, deduplicates per symbol before hitting UI |
 
-**Production Logging** — `AppLogger` wraps `os.Logger` with categories (network, webSocket, persistence, viewModel, startup, UI) and privacy-safe formatting. Filterable in Console.app.
+### Typed Error Hierarchy
+Layered error types with user-facing messages and recovery suggestions:
+
+```
+AppError
+├── .network(NetworkError)        — invalidURL, timeout, rateLimited, serverError, ...
+├── .persistence(PersistenceError) — saveFailed, loadFailed, migrationFailed, ...
+├── .validation(ValidationError)   — invalidSymbol, duplicateEntry, limitExceeded, ...
+├── .webSocket(WebSocketError)     — connectionFailed, disconnected, authFailed, ...
+└── .configuration(ConfigError)    — missingAPIKey, invalidConfiguration, ...
+```
+Each case provides `errorDescription`, `failureReason`, `recoverySuggestion`, and `isRetryable`.
+
+### Production Logging
+`AppLogger` wraps `os.Logger` with category-based filtering:
+
+| Category | Tracks |
+|----------|--------|
+| `network` | API calls, responses, errors |
+| `webSocket` | Connection state, subscriptions, heartbeat |
+| `persistence` | SwiftData save/load/delete operations |
+| `viewModel` | State transitions, user actions |
+| `startup` | App configuration, mode selection |
+
+Privacy-safe formatting. Filterable in Console.app by subsystem and category.
 
 ---
 
