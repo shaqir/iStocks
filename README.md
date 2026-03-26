@@ -1,206 +1,162 @@
 # iStocks
 
-> **Production-ready iOS stock tracking app** with real-time price updates, multiple data sources, and Clean Architecture.
+> iOS stock tracking app with real-time prices, multiple data sources, and Clean Architecture.
 
 [![Swift](https://img.shields.io/badge/Swift-5.10-orange.svg)](https://swift.org)
 [![iOS](https://img.shields.io/badge/iOS-18.5+-blue.svg)](https://developer.apple.com/ios/)
-[![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green.svg)](https://developer.apple.com/xcode/swiftui/)
-[![Xcode](https://img.shields.io/badge/Xcode-26.3-blue.svg)](https://developer.apple.com/xcode/)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-100%25-green.svg)](https://developer.apple.com/xcode/swiftui/)
+[![Dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen.svg)](#tech-stack)
+[![Tests](https://img.shields.io/badge/Tests-159_passing-brightgreen.svg)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://img.shields.io/badge/CI-Disabled-red.svg)](TECH_DECISIONS.md#march-14-2026-cicd-temporarily-disabled)
 
-A modern iOS stock market app featuring multiple watchlists, real-time price tracking, and flexible data sources. Built with **133 Swift files** using Clean Architecture + MVVM for maintainability and testability.
-
-**[📺 Demo Video](https://youtube.com/shorts/u0Ma-Z8fVSY?feature=share)** | **[📖 Architecture Docs](ARCHITECTURE.md)** | **[🚀 Setup Guide](SETUP.md)** | **[🔧 Tech Decisions](TECH_DECISIONS.md)**
+**[Demo Video](https://youtube.com/shorts/u0Ma-Z8fVSY?feature=share)** · **[Architecture](docs/ARCHITECTURE.md)** · **[Setup Guide](docs/SETUP.md)** · **[Tech Decisions](docs/TECH_DECISIONS.md)**
 
 ---
 
-## ✨ Features
+## Features
 
-- **Multiple Watchlists** - Create up to 10 watchlists with up to 10 stocks each
-- **Real-time Updates** - Live price feeds via WebSocket (Finnhub) or REST API (TwelveData)
-- **Offline Mode** - Mock data for testing and demos (no API keys needed)
-- **Fast Search** - Debounced symbol search (300ms) across all stocks
-- **Batch Operations** - Add/remove multiple stocks with progress tracking
-- **Persistence** - SwiftData storage with automatic sync
-- **P&L Tracking** - Real-time profit/loss and percentage gain calculations
-- **Stock Research** - Integrated WebView-based research with bookmarks and navigation
-- **Accessibility** - VoiceOver foundation with dedicated accessibility identifiers
-- **Tab Navigation** - Custom tab bar with 7 feature modules
-- **Clean UI** - Inspired by professional trading platforms (Kite by Zerodha)
+- **Multiple Watchlists** — Up to 10 watchlists, 10 stocks each
+- **4 Data Sources** — Mock, REST (TwelveData), WebSocket (Finnhub), GraphQL — swap with one env var
+- **Real-time Streaming** — WebSocket prices with 1s batching, deduplication, auto-reconnect
+- **Batched API Calls** — 8 symbols/request, exponential backoff, max 2 retries
+- **Persistence** — SwiftData with bidirectional entity relationships
+- **Stock Research** — Integrated WKWebView with bookmarks, history, JavaScript bridge
+- **Accessibility** — VoiceOver identifiers across all interactive elements
+- **Zero Dependencies** — Pure Apple frameworks only (no CocoaPods, no SPM packages)
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-Built with **Clean Architecture** principles for separation of concerns and testability:
+**Clean Architecture + MVVM** with strict layer separation:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  PRESENTATION LAYER (SwiftUI + MVVM)                │
-│  • WatchlistsViewModel (orchestration)               │
-│  • WatchlistViewModel (single list)                 │
-│  • EditWatchlistViewModel (CRUD operations)         │
-└─────────────────────────────────────────────────────┘
-                       ↓ ↑
-┌─────────────────────────────────────────────────────┐
-│  DOMAIN LAYER (Business Logic)                      │
-│  • Entities: Stock, Watchlist                       │
-│  • Use Cases: ObserveTop50, FetchQuotes, etc.       │
-│  • Protocols: Repository interfaces                 │
-└─────────────────────────────────────────────────────┘
-                       ↓ ↑
-┌─────────────────────────────────────────────────────┐
-│  DATA LAYER (Implementation)                        │
-│  • Repositories: Mock, REST, WebSocket              │
-│  • Data Sources: Remote API, WebSocket, Local DB    │
-│  • DTOs & Mappers: API response transformations     │
-└─────────────────────────────────────────────────────┘
+Presentation          Domain                 Data
+───────────────       ──────────────         ─────────────────────
+SwiftUI Views    ──►  Entities (Stock,  ──►  Mock Repository
+@MainActor VMs        Watchlist)             REST Repository
+Manual DI             Use Cases              WebSocket Repository
+                      Repository             GraphQL Repository
+                      Protocols              SwiftData Persistence
+                      (zero imports)         DTOs + Mappers
 ```
 
-**Key Benefits:**
-- **Testability** - Business logic isolated from UI and data sources
-- **Flexibility** - Swap data sources without changing UI code
-- **Maintainability** - Clear separation of responsibilities
-- **Scalability** - Easy to add new features or data sources
+**Key principles:**
+- Domain layer has **zero framework imports** — pure Swift protocols and entities
+- 4 interchangeable repository implementations behind one protocol
+- ViewModels depend on use case protocols, never on concrete data sources
+- Manual DI containers with caching and mode validation
 
-**[→ Full Architecture Documentation](ARCHITECTURE.md)**
+### Data Source Strategy
+
+Controlled via `WATCHLIST_MODE` environment variable:
+
+| Mode | Source | API Keys | Default |
+|------|--------|----------|---------|
+| `mock` | Simulated prices | No | Debug builds |
+| `rest` | TwelveData REST API | Yes | Release builds |
+| `websocket` | Finnhub real-time | Yes | — |
+| `graphql` | GraphQL endpoint | Yes | — |
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **macOS**: Latest (14.0+)
-- **Xcode**: 26.3+ (project format version 77)
-- **iOS**: 18.5+ (Simulator or Device)
-- **Swift**: 5.10+
-
-### Installation
+## Quick Start
 
 ```bash
-# Clone repository
 git clone https://github.com/shaqir/iStocks.git
 cd iStocks
-
-# Open in Xcode
 open iStocks.xcodeproj
-
-# Build and run (⌘R)
-# App runs in mock mode by default - no setup needed!
+# ⌘R — runs in mock mode, no setup needed
 ```
 
-### Data Source Modes
-
-The app supports three modes (configurable in `AppConfiguration.swift`):
-
-| Mode | Description | API Keys Required |
-|------|-------------|-------------------|
-| **Mock** | Pre-loaded stock data | ❌ No |
-| **REST API** | TwelveData batch requests | ✅ Yes |
-| **WebSocket** | Finnhub real-time streaming | ✅ Yes |
-
-**[→ Complete Setup Guide](SETUP.md)**
+**For live data:** Set `FINNHUB_API_KEY` and `TWELVE_DATA_API_KEY` as environment variables or in the Xcode scheme. Free keys from [twelvedata.com](https://twelvedata.com) and [finnhub.io](https://finnhub.io). See [Setup Guide](docs/SETUP.md).
 
 ---
 
-## 🔧 Configuration
+## Tech Stack
 
-### Switching Data Modes
+| Component | Technology |
+|-----------|-----------|
+| UI | SwiftUI (100%) |
+| Architecture | Clean Architecture + MVVM |
+| Reactive | Combine (publishers, subjects, operators) |
+| Concurrency | @MainActor, DispatchQueue, async/await bridge |
+| Persistence | SwiftData (WatchlistEntity ↔ StockEntity) |
+| Networking | URLSession (HTTP + WebSocket) |
+| Logging | os.Logger with category-based filtering |
+| Testing | XCTest with protocol-based mocking |
+| Dependencies | **None** — zero external packages |
 
-The app automatically selects the mode based on build configuration:
+---
 
-```swift
-// Debug builds → Mock mode (no API keys needed)
-// Release builds → REST API mode
+## Testing
 
-// Override via environment variable:
-export WATCHLIST_MODE="mock"      // or "rest" or "websocket"
-```
-
-### API Keys (REST/WebSocket only)
+**159 tests** across 22 test suites, all passing.
 
 ```bash
-# Option 1: Environment variables (recommended)
-export FINNHUB_API_KEY="your_finnhub_key"
-export TWELVE_DATA_API_KEY="your_twelve_data_key"
-
-# Option 2: Add to Info.plist (don't commit!)
-# See SETUP.md for details
-```
-
-Get free API keys:
-- **TwelveData**: [twelvedata.com](https://twelvedata.com)
-- **Finnhub**: [finnhub.io](https://finnhub.io)
-
----
-
-## 📊 Tech Stack
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Language** | Swift 5.10 | Modern, safe, performant |
-| **UI** | SwiftUI (100%) | Declarative, reactive UI |
-| **Architecture** | Clean Architecture + MVVM | Separation of concerns |
-| **Reactive** | Combine | Async data streams (publishers, subjects) |
-| **Persistence** | SwiftData | Local database with relationships |
-| **Networking** | URLSession | HTTP + WebSocket (Finnhub) |
-| **Logging** | os.Logger | Category-based production-grade logs |
-| **Testing** | XCTest + ViewInspector | Unit, integration, and UI tests |
-| **CI/CD** | GitHub Actions | Automated testing (temporarily disabled) |
-| **Fonts** | Inter 28pt | Custom typography |
-| **Dependencies** | None (native only) | Zero external runtime dependencies |
-
----
-
-## 🧪 Testing
-
-**18 test files** (26 total test + helper files) covering ViewModels, repositories, persistence, mappers, networking, and UI components.
-
-```bash
-# Run all tests
 xcodebuild test \
-  -project iStocks.xcodeproj \
   -scheme iStocks \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
-
-# Or in Xcode: ⌘U
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.2'
 ```
 
-**Test Coverage:**
-- ✅ ViewModels — `WatchlistsViewModel`, `WatchlistViewModel`, `EditWatchlistViewModel`, `WatchlistViewModelProvider`, `WatchlistTabViewModel`
-- ✅ Repositories — Mock and REST implementations, data fetching, retry logic
-- ✅ Networking — `URLSessionNetworkClient`, `NetworkError`, `Endpoint`, `QuoteEndpoint`
-- ✅ Data Sources — `StockRemoteDataSource` with mock network client
-- ✅ Persistence — SwiftData CRUD operations
-- ✅ Mappers — `QuoteResponseMapper` (standard + extended)
-- ✅ UI Components — `StockPickerView` (ViewInspector), `SharedAlertManager`
-- ✅ Utilities — `AppConstants`, `Array+Extensions`
-
-<details>
-<summary><b>📸 Test Screenshots</b></summary>
-
-<table>
-  <tr>
-    <th>Test Plan</th>
-    <th>Test Results</th>
-  </tr>
-  <tr>
-    <td><img width="350" src="https://github.com/user-attachments/assets/14ba78ee-24d3-4062-9cb8-b97633c3529a" alt="Test Plan" /></td>
-    <td><img width="350" src="https://github.com/user-attachments/assets/dd472407-c2a6-4d5e-b320-f43966d66ef4" alt="Test Results" /></td>
-  </tr>
-</table>
-
-</details>
+| Area | Coverage |
+|------|----------|
+| ViewModels | Watchlists, Watchlist, Edit, Tab, Provider |
+| Repositories | REST, Mock, GraphQL |
+| Persistence | SwiftData CRUD (in-memory) |
+| Networking | Client, endpoints, error mapping, response mappers |
+| UI Components | StockPickerView, SharedAlertManager |
+| Utilities | AppConstants, Array extensions |
 
 ---
 
-## 📱 Screenshots
+## Project Structure
+
+```
+iStocks/                              107 Swift source files
+├── App/                              Entry point
+├── Core/
+│   ├── Accessibility/                VoiceOver identifiers
+│   ├── Constants/                    AppConstants, AppStrings, AppFonts
+│   ├── Extensions/                   Double, Color, Font, Array
+│   └── Utilities/                    AppConfiguration, AppError, SecureAPIKeyManager
+├── Features/
+│   ├── Watchlist/                    ★ Fully implemented
+│   │   ├── Domain/                   Entities, UseCases, Repository protocols
+│   │   ├── Data/                     4 repos, DTOs, Mappers, DataSources
+│   │   └── Presentation/            ViewModels, Views, DI container
+│   ├── Research/                     WKWebView + Domain layer
+│   └── Dashboard, Portfolio,         Placeholders (scaffolding)
+│       Orders, Positions, Settings
+├── Shared/
+│   ├── Networking/                   NetworkClient, Endpoint, URLSession impl
+│   ├── Components/                   AppLogger, SharedAlertManager
+│   └── TabBar/                       Custom tab navigation
+└── Resources/                        Assets, Inter fonts
+
+iStocksTests/                         31 test files
+iStocksIntegrationTests/              Integration suite
+```
+
+---
+
+## Key Implementations
+
+**Strategy Pattern** — 4 data source implementations behind `WatchlistRepository` protocol, selected at build time via `AppConfiguration.watchlistMode`.
+
+**WebSocket Resilience** — `FinnhubWebSocketClient` with state machine (disconnected → connecting → connected → reconnecting), `ConnectionRetryManager` (exponential backoff, max 5 attempts), heartbeat keep-alive, message queuing across reconnections, `collect(.byTime())` for UI batching.
+
+**Typed Error Hierarchy** — `AppError` wraps `NetworkError`, `PersistenceError`, `ValidationError`, `WebSocketError`, `ConfigurationError` — each with `errorDescription`, `failureReason`, `recoverySuggestion`, and `isRetryable`.
+
+**Production Logging** — `AppLogger` wraps `os.Logger` with categories (network, webSocket, persistence, viewModel, startup, UI) and privacy-safe formatting. Filterable in Console.app.
+
+---
+
+## Screenshots
 
 <table>
   <tr>
-    <th>Watchlist View</th>
+    <th>Watchlist</th>
     <th>Stock Picker</th>
     <th>Edit Watchlist</th>
   </tr>
@@ -213,219 +169,27 @@ xcodebuild test \
 
 ---
 
-## 📁 Project Structure
+## Documentation
 
-```
-iStocks/                              # 104 source files
-├── App/                              # App entry point (iStocksApp.swift)
-├── Core/                             # Shared utilities
-│   ├── Accessibility/                # AccessibilityIdentifiers
-│   ├── Constants/                    # AppConstants, AppStrings, AppFonts
-│   ├── Extensions/                   # Double, Color, Font, Array extensions
-│   └── Utilities/                    # AppConfiguration, AppError, SecureAPIKeyManager
-├── Features/
-│   ├── Watchlist/                    # Main feature (fully implemented)
-│   │   ├── Domain/                   # Business logic
-│   │   │   ├── Entities/             # Stock, Watchlist models
-│   │   │   ├── Repositories/         # Repository protocols
-│   │   │   ├── UseCases/             # ObserveStocks, FetchQuotes, etc.
-│   │   │   └── Shared/              # Shared domain types
-│   │   ├── Data/                     # Data layer
-│   │   │   ├── DataSources/          # Remote, WebSocket, Local, Mock
-│   │   │   ├── Repositories/         # Mock, REST, WebSocket, GraphQL impls
-│   │   │   ├── DTOs/                 # API response models
-│   │   │   └── Mappers/             # DTO → Domain transformations
-│   │   └── Presentation/            # UI layer
-│   │       ├── DI/                   # Dependency injection container
-│   │       ├── ViewModel/            # 4 ViewModels + provider
-│   │       └── View/                 # SwiftUI views
-│   ├── Research/                     # WebView-based stock research
-│   ├── Dashboard/                    # Dashboard (placeholder)
-│   ├── Portfolio/                    # Portfolio (placeholder)
-│   ├── Orders/                       # Orders (placeholder)
-│   ├── Positions/                    # Positions (placeholder)
-│   └── Settings/                     # Settings (placeholder)
-├── Shared/                           # Cross-cutting concerns
-│   ├── Networking/                   # NetworkClient, Endpoint, URLSession impl
-│   ├── Components/                   # Alert, Logging (SharedAlertManager, AppLogger)
-│   └── TabBar/                       # Custom tab navigation (5 files)
-└── Resources/                        # Assets, Inter fonts, Info.plist
-
-iStocksTests/                         # 26 test + helper files
-iStocksIntegrationTests/              # Integration test suite
-```
-
-**Visual Diagram:**
-
-<img width="510" alt="Project Structure" src="https://github.com/user-attachments/assets/433ec79f-0ca7-4126-99c4-a35b4b48cdd9" />
+| Doc | Description |
+|-----|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layer diagrams, data flow, threading model |
+| [SETUP.md](docs/SETUP.md) | Prerequisites, API keys, build configurations |
+| [TECH_DECISIONS.md](docs/TECH_DECISIONS.md) | Technology choices, trade-offs, lessons learned |
+| [IMPROVEMENTS.md](docs/IMPROVEMENTS.md) | Code quality improvements and roadmap |
+| [CODEBASE_ANALYSIS.md](docs/CODEBASE_ANALYSIS.md) | Comprehensive architectural reference |
 
 ---
 
-## 🎯 Key Implementations
+## Author
 
-### Strategy Pattern for Data Sources
-Three interchangeable repository implementations behind a unified protocol:
-```swift
-protocol WatchlistRepository {
-    func observeStocks() -> AnyPublisher<[Stock], Error>
-}
-
-// Switch with one line:
-static let mode: WatchlistAppMode = .mock  // or .restAPI or .websocket
-```
-
-### Batched API Requests
-REST API fetches 50 stocks in batches of 8 to respect rate limits:
-- Automatic retry with exponential backoff
-- Progress tracking for UX feedback
-- Incremental loading (only fetch missing stocks)
-
-### WebSocket Price Streaming
-Real-time updates with smart batching:
-- 1-second collection window
-- Deduplication by symbol (latest price wins)
-- Automatic reconnection with backoff
-- Heartbeat to maintain connection
-
-### Error Handling
-Comprehensive error types with recovery suggestions:
-```swift
-enum AppError: LocalizedError {
-    case network(NetworkError)
-    case persistence(PersistenceError)
-    case validation(ValidationError)
-    case webSocket(WebSocketError)
-    case configuration(ConfigurationError)
-}
-```
-
-### Logging
-Production-grade logging with `os.Logger`:
-- Category-based filtering (network, websocket, persistence, etc.)
-- Log levels (debug, info, warning, error, fault)
-- Privacy-safe logging
-- Filterable in Console.app
-
----
-
-## 🔄 CI/CD Pipeline
-
-GitHub Actions workflow (`.github/workflows/ci.yml`) — **temporarily disabled** due to Xcode 26.3 incompatibility with GitHub Actions runners (see [TECH_DECISIONS.md](TECH_DECISIONS.md#march-14-2026-cicd-temporarily-disabled)):
-
-```yaml
-✓ macOS 14 runner with Xcode 16.2
-✓ Dependency caching (SwiftPM + DerivedData)
-✓ Clean build validation
-✓ Unit test execution with coverage
-✓ Code quality checks
-```
-
-**Future CI/CD options under evaluation**: Bitrise, Jenkins + Fastlane
-
-[![CI Status](https://github.com/shaqir/iStocks/workflows/CI/badge.svg)](https://github.com/shaqir/iStocks/actions)
-
----
-
-## 📈 Code Quality
-
-**Architecture Score: 9.3/10**
-
-| Metric | Score | Details |
-|--------|-------|---------|
-| **Architecture** | 9.5/10 | Clean Architecture + MVVM with strict layer separation |
-| **Error Handling** | 9.5/10 | 5 error domains: Network, Persistence, Validation, WebSocket, Configuration |
-| **Thread Safety** | 9.0/10 | @MainActor + actor isolation, proper Combine cancellable management |
-| **Security** | 9.5/10 | SecureAPIKeyManager (env vars > Info.plist), no hardcoded keys |
-| **Documentation** | 9.0/10 | 5 documentation files (40+ pages), inline docs |
-| **Testing** | 8.5/10 | 18 test files covering all layers, growing coverage |
-
-**Design Patterns Used:**
-Strategy (data sources) · Repository · Dependency Injection · Singleton · Observer (Combine) · Factory
-
-**[→ See Full Improvements Report](IMPROVEMENTS.md)**
-
----
-
-## 🗺️ Roadmap
-
-**Completed:**
-- [x] **Watchlist Module** - Multiple watchlists with real-time updates
-- [x] **Search & Filter** - Debounced symbol search (300ms)
-- [x] **Data Sources** - Mock, REST API (TwelveData), WebSocket (Finnhub)
-- [x] **Persistence** - SwiftData integration with relationships
-- [x] **Research Module** - WebView-based stock research with bookmarks
-- [x] **Testing** - 18 test files across all architecture layers
-- [x] **CI/CD** - GitHub Actions pipeline (temporarily disabled)
-- [x] **Accessibility** - VoiceOver foundation with identifiers
-- [x] **Tab Navigation** - Custom tab bar with 7 modules
-- [x] **Logging** - Production-grade os.Logger with categories
-
-**In Progress / Planned:**
-- [ ] **Stock Detail View** - Charts, news, fundamentals
-- [ ] **Orders Module** - Place and track orders (UI scaffold exists)
-- [ ] **Portfolio Module** - Holdings overview (UI scaffold exists)
-- [ ] **Positions Module** - Active positions tracking (UI scaffold exists)
-- [ ] **Settings Module** - App preferences (UI scaffold exists)
-- [ ] **Dashboard Module** - Market overview (UI scaffold exists)
-- [ ] **Price Alerts** - Push notifications
-- [ ] **Dark Mode** - Full theme support
-- [ ] **iPad Support** - Optimized layout
-- [ ] **Localization** - Multi-language support
-- [ ] **Async/Await Migration** - Replace Combine with async/await + AsyncSequence
-- [ ] **Observation Framework** - iOS 18+ modern state management
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the existing code style and architecture
-4. Add tests for new functionality
-5. Update documentation as needed
-6. Submit a pull request
-
-**See [ARCHITECTURE.md](ARCHITECTURE.md) for code style guidelines.**
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Sakir Saiyed**
-Senior iOS Engineer | Clean Architecture Advocate
+**Sakir Saiyed** — Senior iOS Engineer
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/sakirsaiyed/)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat&logo=github)](https://github.com/shaqir)
 
 ---
 
-## 📚 Documentation
+## License
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture guide with layer diagrams
-- **[SETUP.md](SETUP.md)** - Complete setup and configuration instructions
-- **[TECH_DECISIONS.md](TECH_DECISIONS.md)** - Technology choices, trade-offs, and future paths
-- **[IMPROVEMENTS.md](IMPROVEMENTS.md)** - Code quality improvements and changelog
-
----
-
-## 🙏 Acknowledgments
-
-- **UI Inspiration**: Kite by Zerodha
-- **API Providers**: TwelveData, Finnhub
-- **Architecture**: Clean Architecture by Uncle Bob
-
----
-
-<p align="center">
-  <b>Built with ❤️ using Swift and SwiftUI</b>
-  <br>
-  <sub>⭐ Star this repo if you found it helpful!</sub>
-</p>
+MIT License — see [LICENSE](LICENSE) for details.
