@@ -73,6 +73,7 @@ final class BiometricAuthManager: BiometricAuthManagerProtocol {
         case .faceID: return .faceID
         case .touchID: return .touchID
         case .opticID: return .opticID
+        case .none: return .none
         @unknown default: return .none
         }
     }
@@ -129,6 +130,16 @@ final class BiometricAuthManager: BiometricAuthManagerProtocol {
         case .userCancel: return .userCancelled
         case .userFallback: return .fallbackRequested
         case .systemCancel: return .systemCancel
+        case .authenticationFailed,
+             .appCancel,
+             .invalidContext,
+             .notInteractive,
+             .passcodeNotSet,
+             .touchIDNotAvailable,
+             .touchIDNotEnrolled,
+             .touchIDLockout,
+             .companionNotAvailable:
+            return .unknown(error.localizedDescription)
         @unknown default: return .unknown(error.localizedDescription)
         }
     }
