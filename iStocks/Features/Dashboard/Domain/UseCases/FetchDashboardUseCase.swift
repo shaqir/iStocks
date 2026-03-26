@@ -12,9 +12,9 @@ protocol FetchDashboardUseCaseProtocol: Sendable {
     func execute(userId: String) async throws -> Dashboard
 }
 
-/// Orchestrates dashboard loading with structured concurrency.
+/// NOTE: Orchestrates dashboard loading with structured concurrency.
 ///
-/// NOTE: This is the primary interview talking point for Swift Concurrency.
+///
 /// It demonstrates three key patterns in one method:
 ///   1. Sequential → Parallel flow (need holdings before fetching prices)
 ///   2. async let for fixed parallel tasks (prices + news simultaneously)

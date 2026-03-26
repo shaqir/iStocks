@@ -55,7 +55,7 @@ actor PortfolioActor {
 
     /// NOTE: nonisolated because this method doesn't access any mutable actor state.
     /// Callers don't need `await` — it's a pure computation based on current time.
-    /// This is a key interview talking point: know WHEN to use nonisolated.
+    /// know WHEN to use nonisolated.
     nonisolated func isMarketOpen() -> Bool {
         let calendar = Calendar.current
         let now = Date()

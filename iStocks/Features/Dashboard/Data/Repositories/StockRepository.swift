@@ -22,7 +22,7 @@ final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
 
     func fetchHoldings(userId: String) async throws -> [Holding] {
         // NOTE: In production, this would call a real holdings endpoint.
-        // For interview demo, return mock data to demonstrate the architecture.
+        // For demo, return mock data to demonstrate the architecture.
         return [
             .mock(symbol: "AAPL", name: "Apple Inc.", currentPrice: 150.0),
             .mock(symbol: "GOOGL", name: "Alphabet Inc.", currentPrice: 2800.0),
@@ -40,7 +40,7 @@ final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
 
     func fetchNews(for symbols: [String]) async throws -> [News] {
         // NOTE: In production, this would call a news API.
-        // For interview demo, return mock data.
+        // For demo, return mock data.
         return [
             .mock(headline: "\(symbols.first ?? "Stock") hits new high"),
             .mock(headline: "Market update: Tech sector rallies", source: "Bloomberg")

@@ -12,8 +12,7 @@ import Foundation
 /// NOTE: Unlike the existing `Endpoint` struct which uses method-level generics,
 /// this protocol uses an associated type so each endpoint defines its own
 /// Response type at the type level — the compiler enforces correct decoding
-/// at every call site. This is the "protocol with associated types" pattern
-/// that interviewers ask about.
+/// at every call site. This is the "protocol with associated types" pattern.
 ///
 /// Example:
 /// ```swift
