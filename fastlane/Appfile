@@ -1,0 +1,3 @@
+app_identifier("com.sakirsaiyed.iStocks")
+apple_id("your-apple-id@example.com")
+team_id("YOUR_TEAM_ID")
