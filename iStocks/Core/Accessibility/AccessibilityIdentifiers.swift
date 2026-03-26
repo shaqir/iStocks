@@ -18,6 +18,17 @@ enum AccessibilityID {
         static let stockPicker = "watchlist_stock_picker"
         static let progressBar = "watchlist_progress_bar"
     }
+    enum Dashboard {
+        static let portfolioSummary = "dashboard_portfolio_summary"
+        static let holdingRow = "dashboard_holding_row"
+        static let newsSection = "dashboard_news_section"
+        static let refreshButton = "dashboard_refresh_button"
+    }
+    enum Auth {
+        static let authGate = "auth_gate"
+        static let biometricButton = "auth_biometric_button"
+        static let retryButton = "auth_retry_button"
+    }
     enum General {
         static let loadingOverlay = "loading_overlay"
         static let emptyState = "empty_state"

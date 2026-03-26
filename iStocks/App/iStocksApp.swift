@@ -12,8 +12,10 @@ import SwiftData
 struct iStocksApp: App {
     var body: some Scene {
         WindowGroup {
-            TabBarContainer()
-                .environmentObject(SharedAlertManager.shared)
+            AuthGateView(viewModel: AuthDIContainer.makeAuthViewModel()) {
+                TabBarContainer()
+                    .environmentObject(SharedAlertManager.shared)
+            }
         }
         .modelContainer(for: [WatchlistEntity.self, StockEntity.self])
     }
