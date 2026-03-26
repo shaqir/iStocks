@@ -62,8 +62,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
             return
         }
         stocksQueue.sync {
-            let oldPrice = currentStocks[symbol]?.price ?? 0
-            if let stock = dto.toDomainModel(invested: oldPrice) {
+            if let stock = dto.toDomainModel(previousPrice: currentStocks[symbol]?.price) {
                 currentStocks[symbol] = stock
                 subject.send(Array(currentStocks.values))
             } else {

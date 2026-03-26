@@ -88,8 +88,8 @@ final class EditWatchlistViewModelTests: XCTestCase {
     func test_tooManyStocks_shouldThrowLimitError() {
         let tooMany = (0..<100).map {
             Stock(symbol: "SYM\($0)", name: "Stock \($0)", price: Double($0),
-                  previousPrice: 0, isPriceUp: true, qty: 0, averageBuyPrice: 0,
-                  sector: "Test", currency: "USD", exchange: "NYSE", isFavorite: false)
+                  previousPrice: 0, isPriceUp: true,
+                  sector: "Test", currency: "USD", exchange: "NYSE")
         }
 
         let vm = EditWatchlistViewModel(
@@ -106,7 +106,7 @@ final class EditWatchlistViewModelTests: XCTestCase {
     
     func test_exceedingStockLimit_shouldThrowError() {
            let stocks = (0..<100).map { i in
-               Stock(symbol: "SYM\(i)", name: "Dummy \(i)", price: 1.0, previousPrice: 0, isPriceUp: true, qty: 0, averageBuyPrice: 0, sector: "Tech", currency: "USD", exchange: "NYSE", isFavorite: false)
+               Stock(symbol: "SYM\(i)", name: "Dummy \(i)", price: 1.0, previousPrice: 0, isPriceUp: true, sector: "Tech", currency: "USD", exchange: "NYSE")
            }
            let vm = EditWatchlistViewModel(watchlist: Watchlist(id: .init(), name: "Limit Test", stocks: []), availableStocks: stocks)
            vm.selectedStocks = stocks

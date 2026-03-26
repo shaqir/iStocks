@@ -15,10 +15,10 @@ struct StockFinnPriceDTO: Decodable {
 }
 
 extension StockFinnPriceDTO {
-    func toDomainModel(invested: Double) -> Stock? {
+    func toDomainModel(previousPrice: Double? = nil) -> Stock? {
         guard let symbol = symbol else { return nil }
 
-        let previous = invested > 0 ? invested : price
+        let previous = previousPrice ?? price
 
         return Stock(
             symbol: symbol,
@@ -26,12 +26,9 @@ extension StockFinnPriceDTO {
             price: price,
             previousPrice: previous,
             isPriceUp: price >= previous,
-            qty: 0,
-            averageBuyPrice: 0,
-            sector: "Crypto",
+            sector: StockMetadata.sectorMap[symbol] ?? "Unknown",
             currency: "USD",
-            exchange: "Finnhub",
-            isFavorite: false
+            exchange: "Finnhub"
         )
     }
 }

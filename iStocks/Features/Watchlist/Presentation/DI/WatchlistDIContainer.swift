@@ -176,8 +176,13 @@ final class WatchlistDIContainer {
 }
 
 extension WatchlistDIContainer {
-    ///Add a reset() for testing or logout
-    static func resetWatchlistUseCases() {
+    /// Clears all cached instances — use on logout or mode change
+    static func reset() {
         cachedUseCases = nil
+        cachedMode = nil
+        cachedMockRepository = nil
+        cachedRestRepository = nil
+        cachedWebSocketRepository = nil
+        cachedGraphQLRepository = nil
     }
 }

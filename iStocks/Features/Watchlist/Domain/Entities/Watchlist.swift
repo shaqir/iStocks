@@ -23,7 +23,7 @@ extension Watchlist: Equatable {
     static func == (lhs: Watchlist, rhs: Watchlist) -> Bool {
         lhs.id == rhs.id &&
         lhs.name == rhs.name &&
-        lhs.stocks.map(\.symbol).sorted() == rhs.stocks.map(\.symbol).sorted()
+        lhs.stocks == rhs.stocks
     }
 }
 

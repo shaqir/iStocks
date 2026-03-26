@@ -8,39 +8,42 @@
 import Foundation
 import SwiftData
 
-///The Persistence Model: represents your SwiftData (or CoreData) model
+/// The persistence model: represents a stock stored in SwiftData
 @Model
 class StockEntity {
     var id: UUID
     var symbol: String
+    var name: String
     var price: Double
     var previousPrice: Double
     var isPriceUp: Bool
-    var averageBuyPrice: Double
-    var qty: Double
     var sector: String
+    var currency: String
+    var exchange: String
     
     @Relationship var watchlist: WatchlistEntity?  // inverse relationship here
 
     init(
         id: UUID = UUID(),
         symbol: String,
+        name: String,
         price: Double,
         previousPrice: Double,
         isPriceUp: Bool,
-        averageBuyPrice: Double,
-        qty: Double,
         sector: String,
+        currency: String,
+        exchange: String,
         watchlist: WatchlistEntity? = nil
     ) {
         self.id = id
         self.symbol = symbol
+        self.name = name
         self.price = price
         self.previousPrice = previousPrice
         self.isPriceUp = isPriceUp
-        self.averageBuyPrice = averageBuyPrice
-        self.qty = qty
         self.sector = sector
+        self.currency = currency
+        self.exchange = exchange
         self.watchlist = watchlist
     }
 }
@@ -49,41 +52,34 @@ extension StockEntity {
     func toDomain() -> Stock {
         Stock(
             symbol: symbol,
-            name: symbol,
+            name: name,
             price: price,
             previousPrice: previousPrice,
             isPriceUp: isPriceUp,
-            qty: qty,
-            averageBuyPrice: averageBuyPrice,
             sector: sector,
-            currency: "USD",
-            exchange: "NASDAQ",
-            isFavorite: false
+            currency: currency,
+            exchange: exchange
         )
     }
 
     static func from(_ stock: Stock, watchlist: WatchlistEntity? = nil) -> StockEntity? {
         guard !stock.symbol.isEmpty,
               stock.price.isFinite,
-              stock.previousPrice.isFinite,
-              stock.qty.isFinite,
-              stock.averageBuyPrice.isFinite else {
-             
+              stock.previousPrice.isFinite else {
             AppLogger.warning("Skipping invalid stock: \(stock.symbol)", category: AppLogger.persistence)
-            
             return nil
         }
         
         return StockEntity(
             symbol: stock.symbol,
+            name: stock.name,
             price: stock.price,
             previousPrice: stock.previousPrice,
             isPriceUp: stock.isPriceUp,
-            averageBuyPrice: stock.averageBuyPrice,
-            qty: stock.qty,
             sector: stock.sector,
+            currency: stock.currency,
+            exchange: stock.exchange,
             watchlist: watchlist
         )
     }
-
 }

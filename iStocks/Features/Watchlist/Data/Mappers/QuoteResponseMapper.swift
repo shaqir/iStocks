@@ -15,7 +15,7 @@ enum QuoteResponseMapper {
         for (symbol, result) in responseDict {
             switch result {
             case .success(let response):
-                if let stock = response.toDomainModel(invested: Double.random(in: 50000...100000)) {
+                if let stock = response.toDomainModel() {
                     validStocks.append(stock)
                 }
             case .error(let apiError):

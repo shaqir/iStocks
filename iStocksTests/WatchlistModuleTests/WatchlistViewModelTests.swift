@@ -84,7 +84,7 @@ final class WatchlistViewModelTests: XCTestCase {
     func test_replaceStocks_shouldOnlyUpdateChangedPrices() {
         let vm = makeViewModel()
         let updated = vm.selectedStocks.map {
-            Stock(symbol: $0.symbol, name: $0.name, price: $0.price + 5.0, previousPrice: $0.price, isPriceUp: true, qty: 0, averageBuyPrice: 0, sector: $0.sector, currency: "USD", exchange: "NSE", isFavorite: false)
+            Stock(symbol: $0.symbol, name: $0.name, price: $0.price + 5.0, previousPrice: $0.price, isPriceUp: true, sector: $0.sector, currency: "USD", exchange: "NSE")
         }
 
         let expect = expectation(description: "Prices replaced and priceUpdate emitted")

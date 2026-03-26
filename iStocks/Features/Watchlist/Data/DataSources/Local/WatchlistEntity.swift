@@ -31,8 +31,6 @@ extension WatchlistEntity {
     
     static func from(_ watchlist: Watchlist, orderIndex: Int) -> WatchlistEntity? {
         
-        _ = watchlist.stocks.compactMap { StockEntity.from($0) }
-        
         guard !watchlist.name.isEmpty else {
             AppLogger.warning("Skipping watchlist with empty name: \(watchlist.id)", category: AppLogger.persistence)
             return nil

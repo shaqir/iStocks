@@ -6,28 +6,11 @@
 //
 import Foundation
 
-/// Domain model representing a stock with price, holdings, and P&L calculations
+/// Domain model representing a stock with market price data.
 ///
-/// This is the core business entity used throughout the app.
-/// Immutable except for price updates which create new instances.
-///
-/// Example:
-/// ```swift
-/// let stock = Stock(
-///     symbol: "AAPL",
-///     name: "Apple Inc.",
-///     price: 150.0,
-///     previousPrice: 148.0,
-///     isPriceUp: true,
-///     qty: 10,
-///     averageBuyPrice: 145.0,
-///     sector: "Technology",
-///     currency: "USD",
-///     exchange: "NASDAQ",
-///     isFavorite: false
-/// )
-/// print(stock.pnl) // Profit/Loss: 50.0
-/// ```
+/// Contains only data that APIs actually provide — market prices, exchange info,
+/// and sector classification. Portfolio data (qty, averageBuyPrice) belongs in
+/// the Dashboard's Holding entity where real position data is available.
 struct Stock: Identifiable, Codable, Equatable {
     
     /// Unique identifier derived from stock symbol
@@ -42,19 +25,13 @@ struct Stock: Identifiable, Codable, Equatable {
     /// Current market price
     var price: Double
     
-    /// Previous price for change calculation
+    /// Previous closing price for change calculation
     let previousPrice: Double
     
-    /// Whether the price increased from previous
+    /// Whether the price increased from previous close
     let isPriceUp: Bool
 
-    /// Total quantity owned
-    let qty: Double
-    
-    /// Weighted average buy price per share
-    let averageBuyPrice: Double
-    
-    /// Stock sector (e.g., "Technology", "Finance")
+    /// Stock sector (e.g., "Technology", "Financials")
     let sector: String
 
     /// Currency code (e.g., "USD", "EUR")
@@ -62,34 +39,14 @@ struct Stock: Identifiable, Codable, Equatable {
     
     /// Exchange name (e.g., "NASDAQ", "NYSE")
     let exchange: String
-    
-    /// Whether marked as favorite by user
-    let isFavorite: Bool
-   
-    /// Total amount invested (quantity × average buy price)
-    var invested: Double {
-        qty * averageBuyPrice
-    }
-
-    /// Profit & Loss in currency units
-    var pnl: Double {
-        (price * qty) - invested
-    }
-
-    /// Profit & Loss as a percentage of investment
-    var pnlPercentage: Double {
-        guard invested != 0 else { return 0 }
-        return (pnl / invested) * 100
-    }
-
-    /// Current market value of holdings
-    var currentValue: Double {
-        price * qty
-    }
 
     /// Whether price has changed from previous value
-    var hasPriceChanged: Bool {
-        price != previousPrice
+    var hasPriceChanged: Bool { price != previousPrice }
+
+    /// Price change as a percentage of previous close
+    var priceChangePercentage: Double {
+        guard previousPrice != 0 else { return 0 }
+        return ((price - previousPrice) / previousPrice) * 100
     }
 }
 
@@ -103,16 +60,13 @@ extension Stock {
     static func dummy() -> Stock {
         Stock(
             symbol: "AAPL",
-            name: "Technology",
+            name: "Apple Inc.",
             price: 123.45,
             previousPrice: 120.0,
             isPriceUp: true,
-            qty: 10,
-            averageBuyPrice: 100.0,
             sector: "Technology",
-            currency: "$",
-            exchange: "NASDAQ",
-            isFavorite: false
+            currency: "USD",
+            exchange: "NASDAQ"
         )
     }
     
@@ -123,13 +77,9 @@ extension Stock {
             price: newPrice,
             previousPrice: self.price,
             isPriceUp: newPrice >= self.price,
-            qty: self.qty,
-            averageBuyPrice: self.averageBuyPrice,
             sector: self.sector,
             currency: self.currency,
-            exchange: self.exchange,
-            isFavorite: self.isFavorite
-            
+            exchange: self.exchange
         )
     }
     
@@ -139,12 +89,9 @@ extension Stock {
         price: Double? = nil,
         previousPrice: Double? = nil,
         isPriceUp: Bool? = nil,
-        qty: Int? = nil,
-        averageBuyPrice: Double? = nil,
         sector: String? = nil,
         currency: String? = nil,
-        exchange: String? = nil,
-        isFavorite: Bool? = nil
+        exchange: String? = nil
     ) -> Stock {
         return Stock(
             symbol: symbol ?? self.symbol,
@@ -152,12 +99,9 @@ extension Stock {
             price: price ?? self.price,
             previousPrice: previousPrice ?? self.previousPrice,
             isPriceUp: isPriceUp ?? self.isPriceUp,
-            qty: Double(qty ?? Int(self.qty)),
-            averageBuyPrice: averageBuyPrice ?? self.averageBuyPrice,
             sector: sector ?? self.sector,
             currency: currency ?? self.currency,
-            exchange: exchange ?? self.exchange,
-            isFavorite: isFavorite ?? self.isFavorite
+            exchange: exchange ?? self.exchange
         )
     }
     
@@ -168,13 +112,9 @@ extension Stock {
             price: 100,
             previousPrice: 90,
             isPriceUp: true,
-            qty: 0,
-            averageBuyPrice: 0,
             sector: "Tech",
             currency: "USD",
-            exchange: "NASDAQ",
-            isFavorite: false
+            exchange: "NASDAQ"
         )
     }
 }
- 

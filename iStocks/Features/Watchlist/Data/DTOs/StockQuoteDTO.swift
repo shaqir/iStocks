@@ -30,22 +30,21 @@ struct StockQuoteDTO: Decodable {
  
     func toStock() -> Stock? {
         let finalPrice = price ?? close ?? previousClose
-        guard let price = finalPrice,
-              let previous = previousClose
+        guard let priceStr = finalPrice,
+              let previousStr = previousClose,
+              let priceDouble = Double(priceStr),
+              let previousDouble = Double(previousStr)
         else { return nil }
 
         return Stock(
             symbol: symbol,
-            name: name ?? "",
-            price: Double(price) ?? 0,
-            previousPrice: Double(previous) ?? 0,
-            isPriceUp: price >= previous,
-            qty: 0,
-            averageBuyPrice: Double(price) ?? 0,
-            sector: "Technology",
+            name: name ?? symbol,
+            price: priceDouble,
+            previousPrice: previousDouble,
+            isPriceUp: priceDouble >= previousDouble,
+            sector: StockMetadata.sectorMap[symbol] ?? "Unknown",
             currency: currency ?? "USD",
-            exchange: exchange ?? "NASDAQ",
-            isFavorite: false
+            exchange: exchange ?? "NASDAQ"
         )
     }
 }

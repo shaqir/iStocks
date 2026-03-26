@@ -306,12 +306,9 @@ extension WatchlistsViewModel {
             price: 100000,
             previousPrice: 0,
             isPriceUp: true,
-            qty: 5,
-            averageBuyPrice: 99999,
             sector: "Crypto",
             currency: "USD",
-            exchange: "Binance",
-            isFavorite: false
+            exchange: "Binance"
         )
         
         //Case: First time run — create "Crypto" watchlist with Binance stock

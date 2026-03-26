@@ -63,7 +63,7 @@ struct StockDTO: Decodable {
         return status != "error" && symbol != nil && close != nil
     }
     
-    func toDomainModel(invested: Double) -> Stock? {
+    func toDomainModel() -> Stock? {
         guard
             let symbol = symbol,
             let priceStr = close,
@@ -73,24 +73,16 @@ struct StockDTO: Decodable {
         else {
             return nil
         }
-        
-        let qty = Double(Int.random(in: 1...100))
-        let averageBuyPrice = Bool.random()
-        ? price * Double.random(in: 0.8...0.99)
-        : price * Double.random(in: 1.01...1.2)
-        
+
         return Stock(
             symbol: symbol,
-            name: "name",
+            name: symbol,
             price: price,
             previousPrice: previous,
             isPriceUp: price >= previous,
-            qty: qty,
-            averageBuyPrice: averageBuyPrice,
-            sector: "My Watchlist",
-            currency: "USD",
-            exchange: exchange ?? "Unknown",
-            isFavorite: false
+            sector: StockMetadata.sectorMap[symbol] ?? "Unknown",
+            currency: currency ?? "USD",
+            exchange: exchange ?? "Unknown"
         )
     }
 }

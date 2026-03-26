@@ -33,12 +33,9 @@ enum GraphQLResponseMapper {
             price: price,
             previousPrice: previousClose,
             isPriceUp: isPriceUp,
-            qty: 0,
-            averageBuyPrice: price,
             sector: dto.sector ?? "Unknown",
             currency: dto.currency ?? "USD",
-            exchange: dto.exchange ?? "NYSE",
-            isFavorite: false
+            exchange: dto.exchange ?? "NYSE"
         )
     }
 }

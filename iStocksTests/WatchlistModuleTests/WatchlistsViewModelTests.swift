@@ -357,7 +357,7 @@ class WatchlistsViewModelTests: XCTestCase {
         }
         
         let mockStocks = (0..<100).map {
-            Stock(symbol: "SYM\($0)", name: "Dummy \($0)", price: Double($0), previousPrice: 0, isPriceUp: true, qty: 0, averageBuyPrice: 0, sector: "Tech", currency: "USD", exchange: "NSE", isFavorite: false)
+            Stock(symbol: "SYM\($0)", name: "Dummy \($0)", price: Double($0), previousPrice: 0, isPriceUp: true, sector: "Tech", currency: "USD", exchange: "NSE")
         }
 
         let editVM = EditWatchlistViewModel(watchlist: base, availableStocks: mockStocks)

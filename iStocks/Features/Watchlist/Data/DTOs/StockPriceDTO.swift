@@ -46,10 +46,10 @@ struct StockPriceDTO: Decodable {
         }
     }
 
-    func toDomainModel(invested: Double) -> Stock? {
+    func toDomainModel(previousPrice: Double? = nil) -> Stock? {
         guard let symbol = symbol, let price = price else { return nil }
 
-        let previous = invested > 0 ? invested : price * Double.random(in: 0.97...1.03)
+        let previous = previousPrice ?? price
 
         return Stock(
             symbol: symbol,
@@ -57,12 +57,9 @@ struct StockPriceDTO: Decodable {
             price: price,
             previousPrice: previous,
             isPriceUp: price >= previous,
-            qty: Double(Int.random(in: 1...10)),
-            averageBuyPrice: previous,
-            sector: "Crypto",
-            currency: "USD",
-            exchange: exchange ?? "Coinbase Pro",
-            isFavorite: false
+            sector: StockMetadata.sectorMap[symbol] ?? "Unknown",
+            currency: currencyBase ?? "USD",
+            exchange: exchange ?? "Unknown"
         )
     }
 }
@@ -79,12 +76,9 @@ extension StockPriceDTO {
             price: current,
             previousPrice: current,
             isPriceUp: false,
-            qty: 0,
-            averageBuyPrice: 0,
             sector: sector,
-            currency: "USD",
-            exchange: exchange ?? "NASDAQ",
-            isFavorite: false
+            currency: currencyBase ?? "USD",
+            exchange: exchange ?? "NASDAQ"
         )
     }
 }

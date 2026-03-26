@@ -174,8 +174,9 @@ final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
     private func handleAndMapToAppError(_ error: Error) -> AppError {
         let appError: AppError
         if let api = error as? TwelveDataAPIError {
+            // Errors propagate as AppError — ViewModels decide how to display alerts.
+            // The data layer must not access UI components directly.
             appError = .api(message: api.errorDescription ?? "Unknown API error")
-            SharedAlertManager.shared.show(api.alert)
         } else if let network = error as? NetworkError {
             appError = .network(network)
         } else {
