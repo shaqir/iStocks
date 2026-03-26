@@ -24,9 +24,7 @@ enum WebSocketConnectionState {
 
 final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     
-    // MARK: - Singleton
-    static let shared = FinnhubWebSocketClient()
-    private override init() { super.init() }
+    override init() { super.init() }
 
     // MARK: - Properties
     private var apiKey: String {

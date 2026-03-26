@@ -18,7 +18,7 @@ extension StockFinnPriceDTO {
     func toDomainModel(invested: Double) -> Stock? {
         guard let symbol = symbol else { return nil }
 
-        let previous = invested > 0 ? invested : price * Double.random(in: 0.97...1.03)
+        let previous = invested > 0 ? invested : price
 
         return Stock(
             symbol: symbol,
@@ -26,9 +26,9 @@ extension StockFinnPriceDTO {
             price: price,
             previousPrice: previous,
             isPriceUp: price >= previous,
-            qty: Double(Int.random(in: 1...10)),
-            averageBuyPrice: previous,
-            sector: "Crypto", // or use a mapping
+            qty: 0,
+            averageBuyPrice: 0,
+            sector: "Crypto",
             currency: "USD",
             exchange: "Finnhub",
             isFavorite: false

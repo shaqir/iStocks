@@ -7,6 +7,17 @@
 import SwiftUI
 import Combine
 
+/// Centralized alert coordination across the app.
+///
+/// NOTE: Dual access pattern by design:
+/// - `.shared` singleton for non-View contexts (Data layer error handlers, ViewModels)
+///   where @EnvironmentObject is not available.
+/// - `@EnvironmentObject` injection in SwiftUI Views (injected in iStocksApp.swift)
+///   for idiomatic SwiftUI access.
+///
+/// Both point to the same instance. The singleton exists because Data layer code
+/// (e.g., StockRemoteDataSource error mapping) needs to show alerts but has no
+/// access to the SwiftUI environment.
 final class SharedAlertManager: ObservableObject {
     static let shared = SharedAlertManager()
 

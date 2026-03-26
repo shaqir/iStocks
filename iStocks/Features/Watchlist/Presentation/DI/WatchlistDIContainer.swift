@@ -24,7 +24,8 @@ final class WatchlistDIContainer {
     }
     
     private static var cachedUseCases: WatchlistUseCases?
-    
+    private static var cachedMode: WatchlistAppMode?
+
     // MARK: - Cached repositories
     private static var cachedMockRepository: MockWatchlistRepository?
     private static var cachedRestRepository: RestStockRepository?
@@ -58,7 +59,7 @@ final class WatchlistDIContainer {
            if let cached = cachedWebSocketRepository {
                return cached
            }
-           let webSocketClient = FinnhubWebSocketClient.shared
+           let webSocketClient = FinnhubWebSocketClient()
            let webSocketRepo = WebSocketStockRepositoryImpl(webSocket: webSocketClient)
            cachedWebSocketRepository = webSocketRepo
            return webSocketRepo
@@ -85,9 +86,18 @@ final class WatchlistDIContainer {
 
     // MARK: - Use Case Assembly
     static func makeWatchlistUseCases(context: ModelContext) -> WatchlistUseCases {
-        if let existing = cachedUseCases {
+        // Invalidate caches if mode changed since last creation
+        if let existing = cachedUseCases, cachedMode == mode {
             return existing
         }
+        if cachedMode != mode {
+            cachedUseCases = nil
+            cachedMockRepository = nil
+            cachedRestRepository = nil
+            cachedWebSocketRepository = nil
+            cachedGraphQLRepository = nil
+        }
+        cachedMode = mode
 
                 let useCases: WatchlistUseCases
 
