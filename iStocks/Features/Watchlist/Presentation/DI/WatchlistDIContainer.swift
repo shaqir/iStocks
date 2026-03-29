@@ -9,10 +9,10 @@ import SwiftData
 
 // MARK: - App Mode Enum
 enum WatchlistAppMode {
-    case mock
-    case restAPI
-    case websocket
-    case graphQL
+    case mock       // development and testing
+    case restAPI    // standard client
+    case websocket  // real-time streaming
+    case graphQL    // experiment
 }
 
 // MARK: - DI Container
@@ -42,7 +42,6 @@ final class WatchlistDIContainer {
             cachedMockRepository = mockRepo
             return mockRepo
         }
-    
     private static func makeRestRepository(context: ModelContext) -> RestStockRepository {
         if let cached = cachedRestRepository {
             return cached
@@ -54,7 +53,6 @@ final class WatchlistDIContainer {
         cachedRestRepository = restRepo
         return restRepo
     }
-    
     private static func makeWebSocketRepository() -> StockLiveRepository {
            if let cached = cachedWebSocketRepository {
                return cached
@@ -64,7 +62,6 @@ final class WatchlistDIContainer {
            cachedWebSocketRepository = webSocketRepo
            return webSocketRepo
        }
-
     private static func makeGraphQLRepository(context: ModelContext) -> RestStockRepository {
         if let cached = cachedGraphQLRepository {
             return cached
@@ -173,6 +170,7 @@ final class WatchlistDIContainer {
             viewModelProvider: viewModelProvider
         )
     }
+    
 }
 
 extension WatchlistDIContainer {

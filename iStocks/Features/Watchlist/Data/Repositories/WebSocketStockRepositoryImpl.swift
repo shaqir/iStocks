@@ -26,6 +26,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
         // Initialization - no logging needed
         webSocket.stockPublisher
         ///Batches incoming DTOs per 1 second. Prevents excessive UI updates.
+        ///[ Finnhub sends hundreds of price updates per second... but we process one per second]
             .collect(.byTime(RunLoop.main, .seconds(AppConstants.batchCollectionSeconds)))
             .map { updates in
                 // Group by symbol and pick latest for each symbol

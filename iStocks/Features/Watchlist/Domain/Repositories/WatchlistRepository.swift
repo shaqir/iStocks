@@ -1,6 +1,6 @@
 import Combine
 
-// MARK: - Base Protocol
+// MARK: - Base Protocol // Every data source imeplemnt this
 protocol WatchlistRepository {
     func observeStocks() -> AnyPublisher<[Stock], Error>
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error>
@@ -26,11 +26,9 @@ extension WatchlistRepository {
     func observeStocks() -> AnyPublisher<[Stock], Error> {
         Empty().setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-    
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         Empty().setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-    
     func subscribeToSymbols(_ symbols: [String]) {}
     
     func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], any Error> {
