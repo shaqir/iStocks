@@ -33,9 +33,20 @@ final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
     }
 
     func fetchPrice(for symbol: String) async throws -> Double {
+        // NOTE: In production this calls the TwelveData /price endpoint via APIClient.
+        // Mock prices here so the Dashboard demo works without an API key configured.
+        #if DEBUG
+        let mockPrices: [String: Double] = [
+            "AAPL": 153.25, "GOOGL": 2834.50, "MSFT": 384.20,
+            "TSLA": 247.60, "AMZN": 188.90
+        ]
+        try await Task.sleep(nanoseconds: 200_000_000) // simulate network latency
+        return mockPrices[symbol] ?? 100.0
+        #else
         let endpoint = PriceQuoteEndpoint(symbol: symbol)
         let response = try await apiClient.request(endpoint)
         return response.price
+        #endif
     }
 
     func fetchNews(for symbols: [String]) async throws -> [News] {

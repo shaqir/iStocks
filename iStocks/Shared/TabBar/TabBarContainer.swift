@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TabBarContainer: View {
-    @State private var selectedTab: TabViewEnum = .watchlist
+    @State private var selectedTab: TabViewEnum = .portfolio
 
     var body: some View {
         ZStack(alignment: .bottom) {

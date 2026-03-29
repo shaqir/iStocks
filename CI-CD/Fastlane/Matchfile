@@ -1,0 +1,4 @@
+git_url("https://github.com/your-org/certificates")
+storage_mode("git")
+type("appstore")
+app_identifier("com.sakirsaiyed.iStocks")
