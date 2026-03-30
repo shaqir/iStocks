@@ -31,6 +31,12 @@
 		DF4A64C92DF49CF600F2F879 /* iStocks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iStocks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF7750F72F7AB7FF00E4757C /* Fastfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
+		DF7750F82F7AB81000E4757C /* Matchfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Matchfile; sourceTree = "<group>"; };
+		DF7750F92F7AB81000E4757C /* ci.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ci.yml; sourceTree = "<group>"; };
+		DF7750FA2F7AB81100E4757C /* Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Dev.xcconfig; sourceTree = "<group>"; };
+		DF7750FB2F7AB81200E4757C /* Staging.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Staging.xcconfig; sourceTree = "<group>"; };
+		DF7750FC2F7AB81200E4757C /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -105,6 +111,7 @@
 				DF4A64DB2DF49CF700F2F879 /* iStocksTests */,
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 				DF4A64CA2DF49CF600F2F879 /* Products */,
+				DF7750F32F7AB7F200E4757C /* CI-CD */,
 			);
 			sourceTree = "<group>";
 		};
@@ -116,6 +123,43 @@
 				DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DF7750F32F7AB7F200E4757C /* CI-CD */ = {
+			isa = PBXGroup;
+			children = (
+				DF7750F42F7AB7F600E4757C /* Fastlane */,
+				DF7750F52F7AB7F600E4757C /* GitHub Actions */,
+				DF7750F62F7AB7F700E4757C /* Configurations */,
+			);
+			path = "CI-CD";
+			sourceTree = "<group>";
+		};
+		DF7750F42F7AB7F600E4757C /* Fastlane */ = {
+			isa = PBXGroup;
+			children = (
+				DF7750F72F7AB7FF00E4757C /* Fastfile */,
+				DF7750F82F7AB81000E4757C /* Matchfile */,
+			);
+			path = Fastlane;
+			sourceTree = "<group>";
+		};
+		DF7750F52F7AB7F600E4757C /* GitHub Actions */ = {
+			isa = PBXGroup;
+			children = (
+				DF7750F92F7AB81000E4757C /* ci.yml */,
+			);
+			path = "GitHub Actions";
+			sourceTree = "<group>";
+		};
+		DF7750F62F7AB7F700E4757C /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				DF7750FA2F7AB81100E4757C /* Dev.xcconfig */,
+				DF7750FB2F7AB81200E4757C /* Staging.xcconfig */,
+				DF7750FC2F7AB81200E4757C /* Production.xcconfig */,
+			);
+			path = Configurations;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
