@@ -71,7 +71,7 @@ final class MockStockStreamingService: StockStreamingServiceProtocol {
             let newPrice = max(stock.price + change, 0)
             return stock.updatedPrice(newPrice)
         }
-        AppLogger.debug("Emitting price updates for all mock stocks", category: AppLogger.general)
+        //AppLogger.debug("Emitting price updates for all mock stocks", category: AppLogger.general)
         subject.send(stocks)
     }
 }

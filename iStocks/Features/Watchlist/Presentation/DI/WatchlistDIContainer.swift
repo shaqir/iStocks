@@ -8,12 +8,12 @@ import Foundation
 import SwiftData
 
 // MARK: - App Mode Enum
-enum WatchlistAppMode {
-    case mock       // development and testing
-    case restAPI    // standard client
-    case websocket  // real-time streaming
-    case graphQL    // experiment
-}
+    enum WatchlistAppMode {
+        case mock       // development and testing
+        case restAPI    // standard client
+        case websocket  // real-time streaming
+        case graphQL    // experiment
+    }
 
 // MARK: - DI Container
 /// Dependency injection container for Watchlist module
