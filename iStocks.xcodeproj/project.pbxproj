@@ -111,7 +111,7 @@
 				DF4A64DB2DF49CF700F2F879 /* iStocksTests */,
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 				DF4A64CA2DF49CF600F2F879 /* Products */,
-				DF7750F32F7AB7F200E4757C /* CI-CD */,
+				DF7750F32F7AB7F200E4757C /* ci-cd */,
 			);
 			sourceTree = "<group>";
 		};
@@ -125,14 +125,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DF7750F32F7AB7F200E4757C /* CI-CD */ = {
+		DF7750F32F7AB7F200E4757C /* ci-cd */ = {
 			isa = PBXGroup;
 			children = (
 				DF7750F42F7AB7F600E4757C /* Fastlane */,
 				DF7750F52F7AB7F600E4757C /* GitHub Actions */,
 				DF7750F62F7AB7F700E4757C /* Configurations */,
 			);
-			path = "CI-CD";
+			path = "ci-cd";
 			sourceTree = "<group>";
 		};
 		DF7750F42F7AB7F600E4757C /* Fastlane */ = {
