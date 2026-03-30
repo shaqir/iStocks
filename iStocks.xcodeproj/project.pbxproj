@@ -37,13 +37,13 @@
 		DF3105DB2E107935000F970D /* Exceptions for "iStocks" folder in "iStocks" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"ci-cd/Configurations/Dev.xcconfig",
-				"ci-cd/Configurations/Production.xcconfig",
-				"ci-cd/Configurations/Staging.xcconfig",
-				"ci-cd/Fastlane/Fastfile",
-				"ci-cd/Fastlane/Matchfile",
-				"ci-cd/GitHub Actions/ci.yml",
 				Resources/Info.plist,
+				"Shared/ci-cd/Configurations/Dev.xcconfig",
+				"Shared/ci-cd/Configurations/Production.xcconfig",
+				"Shared/ci-cd/Configurations/Staging.xcconfig",
+				"Shared/ci-cd/Fastlane/Fastfile",
+				"Shared/ci-cd/Fastlane/Matchfile",
+				"Shared/ci-cd/GitHub Actions/ci.yml",
 			);
 			target = DF4A64C82DF49CF600F2F879 /* iStocks */;
 		};
