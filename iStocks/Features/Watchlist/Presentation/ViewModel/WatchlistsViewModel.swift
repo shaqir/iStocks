@@ -120,8 +120,6 @@ final class WatchlistsViewModel: ObservableObject {
         }
     }
 
-    deinit {}
-    
 }
 
 ///Mock Mode
