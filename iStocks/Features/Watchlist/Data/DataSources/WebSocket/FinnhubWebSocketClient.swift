@@ -116,6 +116,7 @@ final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     // MARK: - Sending Messages
     func send(_ message: URLSessionWebSocketTask.Message) {
         guard connectionState == .connected else {
+            guard messageQueue.count < 1000 else { return }
             messageQueue.append(message)
             return
         }
