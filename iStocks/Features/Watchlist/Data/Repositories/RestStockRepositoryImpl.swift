@@ -47,10 +47,12 @@ final class RestStockRepositoryImpl: RestStockRepository {
             missingSymbols,
             batchSize: 8,
             onProgress: { [weak self] index, total, retry, success in
-                self?.batchProgress = BatchProgress(current: index,
-                                                    total: total,
-                                                    retryCount: retry,
-                                                    success: success)
+                DispatchQueue.main.async {
+                    self?.batchProgress = BatchProgress(current: index,
+                                                        total: total,
+                                                        retryCount: retry,
+                                                        success: success)
+                }
             }
         )
     }
