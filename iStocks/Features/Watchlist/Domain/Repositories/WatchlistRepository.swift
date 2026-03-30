@@ -1,6 +1,10 @@
 import Combine
 
 // MARK: - Base Protocol
+
+/// Common contract for all data source implementations.
+/// Mock, REST, WebSocket, and GraphQL repositories all conform to this.  lets four completely different data sources — be swapped at runtime without a single change to the ViewModel or use cases.
+ 
 protocol WatchlistRepository {
     func observeStocks() -> AnyPublisher<[Stock], Error>
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error>
