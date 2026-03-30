@@ -38,12 +38,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Resources/Info.plist,
-				"Shared/ci-cd/Configurations/Dev.xcconfig",
-				"Shared/ci-cd/Configurations/Production.xcconfig",
-				"Shared/ci-cd/Configurations/Staging.xcconfig",
-				"Shared/ci-cd/Fastlane/Fastfile",
-				"Shared/ci-cd/Fastlane/Matchfile",
-				"Shared/ci-cd/GitHub Actions/ci.yml",
+				"Shared/CI-CD/Configurations/Dev.xcconfig",
+				"Shared/CI-CD/Configurations/Production.xcconfig",
+				"Shared/CI-CD/Configurations/Staging.xcconfig",
+				"Shared/CI-CD/Fastlane/Fastfile",
+				"Shared/CI-CD/Fastlane/Matchfile",
+				"Shared/CI-CD/GitHub Actions/ci.yml",
 			);
 			target = DF4A64C82DF49CF600F2F879 /* iStocks */;
 		};
