@@ -1,6 +1,9 @@
 import Combine
 
-// MARK: - Base Protocol // Every data source imeplemnt this
+// MARK: - Base Protocol
+
+/// Common contract for all data source implementations.
+/// Mock, REST, WebSocket, and GraphQL repositories all conform to this.
 protocol WatchlistRepository {
     func observeStocks() -> AnyPublisher<[Stock], Error>
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error>
