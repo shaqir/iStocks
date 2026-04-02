@@ -69,7 +69,7 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
             guard let self else { return }
             let snapshot = await self.stateActor.snapshot()
             let oldPrice = snapshot.first(where: { $0.symbol == symbol })?.price ?? 0
-            if let stock = dto.toDomainModel(invested: oldPrice) {
+            if let stock = dto.toDomainModel(previousPrice: oldPrice) {
                 let allStocks = await self.stateActor.update(symbol: symbol, stock: stock)
                 self.subject.send(allStocks)
             } else {
