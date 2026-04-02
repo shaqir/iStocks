@@ -1,0 +1,43 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Run all tests"
+  lane :test do
+    run_tests(
+      scheme: "iStocks",
+      devices: ["iPhone 16"],
+      code_coverage: true,
+      output_types: "junit,html"
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"]
+    )
+
+    match(type: "appstore", readonly: true)
+
+    increment_build_number(
+      build_number: latest_testflight_build_number + 1
+    )
+
+    build_app(
+      scheme: "iStocks",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: changelog_from_git_commits(
+        between: [last_git_tag, "HEAD"],
+        pretty: "- %s"
+      )
+    )
+  end
+end

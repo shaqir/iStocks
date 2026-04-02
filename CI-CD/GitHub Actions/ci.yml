@@ -1,0 +1,62 @@
+name: iOS CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Build (Debug)
+        run: |
+          xcodebuild build \
+            -scheme iStocks \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            | xcpretty
+
+      - name: Build (Release)
+        run: |
+          xcodebuild build \
+            -scheme iStocks \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Release \
+            | xcpretty
+
+      - name: Run Tests
+        run: |
+          xcodebuild test \
+            -scheme iStocks \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -resultBundlePath TestResults.xcresult \
+            | xcpretty
+
+      - name: Check Coverage
+        run: |
+          xcrun xccov view --report TestResults.xcresult --json > coverage.json
+          python3 -c "
+          import json
+          with open('coverage.json') as f:
+              data = json.load(f)
+          coverage = data.get('lineCoverage', 0)
+          print(f'Coverage: {coverage:.1%}')
+          if coverage < 0.60:
+              print('Coverage below 60% threshold')
+              exit(1)
+          "

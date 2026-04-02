@@ -1,0 +1,5 @@
+// Production.xcconfig — Production environment configuration
+
+API_BASE_URL = https://api.twelvedata.com
+ENABLE_LOGGING = NO
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited)

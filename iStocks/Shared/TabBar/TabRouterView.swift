@@ -23,7 +23,7 @@ struct TabRouterView: View {
             OrderView()
 
         case .portfolio:
-            PortfolioView()
+            DashboardView(viewModel: DashboardDIContainer.makeDashboardViewModel())
 
         case .research:
             StockResearchView()
