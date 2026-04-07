@@ -8,7 +8,7 @@
 import Foundation
 
 /// Authentication state management with biometric support.
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class AuthViewModel: ObservableObject {
 
     @Published private(set) var isAuthenticated = false

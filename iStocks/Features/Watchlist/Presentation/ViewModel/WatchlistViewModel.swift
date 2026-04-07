@@ -8,7 +8,7 @@ import Foundation
 import Combine
 
 /// ViewModel for managing a single watchlist (stocks, search, updates, sync)
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class WatchlistViewModel: ObservableObject {
     
     // MARK: - Published Properties

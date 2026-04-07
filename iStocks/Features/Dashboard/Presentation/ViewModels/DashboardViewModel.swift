@@ -12,7 +12,7 @@ import Foundation
 /// NOTE: @MainActor guarantees ALL @Published property updates happen on the main thread.
 /// Without this, setting `isLoading = true` from a background task would crash.
 /// This replaces the old pattern of wrapping every update in DispatchQueue.main.async {}.
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class DashboardViewModel: ObservableObject {
 
     @Published private(set) var dashboard: Dashboard?

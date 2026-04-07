@@ -12,7 +12,7 @@ import OSLog
 
 /// ViewModel for the Stock Research web view feature.
 /// Manages navigation state, bookmarks, browsing history, and JavaScript bridge callbacks.
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class StockResearchViewModel: ObservableObject {
 
     // MARK: - Published Properties

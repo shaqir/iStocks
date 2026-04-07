@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class EditWatchlistViewModel: ObservableObject {
     @Published var name: String
     @Published var selectedStocks: [Stock]

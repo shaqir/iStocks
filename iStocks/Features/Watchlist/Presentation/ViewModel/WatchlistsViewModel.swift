@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-@MainActor
+/// Implicitly @MainActor via defaultIsolation(MainActor.self) — SE-0466
 final class WatchlistsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var watchlists: [Watchlist] = []
