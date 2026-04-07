@@ -24,6 +24,11 @@ actor PortfolioActor {
     private(set) var holdings: [Holding] = []
     private(set) var lastUpdated: Date?
 
+    /// Tracks the in-flight refresh task for deduplication.
+    /// When a new refresh is requested, any existing in-flight task is cancelled
+    /// before starting a new one — prevents redundant network calls.
+    private var inFlightRefresh: Task<Void, Never>?
+
     // MARK: - Mutations
 
     func update(_ newHoldings: [Holding]) {
@@ -39,6 +44,57 @@ actor PortfolioActor {
     func removeHolding(symbol: String) {
         holdings.removeAll { $0.symbol == symbol }
         lastUpdated = Date()
+    }
+
+    // MARK: - Reentrancy Patterns
+
+    /// Demonstrates the deduct-before-await pattern with rollback on failure.
+    ///
+    /// Why this matters: Between the optimistic mutation and the await point,
+    /// another task could read the actor's state and see the uncommitted holding.
+    /// If the network call fails, we rollback — callers who read the interim state
+    /// will see the corrected state on their next access.
+    func executeTrade(symbol: String, quantity: Double, price: Double, using service: TradeExecutionService) async throws {
+        // 1. Snapshot for rollback
+        let previousHoldings = holdings
+
+        // 2. Optimistic mutation BEFORE await — actor reentrancy means
+        //    other callers see this immediately
+        let newHolding = Holding.mock(symbol: symbol, name: symbol, quantity: quantity, averageCost: price, currentPrice: price)
+        holdings.append(newHolding)
+        lastUpdated = Date()
+
+        // 3. Await network confirmation — actor is free to process other messages here
+        do {
+            try await service.confirmTrade(symbol: symbol, quantity: quantity, price: price)
+            // Trade confirmed — optimistic state is now authoritative
+        } catch {
+            // 4. Rollback on failure
+            holdings = previousHoldings
+            lastUpdated = Date()
+            throw error
+        }
+    }
+
+    /// Demonstrates in-flight task deduplication — prevents redundant network calls
+    /// when refresh is triggered multiple times rapidly (e.g., pull-to-refresh spam).
+    func refreshPrices(using service: PriceRefreshService) {
+        // Cancel any existing in-flight refresh
+        inFlightRefresh?.cancel()
+
+        let symbols = holdings.map(\.symbol)
+        inFlightRefresh = Task {
+            guard !Task.isCancelled else { return }
+            guard let prices = try? await service.fetchLatestPrices(for: symbols),
+                  !Task.isCancelled else { return }
+
+            for (symbol, price) in prices {
+                if let idx = self.holdings.firstIndex(where: { $0.symbol == symbol }) {
+                    self.holdings[idx] = self.holdings[idx].withUpdatedPrice(price)
+                }
+            }
+            self.lastUpdated = Date()
+        }
     }
 
     // MARK: - Queries

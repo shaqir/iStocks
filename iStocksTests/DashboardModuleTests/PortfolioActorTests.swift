@@ -81,4 +81,79 @@ final class PortfolioActorTests: XCTestCase {
         let holdings = await actor.holdings
         XCTAssertEqual(holdings.count, 10)
     }
+
+    // MARK: - Trade Execution Tests (Deduct-Before-Await Pattern)
+
+    func test_executeTrade_rollsBackOnFailure() async throws {
+        // Given: actor with one existing holding
+        let actor = PortfolioActor()
+        await actor.addHolding(.mock(symbol: "AAPL"))
+        let initialCount = await actor.holdings.count
+
+        // When: trade fails
+        let failingService = MockTradeService(shouldFail: true)
+        do {
+            try await actor.executeTrade(symbol: "TSLA", quantity: 5, price: 250.0, using: failingService)
+            XCTFail("Should have thrown")
+        } catch {
+            // Then: holdings rolled back to original state
+            let finalCount = await actor.holdings.count
+            XCTAssertEqual(finalCount, initialCount, "Holdings should be rolled back after failed trade")
+        }
+    }
+
+    func test_executeTrade_persistsOnSuccess() async throws {
+        // Given: empty actor
+        let actor = PortfolioActor()
+        let successService = MockTradeService(shouldFail: false)
+
+        // When: trade succeeds
+        try await actor.executeTrade(symbol: "AAPL", quantity: 10, price: 150.0, using: successService)
+
+        // Then: holding persists
+        let holdings = await actor.holdings
+        XCTAssertEqual(holdings.count, 1)
+        XCTAssertEqual(holdings.first?.symbol, "AAPL")
+    }
+
+    func test_refreshPrices_deduplicatesInFlightRequests() async throws {
+        // Given: actor with holdings
+        let actor = PortfolioActor()
+        await actor.addHolding(.mock(symbol: "AAPL", currentPrice: 100.0))
+
+        let service = MockPriceRefreshService(prices: [("AAPL", 155.0)])
+
+        // When: call refresh twice rapidly — first should be cancelled
+        await actor.refreshPrices(using: service)
+        await actor.refreshPrices(using: service)
+
+        // Wait for the refresh task to complete
+        try await Task.sleep(for: .milliseconds(200))
+
+        // Then: prices should be updated (verifies at least one refresh completed)
+        let holdings = await actor.holdings
+        XCTAssertEqual(holdings.first?.currentPrice, 155.0)
+    }
+}
+
+// MARK: - Mock Services
+
+private struct MockTradeService: TradeExecutionService {
+    let shouldFail: Bool
+
+    func confirmTrade(symbol: String, quantity: Double, price: Double) async throws {
+        try await Task.sleep(for: .milliseconds(10)) // simulate network
+        if shouldFail {
+            throw NSError(domain: "TradeError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Trade rejected"])
+        }
+    }
+}
+
+private struct MockPriceRefreshService: PriceRefreshService {
+    let prices: [(String, Double)]
+
+    func fetchLatestPrices(for symbols: [String]) async throws -> [(String, Double)] {
+        try await Task.sleep(for: .milliseconds(10)) // simulate network
+        return prices
+    }
 }

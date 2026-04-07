@@ -7,16 +7,9 @@
 
 import Foundation
 
-extension Double {
-    private static let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 2
-        return formatter
-    }()
-
+nonisolated extension Double {
+    /// Convenience accessor — delegates to StockFormatter for cached formatting.
     var currencyFormatted: String {
-        Double.currencyFormatter.string(from: NSNumber(value: self)) ?? "\(self)"
+        StockFormatter.formatPrice(self)
     }
 }
