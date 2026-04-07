@@ -1,6 +1,6 @@
 # Code Review Guidelines — iStocks
 
-These guidelines direct automated code review (Codex, Claude) on what to check and what to skip.
+These guidelines direct automated code review tools on what to check and what to skip.
 
 ## Architecture (Clean Architecture + MVVM)
 
