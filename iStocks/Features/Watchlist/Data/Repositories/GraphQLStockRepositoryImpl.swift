@@ -8,17 +8,21 @@
 import Foundation
 import Combine
 
-final class GraphQLStockRepositoryImpl: RestStockRepository {
+nonisolated final class GraphQLStockRepositoryImpl: RestStockRepository {
 
     // MARK: - Dependencies
 
     private let graphQLDataSource: StockGraphQLDataSourceProtocol
     private let persistenceService: WatchlistPersistenceProtocol
 
-    @Published var batchProgress: BatchProgress? = nil
+    private let batchProgressSubject = CurrentValueSubject<BatchProgress?, Never>(nil)
+    var batchProgress: BatchProgress? {
+        get { batchProgressSubject.value }
+        set { batchProgressSubject.send(newValue) }
+    }
 
     var progressPublisher: AnyPublisher<BatchProgress, Never> {
-        $batchProgress
+        batchProgressSubject
             .compactMap { $0 }
             .eraseToAnyPublisher()
     }

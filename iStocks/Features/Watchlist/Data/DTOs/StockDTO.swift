@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - DTO (Response from Twelve Data): mirrors the API response format
 ///   Needs to be mapped to Stock via a mapper (e.g. StockMapper or StockResponseWrapper)
-struct StockDTO: Decodable {
+nonisolated struct StockDTO: Decodable {
     let event: String?
     let symbol: String?
     var close: String?

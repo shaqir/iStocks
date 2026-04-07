@@ -10,6 +10,7 @@ import XCTest
 @testable import iStocks
 import Combine
 
+@MainActor
 final class SharedAlertManagerTests: XCTestCase {
 
     private var cancellables: Set<AnyCancellable> = []

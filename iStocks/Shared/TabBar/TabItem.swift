@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TabItem{
+nonisolated struct TabItem{
     let title: String
     let imageName: String
     let color: Color

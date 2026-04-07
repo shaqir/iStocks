@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct StockPriceDTO: Decodable {
+nonisolated struct StockPriceDTO: Decodable {
     let event: String?  
     let symbol: String?
     let price: Double?
@@ -64,7 +64,7 @@ struct StockPriceDTO: Decodable {
     }
 }
  
-extension StockPriceDTO {
+nonisolated extension StockPriceDTO {
     func toStockPrice(symbol: String) -> Stock? {
         guard let current = price else { return nil }
 

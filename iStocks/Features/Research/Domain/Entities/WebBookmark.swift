@@ -8,7 +8,7 @@
 import Foundation
 
 /// Domain model representing a bookmarked web page for stock research
-struct WebBookmark: Identifiable, Codable, Equatable {
+nonisolated struct WebBookmark: Identifiable, Codable, Equatable {
     let id: UUID
     let title: String
     let url: URL

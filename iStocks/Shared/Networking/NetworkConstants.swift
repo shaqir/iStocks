@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum API {
+nonisolated enum API {
     static let baseURL = "https://api.twelvedata.com"
     static let graphQLBaseURL = "https://api.twelvedata.com/graphql"
     static let apiKey_TwelveData = ""

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct QuoteEndPoint {
+nonisolated struct QuoteEndPoint {
     static func forSymbols(_ symbols: [String], apiKey: String) -> Endpoint {
         return Endpoint(
             path: "/quote",  // use /quote for multiple symbols

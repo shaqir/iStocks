@@ -13,7 +13,7 @@ import Foundation
 /// are passed across actor boundaries (e.g., into PortfolioActor or TaskGroup closures).
 /// The protocol knows nothing about stocks or portfolios — it's fully generic.
 /// MockAPIClient in tests conforms to this same protocol, enabling network-free testing.
-protocol APIClientProtocol: Sendable {
+nonisolated protocol APIClientProtocol: Sendable {
     func request<E: APIEndpoint>(_ endpoint: E) async throws -> E.Response
 }
 
@@ -21,7 +21,7 @@ protocol APIClientProtocol: Sendable {
 ///
 /// NOTE: @unchecked Sendable because URLSession.shared is thread-safe and the
 /// JSONDecoder is only used within the async method scope (no shared mutable state).
-final class URLSessionAPIClient: APIClientProtocol, @unchecked Sendable {
+nonisolated final class URLSessionAPIClient: APIClientProtocol, @unchecked Sendable {
 
     private let session: URLSession
     private let decoder: JSONDecoder

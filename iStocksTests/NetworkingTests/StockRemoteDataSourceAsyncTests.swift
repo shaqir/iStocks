@@ -65,7 +65,7 @@ final class StockRemoteDataSourceAsyncTests: XCTestCase {
         let symbols = ["AAPL", "MSFT", "GOOGL", "TSLA"]
         mockClient.resultData = makePriceResponseJSON(symbols: symbols)
 
-        var progressUpdates: [(batch: Int, total: Int, success: Bool)] = []
+        nonisolated(unsafe) var progressUpdates: [(batch: Int, total: Int, success: Bool)] = []
 
         _ = try await sut.fetchTop50InBatchesAsync(
             symbols,
@@ -102,8 +102,9 @@ final class StockRemoteDataSourceAsyncTests: XCTestCase {
         let symbols = Array(repeating: "AAPL", count: 50)
         mockClient.resultData = makePriceResponseJSON(symbols: ["AAPL"])
 
+        let localSut = sut!
         let task = Task {
-            try await sut.fetchTop50InBatchesAsync(symbols, batchSize: 2)
+            try await localSut.fetchTop50InBatchesAsync(symbols, batchSize: 2)
         }
 
         // Cancel immediately

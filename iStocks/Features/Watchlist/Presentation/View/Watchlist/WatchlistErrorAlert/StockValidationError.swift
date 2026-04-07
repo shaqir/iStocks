@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum StockValidationError: Error, Equatable {
+nonisolated enum StockValidationError: Error, Equatable {
     case duplicate
     case limitReached(num: Int)
     case invalidSymbol

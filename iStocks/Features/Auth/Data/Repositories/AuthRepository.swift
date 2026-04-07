@@ -12,7 +12,7 @@ import Foundation
 /// NOTE: The repository pattern here provides the seam for testing.
 /// Tests inject MockBiometricAuthManager via the protocol — no real
 /// biometric sensor needed for unit tests.
-final class AuthRepository: AuthRepositoryProtocol {
+nonisolated final class AuthRepository: AuthRepositoryProtocol {
 
     private let biometricManager: BiometricAuthManagerProtocol
 

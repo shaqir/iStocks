@@ -8,7 +8,7 @@
 import Foundation
 
 /// Network-related errors with detailed context
-enum NetworkError: LocalizedError {
+nonisolated enum NetworkError: LocalizedError {
     case invalidURL
     case invalidResponse
     case noData

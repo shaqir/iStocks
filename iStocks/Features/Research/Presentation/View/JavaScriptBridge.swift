@@ -9,7 +9,7 @@ import WebKit
 
 /// Defines JavaScript bridge constants, message types, and injectable user scripts
 /// for communication between WKWebView content and the native app layer.
-enum JavaScriptBridge {
+nonisolated enum JavaScriptBridge {
 
     // MARK: - Handler Name
 

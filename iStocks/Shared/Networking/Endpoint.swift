@@ -7,13 +7,13 @@
 
 import Foundation
 
-enum HTTPMethod: String {
+nonisolated enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
     // Extend as needed
 }
 
-struct Endpoint {
+nonisolated struct Endpoint {
     let path: String
     let method: HTTPMethod
     let queryItems: [URLQueryItem]?

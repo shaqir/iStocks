@@ -8,7 +8,7 @@
 import Foundation
 
 /// Application-level errors with detailed context and recovery suggestions
-enum AppError: LocalizedError {
+nonisolated enum AppError: LocalizedError {
     case network(NetworkError)
     case api(message: String)
     case persistence(PersistenceError)
@@ -77,7 +77,7 @@ enum AppError: LocalizedError {
 
 // MARK: - Persistence Errors
 
-enum PersistenceError: LocalizedError {
+nonisolated enum PersistenceError: LocalizedError {
     case saveFailed(Error)
     case loadFailed(Error)
     case deleteFailed(Error)
@@ -128,7 +128,7 @@ enum PersistenceError: LocalizedError {
 
 // MARK: - Validation Errors
 
-enum ValidationError: LocalizedError {
+nonisolated enum ValidationError: LocalizedError {
     case invalidSymbol(String)
     case invalidPrice
     case invalidQuantity
@@ -179,7 +179,7 @@ enum ValidationError: LocalizedError {
 
 // MARK: - WebSocket Errors
 
-enum WebSocketError: LocalizedError {
+nonisolated enum WebSocketError: LocalizedError {
     case connectionFailed(Error)
     case invalidURL
     case disconnected
@@ -242,7 +242,7 @@ enum WebSocketError: LocalizedError {
 
 // MARK: - Configuration Errors
 
-enum ConfigurationError: LocalizedError {
+nonisolated enum ConfigurationError: LocalizedError {
     case missingAPIKey
     case invalidAPIKey
     case missingConfiguration(String)

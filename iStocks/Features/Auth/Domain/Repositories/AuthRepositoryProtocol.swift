@@ -13,7 +13,7 @@ import Foundation
 /// The Data layer implementation (AuthRepository) wraps BiometricAuthManager
 /// which imports LocalAuthentication. This separation means the domain logic
 /// can be tested without a real biometric sensor.
-protocol AuthRepositoryProtocol {
+nonisolated protocol AuthRepositoryProtocol {
 
     /// Attempts biometric authentication with the given reason string.
     /// - Returns: `true` if authentication succeeded.

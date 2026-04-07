@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct Watchlist: Identifiable {
+/// NOTE (Swift 6.2): nonisolated — domain entities must work across all isolation contexts.
+nonisolated struct Watchlist: Identifiable {
     let id: UUID
     var name: String
     var stocks: [Stock]

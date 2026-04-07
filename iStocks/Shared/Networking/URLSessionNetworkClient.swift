@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-final class URLSessionNetworkClient: NetworkClient {
+nonisolated final class URLSessionNetworkClient: NetworkClient {
     private let session: URLSession
     private let decoder: JSONDecoder
 

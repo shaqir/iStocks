@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class ConnectionRetryManager {
+nonisolated final class ConnectionRetryManager {
     
     // MARK: - Properties
     private(set) var attempt = 0

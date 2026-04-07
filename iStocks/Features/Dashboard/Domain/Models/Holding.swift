@@ -9,11 +9,16 @@ import Foundation
 
 /// Domain model representing a portfolio holding with cost basis and P&L calculations.
 ///
-/// NOTE: Sendable conformance is required for passing across actor boundaries
+/// NOTE (Swift 6.2): Explicitly nonisolated because domain entities must be usable from
+/// any isolation context — actors, TaskGroups, @concurrent functions.
+/// With defaultIsolation(MainActor.self), this struct would otherwise be implicitly
+/// MainActor-isolated, preventing use in background computation.
+///
+/// Sendable conformance is required for passing across actor boundaries
 /// (e.g., PortfolioActor). Since this is a value type with all Sendable properties,
 /// the compiler infers conformance automatically — but we declare it explicitly
 /// for documentation and Swift 6 strict concurrency readiness.
-struct Holding: Identifiable, Codable, Equatable, Sendable {
+nonisolated struct Holding: Identifiable, Codable, Equatable, Sendable {
 
     let id: UUID
     let symbol: String

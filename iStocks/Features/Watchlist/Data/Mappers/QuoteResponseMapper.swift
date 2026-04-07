@@ -7,7 +7,7 @@
 
 import Foundation
 ///Maps valid stocks and logs or throws on failure
-enum QuoteResponseMapper {
+nonisolated enum QuoteResponseMapper {
     static func map(_ responseDict: [String: StockResponseWrapper]) throws -> [Stock] {
         var validStocks: [Stock] = []
         var errorMessages: [String] = []
@@ -44,7 +44,7 @@ enum QuoteResponseMapper {
 }
 
 ///Allows decoding of both object and dictionary forms
-enum StockQuoteDynamicResponse: Decodable {
+nonisolated enum StockQuoteDynamicResponse: Decodable {
     case dictionary([String: StockResponseWrapper])
     case single(StockResponseWrapper)
 

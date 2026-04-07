@@ -10,7 +10,7 @@ import Combine
 
 // MARK: - Protocol
 
-protocol GraphQLClientProtocol {
+nonisolated protocol GraphQLClientProtocol {
     /// Execute a GraphQL query and decode the response using Combine
     func execute<T: Decodable>(query: GraphQLQuery) -> AnyPublisher<T, Error>
 
@@ -21,7 +21,7 @@ protocol GraphQLClientProtocol {
 // MARK: - Implementation
 
 /// Lightweight GraphQL client built on URLSession — no third-party dependencies
-final class GraphQLClient: GraphQLClientProtocol {
+nonisolated final class GraphQLClient: GraphQLClientProtocol {
 
     // MARK: - Dependencies
 

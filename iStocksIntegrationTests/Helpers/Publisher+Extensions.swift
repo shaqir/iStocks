@@ -8,27 +8,31 @@
 import Foundation
 internal import Combine
 
-extension Publisher {
+extension Publisher where Output: Sendable {
     func asyncValues() async throws -> [Output] {
-        try await withCheckedThrowingContinuation { continuation in
-            var collected: [Output] = []
-            let cancellable = self
+        // NOTE: The cancellable must be declared OUTSIDE the continuation closure
+        // so it stays alive until the continuation resumes. If it's deallocated early,
+        // the subscription is cancelled and no values arrive.
+        nonisolated(unsafe) var cancellable: AnyCancellable?
+        return try await withCheckedThrowingContinuation { continuation in
+            nonisolated(unsafe) var collected: [Output] = []
+            nonisolated(unsafe) var didResume = false
+            cancellable = self
                 .sink(receiveCompletion: { completion in
+                    guard !didResume else { return }
+                    didResume = true
                     switch completion {
                     case .finished:
                         continuation.resume(returning: collected)
                     case .failure(let error):
                         continuation.resume(throwing: error)
                     }
+                    // Release after resuming
+                    cancellable?.cancel()
+                    cancellable = nil
                 }, receiveValue: { value in
                     collected.append(value)
                 })
-
-            // Cancellation cleanup optional
-            Task {
-                try await Task.sleep(nanoseconds: 2 * 1_000_000_000)
-                _ = cancellable
-            }
         }
     }
 }

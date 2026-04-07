@@ -7,18 +7,23 @@
 import Foundation
 import Combine
 
-final class RestStockRepositoryImpl: RestStockRepository {
+nonisolated final class RestStockRepositoryImpl: RestStockRepository, @unchecked Sendable {
     
     private let remoteDataSource: StockRemoteDataSourceProtocol
     private let persistenceService: WatchlistPersistenceProtocol
 
-    @Published var batchProgress: BatchProgress? = nil
+    /// NOTE (Swift 6.2): nonisolated(unsafe) because CurrentValueSubject is not Sendable,
+    /// but this is only accessed from the main thread via DispatchQueue.main.async.
+    nonisolated(unsafe) var batchProgress: BatchProgress? = nil {
+        didSet { batchProgressPassthrough.send(batchProgress) }
+    }
+    private let batchProgressPassthrough = PassthroughSubject<BatchProgress?, Never>()
 
     var progressPublisher: AnyPublisher<BatchProgress, Never> {
-            $batchProgress
-                .compactMap { $0 } // remove nils
-                .eraseToAnyPublisher()
-        }
+        batchProgressPassthrough
+            .compactMap { $0 }
+            .eraseToAnyPublisher()
+    }
     
     init(service: StockRemoteDataSourceProtocol, persistenceService: WatchlistPersistenceProtocol) {
            self.remoteDataSource = service

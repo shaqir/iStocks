@@ -7,7 +7,7 @@
 
 import Foundation
 ///Detects and decodes either a success or error object
-enum StockResponseWrapper: Decodable {
+nonisolated enum StockResponseWrapper: Decodable {
     case success(StockDTO)
     case error(TwelveDataAPIError)
 

@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-protocol NetworkClient {
+nonisolated protocol NetworkClient {
     // Combine (Decodable)
     func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error>
 

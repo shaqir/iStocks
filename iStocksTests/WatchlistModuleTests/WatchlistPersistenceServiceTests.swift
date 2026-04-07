@@ -10,6 +10,7 @@ import XCTest
 import SwiftData
 @testable import iStocks
 
+@MainActor
 final class WatchlistPersistenceServiceTests: XCTestCase {
 
     private func makeInMemoryContext() throws -> ModelContext {

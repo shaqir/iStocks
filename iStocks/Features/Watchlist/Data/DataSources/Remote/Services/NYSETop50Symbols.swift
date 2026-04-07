@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum NYSETop50Symbols {
+nonisolated enum NYSETop50Symbols {
     static let top50: [String] = [
         // Tech
         "AAPL", "MSFT", "GOOGL", "IBM", "INTC",

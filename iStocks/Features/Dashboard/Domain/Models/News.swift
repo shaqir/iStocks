@@ -8,7 +8,8 @@
 import Foundation
 
 /// Domain model representing a financial news article.
-struct News: Identifiable, Codable, Sendable {
+/// NOTE (Swift 6.2): nonisolated — domain entities must work across all isolation contexts.
+nonisolated struct News: Identifiable, Codable, Sendable {
 
     let id: UUID
     let headline: String

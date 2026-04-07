@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: - Protocol
 
-protocol CryptoManagerProtocol {
+nonisolated protocol CryptoManagerProtocol {
     func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data
     func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data
     func deriveKey(from password: String, salt: Data) -> SymmetricKey
@@ -20,7 +20,7 @@ protocol CryptoManagerProtocol {
 
 // MARK: - Errors
 
-enum CryptoError: Error, LocalizedError {
+nonisolated enum CryptoError: Error, LocalizedError {
     case encryptionFailed
     case decryptionFailed
     case invalidData
@@ -44,7 +44,7 @@ enum CryptoError: Error, LocalizedError {
 /// security guarantees but safer (no raw pointers, no buffer management).
 /// When asked "CommonCrypto vs CryptoKit?": CryptoKit for new code,
 /// CommonCrypto only for legacy compatibility or raw C-level control.
-final class CryptoManager: CryptoManagerProtocol {
+nonisolated final class CryptoManager: CryptoManagerProtocol {
 
     /// AES-GCM encryption (authenticated encryption — integrity built in).
     ///

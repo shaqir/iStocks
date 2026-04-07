@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AppStrings {
+nonisolated enum AppStrings {
     
     enum General {
         static let ok = "OK"

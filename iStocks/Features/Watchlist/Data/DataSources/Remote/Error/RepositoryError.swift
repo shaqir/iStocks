@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum RepositoryError: LocalizedError {
+nonisolated enum RepositoryError: LocalizedError {
     case notImplemented
 
     var errorDescription: String? {

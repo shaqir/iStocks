@@ -8,7 +8,7 @@
 import Foundation
 
 /// Tracks the current navigation state of the research web view
-struct WebNavigationState: Equatable {
+nonisolated struct WebNavigationState: Equatable {
     var canGoBack: Bool = false
     var canGoForward: Bool = false
     var isLoading: Bool = false

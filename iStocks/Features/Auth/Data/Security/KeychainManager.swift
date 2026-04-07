@@ -10,7 +10,7 @@ import LocalAuthentication
 
 // MARK: - Protocol
 
-protocol KeychainManagerProtocol {
+nonisolated protocol KeychainManagerProtocol {
     func save(_ data: Data, for key: String, requireBiometric: Bool) throws
     func load(for key: String) throws -> Data
     func delete(for key: String) throws
@@ -18,7 +18,7 @@ protocol KeychainManagerProtocol {
 
 // MARK: - Errors
 
-enum KeychainError: Error, LocalizedError {
+nonisolated enum KeychainError: Error, LocalizedError {
     case saveFailed(OSStatus)
     case loadFailed(OSStatus)
     case deleteFailed(OSStatus)
@@ -43,7 +43,7 @@ enum KeychainError: Error, LocalizedError {
 /// kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly is used, which ties
 /// data to the current device passcode). Choose accessibility carefully
 /// based on the sensitivity of the data.
-final class KeychainManager: KeychainManagerProtocol {
+nonisolated final class KeychainManager: KeychainManagerProtocol {
 
     func save(_ data: Data, for key: String, requireBiometric: Bool = false) throws {
         // Delete existing item first to avoid errSecDuplicateItem

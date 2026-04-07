@@ -9,7 +9,7 @@ import Foundation
 @testable import iStocks
 import SwiftData
 
-final class MockWatchlistPersistenceService: WatchlistPersistenceProtocol {
+nonisolated final class MockWatchlistPersistenceService: WatchlistPersistenceProtocol, @unchecked Sendable {
     
     var savedStocks: [Stock] = []
     

@@ -49,7 +49,9 @@ struct StockWebView: UIViewRepresentable {
 
         private weak var viewModel: StockResearchViewModel?
         weak var webView: WKWebView?
-        private var cancellables = Set<AnyCancellable>()
+        /// NOTE (Swift 6.2): nonisolated(unsafe) because AnyCancellable is not Sendable,
+        /// but we need to access this in deinit (which is always nonisolated).
+        nonisolated(unsafe) private var cancellables = Set<AnyCancellable>()
         private var progressObservation: NSKeyValueObservation?
         private var titleObservation: NSKeyValueObservation?
         private var urlObservation: NSKeyValueObservation?

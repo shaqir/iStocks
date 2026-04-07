@@ -9,10 +9,13 @@
 import Foundation
 import Combine
 
-final class WebSocketStockRepositoryImpl: StockLiveRepository {
+/// NOTE (Swift 6.2): nonisolated + @unchecked Sendable because this is a Data layer class
+/// managing WebSocket I/O. Thread safety is guaranteed by the Combine pipeline running on
+/// RunLoop.main and the StockStateActor protecting shared mutable stock state.
+nonisolated final class WebSocketStockRepositoryImpl: StockLiveRepository, @unchecked Sendable {
 
     private var webSocket: WebSocketClient
-    private var subject = PassthroughSubject<[Stock], Never>()
+    private let subject = PassthroughSubject<[Stock], Never>()
     private let stateActor = StockStateActor()
     private var cancellables = Set<AnyCancellable>()
     
@@ -21,11 +24,18 @@ final class WebSocketStockRepositoryImpl: StockLiveRepository {
         self.bindWebSocket()
     }
     
+    // MARK: - Bounded Buffer with Backpressure
+    //
+    // Strategy: The Combine pipeline below implements bounded buffering with backpressure:
+    // 1. collect(.byTime) acts as the time-windowed buffer — accumulates all updates within 1 second
+    // 2. Dictionary(grouping:) + .last deduplicates — keeps only the latest price per symbol
+    // 3. Stale intermediate prices are discarded — a user never sees outdated prices
+    //
+    // This prevents UI thrashing from Finnhub's hundreds of updates/second while ensuring
+    // the UI always shows the most recent price for each symbol.
+
     private func bindWebSocket() {
-        // Initialization - no logging needed
         webSocket.stockPublisher
-        ///Batches incoming DTOs per 1 second. Prevents excessive UI updates.
-        ///[ Finnhub sends hundreds of price updates per second... but we process one per second]
             .collect(.byTime(RunLoop.main, .seconds(AppConstants.batchCollectionSeconds)))
             .map { updates in
                 // Group by symbol and pick latest for each symbol

@@ -17,8 +17,8 @@ final class WatchlistViewModelProviderTests: XCTestCase {
     var mockWatchlist: Watchlist!
     var mockStocks: [Stock]!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         let useCases = makeMockWatchlistUseCases()
         provider = DefaultWatchlistViewModelProvider(useCases: useCases)
         mockStocks = MockStockData.allStocks

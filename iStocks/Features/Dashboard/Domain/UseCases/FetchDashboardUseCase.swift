@@ -8,7 +8,7 @@
 import Foundation
 
 /// Use case protocol — Sendable for safe passage across actor boundaries.
-protocol FetchDashboardUseCaseProtocol: Sendable {
+nonisolated protocol FetchDashboardUseCaseProtocol: Sendable {
     func execute(userId: String) async throws -> Dashboard
 }
 
@@ -20,7 +20,8 @@ protocol FetchDashboardUseCaseProtocol: Sendable {
 ///   3. TaskGroup for dynamic parallel tasks (N symbols, each fetched concurrently)
 ///   4. Task.checkCancellation for cooperative cancellation
 ///   5. Graceful degradation (price failure keeps cached, news failure returns empty)
-final class FetchDashboardUseCase: FetchDashboardUseCaseProtocol, @unchecked Sendable {
+/// NOTE (Swift 6.2): nonisolated — domain use cases should be callable from any context.
+nonisolated final class FetchDashboardUseCase: FetchDashboardUseCaseProtocol, @unchecked Sendable {
 
     private let stockRepository: StockRepositoryProtocol
     private let portfolio: PortfolioActor

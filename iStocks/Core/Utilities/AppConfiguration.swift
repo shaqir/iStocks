@@ -9,7 +9,7 @@ import Foundation
 
 /// Application configuration management
 /// Provides environment-based settings with build configuration support
-enum AppConfiguration {
+nonisolated enum AppConfiguration {
     
     // MARK: - Environment
     

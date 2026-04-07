@@ -23,7 +23,7 @@ import Foundation
 ///     var queryItems: [URLQueryItem]? { [URLQueryItem(name: "symbol", value: symbol)] }
 /// }
 /// ```
-protocol APIEndpoint {
+nonisolated protocol APIEndpoint {
     associatedtype Response: Decodable & Sendable
 
     var path: String { get }
@@ -36,7 +36,7 @@ protocol APIEndpoint {
 
 /// NOTE: Extension defaults reduce boilerplate — most endpoints are GET requests
 /// to the same base URL. Only override what differs.
-extension APIEndpoint {
+nonisolated extension APIEndpoint {
     var baseURL: URL { URL(string: API.baseURL)! }
     var method: HTTPMethod { .get }
     var queryItems: [URLQueryItem]? { nil }

@@ -8,13 +8,13 @@
 import Foundation
 
 // MARK: - StockTradePriceDTO
-struct StockFinnPriceDTO: Decodable {
+nonisolated struct StockFinnPriceDTO: Decodable {
     let symbol: String?
     let price: Double
     let timestamp: TimeInterval
 }
 
-extension StockFinnPriceDTO {
+nonisolated extension StockFinnPriceDTO {
     func toDomainModel(previousPrice: Double? = nil) -> Stock? {
         guard let symbol = symbol else { return nil }
 

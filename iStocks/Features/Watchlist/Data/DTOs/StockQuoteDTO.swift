@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct StockQuoteDTO: Decodable {
+nonisolated struct StockQuoteDTO: Decodable {
     let symbol: String
     let name: String?
     let exchange: String?

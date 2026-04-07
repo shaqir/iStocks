@@ -10,14 +10,14 @@ import Combine
 
 // MARK: - Protocol
 
-protocol StockGraphQLDataSourceProtocol {
+nonisolated protocol StockGraphQLDataSourceProtocol {
     func fetchStockQuotes(for symbols: [String]) -> AnyPublisher<[Stock], Error>
     func fetchTop50Stocks() -> AnyPublisher<[Stock], Error>
 }
 
 // MARK: - Implementation
 
-final class StockGraphQLDataSource: StockGraphQLDataSourceProtocol {
+nonisolated final class StockGraphQLDataSource: StockGraphQLDataSourceProtocol {
 
     // MARK: - Dependencies
 

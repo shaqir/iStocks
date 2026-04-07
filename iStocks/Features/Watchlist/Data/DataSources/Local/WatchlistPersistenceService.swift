@@ -12,7 +12,7 @@ final class WatchlistPersistenceService {
     init(context: ModelContext) { self.context = context }
 }
 
-protocol WatchlistPersistenceProtocol {
+nonisolated protocol WatchlistPersistenceProtocol {
     func loadWatchlists() -> [Watchlist]
     func saveWatchlists(_ watchlists: [Watchlist])
     func saveWatchlist(_ watchlist: Watchlist)

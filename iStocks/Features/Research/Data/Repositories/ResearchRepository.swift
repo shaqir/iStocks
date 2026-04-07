@@ -10,7 +10,7 @@ import Foundation
 /// Concrete implementation of research configuration.
 /// Centralizes URL validation and default page logic that was previously
 /// scattered across the ViewModel and WebView coordinator.
-final class ResearchRepository: ResearchRepositoryProtocol {
+nonisolated final class ResearchRepository: ResearchRepositoryProtocol {
 
     private let allowedSchemes: Set<String> = ["https", "http"]
 

@@ -7,7 +7,9 @@
 
 import Foundation
 
-enum TwelveDataAPIError: LocalizedError, Decodable {
+/// NOTE (Swift 6.2): nonisolated because error types are created during network response
+/// handling which may run outside the MainActor isolation context.
+nonisolated enum TwelveDataAPIError: LocalizedError, Decodable {
     case badRequest(message: String)
     case unauthorized
     case forbidden

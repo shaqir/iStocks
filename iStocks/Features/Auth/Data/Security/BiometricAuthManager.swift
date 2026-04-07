@@ -11,7 +11,7 @@ import LocalAuthentication
 
 /// NOTE: Protocol-based design enables MockBiometricAuthManager in tests —
 /// no real biometric sensor needed for unit testing auth flows.
-protocol BiometricAuthManagerProtocol: Sendable {
+nonisolated protocol BiometricAuthManagerProtocol: Sendable {
     func authenticate(reason: String) async throws -> Bool
     func getBiometryType() -> BiometryType
     func isBiometricsAvailable() -> Bool
@@ -19,14 +19,14 @@ protocol BiometricAuthManagerProtocol: Sendable {
 
 // MARK: - Types
 
-enum BiometryType: Sendable {
+nonisolated enum BiometryType: Sendable {
     case faceID, touchID, opticID, none
 }
 
 /// NOTE: Every LAError case is mapped explicitly — no catch-all that swallows errors.
 /// In a financial app, silent auth failures are unacceptable. Each case gets a
 /// user-facing message and a recovery path.
-enum AuthError: Error, LocalizedError, Sendable {
+nonisolated enum AuthError: Error, LocalizedError, Sendable {
     case biometryNotAvailable
     case biometryNotEnrolled
     case biometryLockout
@@ -63,7 +63,7 @@ enum AuthError: Error, LocalizedError, Sendable {
 /// The app only receives a boolean result. Apple's hardware handles the actual
 /// biometric matching in an isolated processor. We cannot (and should not)
 /// access raw biometric data.
-final class BiometricAuthManager: BiometricAuthManagerProtocol {
+nonisolated final class BiometricAuthManager: BiometricAuthManagerProtocol {
 
     func getBiometryType() -> BiometryType {
         let context = LAContext()

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Predefined GraphQL queries for stock data operations
-enum StockGraphQLQueries {
+nonisolated enum StockGraphQLQueries {
 
     // MARK: - Stock Quotes (Multiple Symbols)
 

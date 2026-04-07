@@ -6,7 +6,7 @@
 //
 import Foundation
 // MARK: - Finnhub Response Model
-struct FinnhubResponseMapper: Decodable {
+nonisolated struct FinnhubResponseMapper: Decodable {
     let type: String
     let data: [Trade]?
     struct Trade: Decodable {

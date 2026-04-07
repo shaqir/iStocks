@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum TabViewEnum: Identifiable, CaseIterable, Hashable {
+nonisolated enum TabViewEnum: Identifiable, CaseIterable, Hashable {
     case watchlist, orders, portfolio, research, settings
 
     var id: Self { self }

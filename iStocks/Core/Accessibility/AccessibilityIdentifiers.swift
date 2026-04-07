@@ -8,7 +8,7 @@
 import Foundation
 
 /// Centralized accessibility identifiers for UI testing
-enum AccessibilityID {
+nonisolated enum AccessibilityID {
     enum Watchlist {
         static let tabBar = "watchlist_tab_bar"
         static let stockRow = "watchlist_stock_row"

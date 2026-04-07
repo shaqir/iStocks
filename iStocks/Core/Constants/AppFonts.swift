@@ -8,7 +8,7 @@
 import UIKit
 import SwiftUI
 
-enum AppFont {
+nonisolated enum AppFont {
     // MARK: - UIKit fonts
     struct UIKit {
         static func regular(size: CGFloat) -> UIFont {

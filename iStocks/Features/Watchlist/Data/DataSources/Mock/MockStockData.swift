@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct MockStockData {
+nonisolated struct MockStockData {
     
     static let allStocks: [Stock] = {
         let rawStocks: [Stock] = [

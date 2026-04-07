@@ -8,7 +8,7 @@
 import Foundation
 
 /// Maps GraphQL DTOs to domain Stock entities
-enum GraphQLResponseMapper {
+nonisolated enum GraphQLResponseMapper {
 
     // MARK: - Map Array
 

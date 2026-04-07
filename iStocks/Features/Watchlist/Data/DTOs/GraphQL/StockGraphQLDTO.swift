@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Generic GraphQL Response Wrapper
 
-struct GraphQLResponse<T: Decodable>: Decodable {
+nonisolated struct GraphQLResponse<T: Decodable>: Decodable {
     let data: T?
     let errors: [GraphQLErrorDetail]?
 }
@@ -17,23 +17,23 @@ struct GraphQLResponse<T: Decodable>: Decodable {
 // MARK: - Stock Quotes Response
 
 /// Maps the `data.stockQuotes` field from the GraphQL response
-struct StockQuotesGraphQLResponse: Decodable {
+nonisolated struct StockQuotesGraphQLResponse: Decodable {
     let stockQuotes: [StockGraphQLDTO]
 }
 
 /// Maps the `data.top50Stocks` field from the GraphQL response
-struct Top50StocksGraphQLResponse: Decodable {
+nonisolated struct Top50StocksGraphQLResponse: Decodable {
     let top50Stocks: [StockGraphQLDTO]
 }
 
 /// Maps the `data.stockPrice` field for a single stock query
-struct StockPriceGraphQLResponse: Decodable {
+nonisolated struct StockPriceGraphQLResponse: Decodable {
     let stockPrice: StockGraphQLDTO
 }
 
 // MARK: - Stock GraphQL DTO
 
-struct StockGraphQLDTO: Decodable {
+nonisolated struct StockGraphQLDTO: Decodable {
     let symbol: String
     let name: String?
     let price: Double?

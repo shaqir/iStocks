@@ -8,7 +8,7 @@ import Combine
 import Foundation
 
 //This protocol defines a single requirement: stockPublisher, which is a Combine publisher that emits an array of Stock objects over time.
-protocol StockStreamingServiceProtocol {
+nonisolated protocol StockStreamingServiceProtocol {
     var stockPublisher: AnyPublisher<[Stock], any Error> { get }
     func start()
     func stop()
@@ -16,7 +16,7 @@ protocol StockStreamingServiceProtocol {
 
 //This class mocks a real-time stock streaming service by simulating stock price updates at regular intervals.
 //It conforms to the StockStreamingService protocol.
-final class MockStockStreamingService: StockStreamingServiceProtocol {
+nonisolated final class MockStockStreamingService: StockStreamingServiceProtocol {
     
     private var stocks: [Stock]
     

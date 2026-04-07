@@ -9,7 +9,8 @@ import Foundation
 
 /// Aggregate model representing the portfolio dashboard state.
 /// Combines holdings, news, and summary metrics into a single view-ready model.
-struct Dashboard: Sendable {
+/// NOTE (Swift 6.2): nonisolated — domain entities must work across all isolation contexts.
+nonisolated struct Dashboard: Sendable {
 
     let holdings: [Holding]
     let news: [News]

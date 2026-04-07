@@ -6,7 +6,7 @@
 //
 import Foundation
 
-enum PriceResponseMapper {
+nonisolated enum PriceResponseMapper {
     static func map(data: Data) throws -> [Stock] {
         let decoded = try JSONDecoder().decode([String: StockPriceDTO].self, from: data)
 

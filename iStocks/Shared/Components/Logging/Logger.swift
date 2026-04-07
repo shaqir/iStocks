@@ -10,7 +10,12 @@ import OSLog
 
 /// Production-grade logging system using os.Logger
 /// Provides structured logging with different levels and automatic log filtering
-enum AppLogger {
+///
+/// NOTE (Swift 6.2): Explicitly nonisolated because logging must be callable from any
+/// isolation context — actors, TaskGroups, @concurrent functions, etc.
+/// With defaultIsolation(MainActor.self), this enum would otherwise be implicitly
+/// MainActor-isolated, making it impossible to log from background work.
+nonisolated enum AppLogger {
     
     // MARK: - Subsystem
     private static let subsystem = Bundle.main.bundleIdentifier ?? "com.iStocks"
@@ -82,8 +87,8 @@ enum AppLogger {
 // MARK: - Legacy Logger Compatibility
 // Provides backward compatibility for existing code
 @available(*, deprecated, message: "Use AppLogger instead")
-enum Logger {
-    static var isEnabled = true
+nonisolated enum Logger {
+    nonisolated(unsafe) static var isEnabled = true
 
     static func log(_ message: String, category: String = "General") {
         guard isEnabled else { return }

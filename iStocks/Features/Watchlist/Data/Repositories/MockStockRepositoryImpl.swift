@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-final class MockStockRepositoryImpl: MockWatchlistRepository {
+nonisolated final class MockStockRepositoryImpl: MockWatchlistRepository {
     
     private let mockService: StockStreamingServiceProtocol
     

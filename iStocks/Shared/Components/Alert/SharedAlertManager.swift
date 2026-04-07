@@ -50,7 +50,9 @@ final class SharedAlertManager: ObservableObject {
     }
 }
 
-struct SharedAlertData: Identifiable, Equatable {
+/// NOTE (Swift 6.2): nonisolated so alert data can be constructed from any isolation context
+/// (e.g., Data layer error handlers that may run outside MainActor).
+nonisolated struct SharedAlertData: Identifiable, Equatable {
     let id = UUID()
     let title: String
     let message: String

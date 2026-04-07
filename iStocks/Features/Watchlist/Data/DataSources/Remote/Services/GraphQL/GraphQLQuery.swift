@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Variable Type
 
 /// Represents a GraphQL variable value that can be encoded as JSON
-enum GraphQLVariable: Encodable {
+nonisolated enum GraphQLVariable: Encodable {
     case string(String)
     case int(Int)
     case double(Double)
@@ -40,7 +40,7 @@ enum GraphQLVariable: Encodable {
 // MARK: - GraphQL Query
 
 /// Represents a GraphQL query with optional variables and operation name
-struct GraphQLQuery: Encodable {
+nonisolated struct GraphQLQuery: Encodable {
     let query: String
     let variables: [String: GraphQLVariable]?
     let operationName: String?

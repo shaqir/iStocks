@@ -10,10 +10,10 @@ import XCTest
 
 // MARK: - Mock
 
-final class MockBiometricAuthManager: BiometricAuthManagerProtocol {
-    var authenticateResult: Result<Bool, Error> = .success(true)
-    var biometryTypeValue: BiometryType = .faceID
-    var isAvailable = true
+nonisolated final class MockBiometricAuthManager: BiometricAuthManagerProtocol {
+    nonisolated(unsafe) var authenticateResult: Result<Bool, Error> = .success(true)
+    nonisolated(unsafe) var biometryTypeValue: BiometryType = .faceID
+    nonisolated(unsafe) var isAvailable = true
 
     func authenticate(reason: String) async throws -> Bool {
         try authenticateResult.get()

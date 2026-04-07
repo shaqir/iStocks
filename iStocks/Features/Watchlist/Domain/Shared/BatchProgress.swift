@@ -5,7 +5,7 @@
 //  Created by Sakir Saiyed on 2025-07-20.
 //
 import Foundation
-struct BatchProgress {
+nonisolated struct BatchProgress {
     let current: Int
     let total: Int
     let retryCount: Int

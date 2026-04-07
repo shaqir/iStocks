@@ -14,7 +14,7 @@ import Foundation
 /// uses APIClient for remote data and PortfolioCache for offline support.
 /// Sendable conformance is required because this protocol is used across
 /// actor boundaries (PortfolioActor calls through use cases that hold this).
-protocol StockRepositoryProtocol: Sendable {
+nonisolated protocol StockRepositoryProtocol: Sendable {
 
     /// Fetches the user's portfolio holdings from remote or cache.
     func fetchHoldings(userId: String) async throws -> [Holding]

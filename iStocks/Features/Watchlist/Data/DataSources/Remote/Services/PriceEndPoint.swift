@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PriceEndpoint {
+nonisolated struct PriceEndpoint {
     static func forSymbols(_ symbols: [String], apiKey: String) -> Endpoint {
         return Endpoint(
             path: "/price",

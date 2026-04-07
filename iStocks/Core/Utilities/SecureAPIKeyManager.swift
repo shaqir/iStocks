@@ -9,7 +9,7 @@ import Foundation
 
 /// Secure API key management
 /// Retrieves API keys from environment variables or secure storage
-enum SecureAPIKeyManager {
+nonisolated enum SecureAPIKeyManager {
     
     // MARK: - API Keys
     

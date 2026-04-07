@@ -11,7 +11,10 @@ import Foundation
 /// Contains only data that APIs actually provide — market prices, exchange info,
 /// and sector classification. Portfolio data (qty, averageBuyPrice) belongs in
 /// the Dashboard's Holding entity where real position data is available.
-struct Stock: Identifiable, Codable, Equatable {
+///
+/// NOTE (Swift 6.2): nonisolated because domain entities are used across all isolation
+/// contexts — actors, TaskGroups, Combine pipelines, and @concurrent functions.
+nonisolated struct Stock: Identifiable, Codable, Equatable, Sendable {
     
     /// Unique identifier derived from stock symbol
     var id: String { symbol }
@@ -50,7 +53,7 @@ struct Stock: Identifiable, Codable, Equatable {
     }
 }
 
-extension Stock {
+nonisolated extension Stock {
     
     var priceChangeText: String {
         let diff = price - previousPrice

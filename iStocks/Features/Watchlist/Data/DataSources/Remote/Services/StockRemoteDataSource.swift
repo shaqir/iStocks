@@ -9,7 +9,7 @@ import Combine
 
 // MARK: - Protocol
 
-protocol StockRemoteDataSourceProtocol {
+nonisolated protocol StockRemoteDataSourceProtocol {
     func fetchRealtimePrices(for symbols: [String]) -> AnyPublisher<[Stock], Error>
     func fetchRealtimePricesForTop50InBatches(
         _ symbols: [String],
@@ -18,11 +18,11 @@ protocol StockRemoteDataSourceProtocol {
     ) -> AnyPublisher<[Stock], Error>
 }
 
-typealias BatchProgressHandler = (_ batchIndex: Int, _ totalBatches: Int, _ retryAttempt: Int, _ success: Bool) -> Void
+typealias BatchProgressHandler = @Sendable (_ batchIndex: Int, _ totalBatches: Int, _ retryAttempt: Int, _ success: Bool) -> Void
 
 // MARK: - Implementation
 
-final class StockRemoteDataSource: StockRemoteDataSourceProtocol {
+nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @unchecked Sendable {
     
     // MARK: - Dependencies
 

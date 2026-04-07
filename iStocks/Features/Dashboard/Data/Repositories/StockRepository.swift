@@ -65,7 +65,9 @@ final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
 /// The associated type `Response` tells the APIClient exactly what to decode.
 /// No manual JSON parsing — the generic client handles it all.
 
-struct PriceQuoteEndpoint: APIEndpoint {
+/// NOTE (Swift 6.2): nonisolated because endpoint and response types must satisfy
+/// Sendable + Decodable protocol requirements across isolation boundaries.
+nonisolated struct PriceQuoteEndpoint: APIEndpoint {
     typealias Response = PriceResponse
 
     let symbol: String
@@ -80,7 +82,8 @@ struct PriceQuoteEndpoint: APIEndpoint {
 }
 
 /// Response DTO for price endpoint — Sendable for actor boundary crossing.
-struct PriceResponse: Decodable, Sendable {
+/// NOTE (Swift 6.2): nonisolated so Decodable conformance doesn't conflict with MainActor default.
+nonisolated struct PriceResponse: Decodable, Sendable {
     let price: Double
 
     init(from decoder: Decoder) throws {

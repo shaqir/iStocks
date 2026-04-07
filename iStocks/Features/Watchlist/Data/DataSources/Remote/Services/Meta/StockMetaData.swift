@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct StockMetadata: Codable, Identifiable {
+nonisolated struct StockMetadata: Codable, Identifiable {
     var id: String { symbol }
     let symbol: String
     let name: String

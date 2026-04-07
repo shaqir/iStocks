@@ -8,7 +8,7 @@
 import Foundation
 
 /// Use case protocol for authentication — domain layer, zero framework imports.
-protocol AuthenticateUserUseCaseProtocol {
+nonisolated protocol AuthenticateUserUseCaseProtocol: Sendable {
     func execute(reason: String) async throws -> Bool
     func isBiometricsAvailable() -> Bool
 }
@@ -19,7 +19,8 @@ protocol AuthenticateUserUseCaseProtocol {
 /// The ViewModel depends on the UseCase protocol, not the Repository directly.
 /// If authentication logic grows (e.g., combining biometrics + PIN + server
 /// token refresh), the complexity lives here — not in the ViewModel.
-final class AuthenticateUserUseCase: AuthenticateUserUseCaseProtocol {
+/// NOTE (Swift 6.2): @unchecked Sendable — immutable after init, safe to cross actor boundaries.
+nonisolated final class AuthenticateUserUseCase: AuthenticateUserUseCaseProtocol, @unchecked Sendable {
 
     private let authRepository: AuthRepositoryProtocol
 

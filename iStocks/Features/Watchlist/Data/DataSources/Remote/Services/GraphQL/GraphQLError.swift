@@ -10,13 +10,13 @@ import Foundation
 // MARK: - GraphQL Error Detail
 
 /// Represents a single error returned in the GraphQL response `errors` array
-struct GraphQLErrorDetail: Decodable, Equatable {
+nonisolated struct GraphQLErrorDetail: Decodable, Equatable {
     let message: String
     let locations: [GraphQLErrorLocation]?
     let path: [String]?
 }
 
-struct GraphQLErrorLocation: Decodable, Equatable {
+nonisolated struct GraphQLErrorLocation: Decodable, Equatable {
     let line: Int
     let column: Int
 }
@@ -24,7 +24,7 @@ struct GraphQLErrorLocation: Decodable, Equatable {
 // MARK: - GraphQL Error
 
 /// Domain-level errors specific to GraphQL operations
-enum GraphQLError: LocalizedError {
+nonisolated enum GraphQLError: LocalizedError {
     case queryFailed(String)
     case invalidResponse
     case graphQLErrors([GraphQLErrorDetail])
