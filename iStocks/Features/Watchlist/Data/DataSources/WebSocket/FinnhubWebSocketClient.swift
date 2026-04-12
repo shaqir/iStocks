@@ -10,22 +10,36 @@ import Combine
 
 // MARK: - Protocol
 
-nonisolated protocol WebSocketClient {
-    func connect()
-    func disconnect(clearPending: Bool)
-    func subscribe(to symbols: [String])
+/// NOTE (Swift 6.2): Protocol is async because implementations delegate to actors.
+/// Callers bridge via `Task { await client.connect() }` from synchronous contexts.
+nonisolated protocol WebSocketClient: Sendable {
+    func connect() async
+    func disconnect(clearPending: Bool) async
+    func subscribe(to symbols: [String]) async
     var stockPublisher: AnyPublisher<StockFinnPriceDTO, Never> { get }
 }
 
 // MARK: - Connection State Enum
-nonisolated enum WebSocketConnectionState {
+nonisolated enum WebSocketConnectionState: Sendable {
     case disconnected, connecting, connected, reconnecting
 }
 
-/// NOTE (Swift 6.2): nonisolated because WebSocket client is a Data layer component
-/// managing network I/O — should not be MainActor-isolated.
-nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
-    
+/// Finnhub WebSocket client — thin NSObject coordinator over actor-isolated state.
+///
+/// Migration (Swift 6.2): Previously, this class owned all mutable state (connectionState,
+/// subscribedSymbols, pendingSymbols, messageQueue) in a nonisolated class, relying on
+/// the URLSession delegateQueue being .main for thread safety. Now:
+///
+/// - **WebSocketConnectionActor** owns all mutable connection state (compiler-enforced isolation)
+/// - **ConnectionRetryManager** (actor) handles retry scheduling via Task.sleep
+/// - This class retains NSObject only for URLSessionWebSocketDelegate conformance
+/// - State access requires `await`, making thread-safety visible at every call site
+///
+/// Why not make this class itself an actor?
+/// → Actors cannot inherit from NSObject, which is required for URLSessionWebSocketDelegate.
+///   This is the standard composition pattern: actor for state, class for delegate conformance.
+nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient, @unchecked Sendable {
+
     override init() {
         super.init()
         session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
@@ -35,29 +49,25 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     private var apiKey: String {
         SecureAPIKeyManager.finnhubAPIKey
     }
-    private var session: URLSession!  // Initialized in init after super.init
+    private var session: URLSession!
     private var webSocketTask: URLSessionWebSocketTask?
     private let stockSubject = PassthroughSubject<StockFinnPriceDTO, Never>()
     var stockPublisher: AnyPublisher<StockFinnPriceDTO, Never> {
         stockSubject.eraseToAnyPublisher()
     }
 
-    private(set) var connectionState: WebSocketConnectionState = .disconnected
-    private var heartbeatTimer: Timer?
-    private var subscribedSymbols: Set<String> = []
-    private var pendingSymbols: Set<String> = []
-    private var messageQueue: [URLSessionWebSocketTask.Message] = []
-    private var isReadyToSubscribe = false
-    private var subscribeRetryAttempts = 0
-    private let maxSubscribeRetryAttempts = 5
+    /// Actor-isolated connection state — replaces the 8 mutable instance variables
+    /// that previously relied on "always call from main queue" for thread safety.
+    private let connectionActor = WebSocketConnectionActor()
     private let reconnectManager = ConnectionRetryManager()
+    private var heartbeatTask: Task<Void, Never>?
 
     private var url: URL? {
         var components = URLComponents()
         components.scheme = "wss"
         components.host = "ws.finnhub.io"
         components.queryItems = [URLQueryItem(name: "token", value: apiKey)]
-        
+
         guard let url = components.url else {
             AppLogger.error("Invalid WebSocket URL — check API key configuration", category: AppLogger.webSocket)
             return nil
@@ -65,50 +75,20 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
         return url
     }
 
-    // MARK: - State Machine
-
-    /// Enforces valid WebSocket state transitions. Invalid transitions are logged
-    /// and trigger an assertion failure in DEBUG builds.
-    ///
-    /// Valid transitions:
-    /// - disconnected  → connecting
-    /// - connecting    → connected | disconnected
-    /// - connected     → disconnected | reconnecting
-    /// - reconnecting  → connecting | disconnected
-    private func transition(to newState: WebSocketConnectionState) {
-        let validTransitions: [WebSocketConnectionState: Set<WebSocketConnectionState>] = [
-            .disconnected: [.connecting],
-            .connecting:   [.connected, .disconnected],
-            .connected:    [.disconnected, .reconnecting],
-            .reconnecting: [.connecting, .disconnected],
-        ]
-
-        guard let allowed = validTransitions[connectionState], allowed.contains(newState) else {
-            AppLogger.error(
-                "Invalid WebSocket state transition: \(connectionState) → \(newState)",
-                category: AppLogger.webSocket
-            )
-            #if DEBUG
-            assertionFailure("Invalid WebSocket state transition: \(connectionState) → \(newState)")
-            #endif
-            return
-        }
-
-        connectionState = newState
-    }
-
     // MARK: - Connection Lifecycle
-    func connect() {
-        guard connectionState != .connected && connectionState != .connecting else { return }
+
+    func connect() async {
+        let state = await connectionActor.connectionState
+        guard state != .connected && state != .connecting else { return }
 
         guard let url = url else {
             AppLogger.error("Cannot connect: Invalid WebSocket URL", category: AppLogger.webSocket)
-            transition(to: .disconnected)
+            await connectionActor.transition(to: .disconnected)
             return
         }
 
-        disconnect(clearPending: false)
-        transition(to: .connecting)
+        await disconnectInternal(clearPending: false)
+        await connectionActor.transition(to: .connecting)
         AppLogger.info("Connecting to \(url.absoluteString)", category: AppLogger.webSocket)
 
         let request = URLRequest(url: url)
@@ -118,49 +98,56 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
         startHeartbeat()
     }
 
-    func disconnect(clearPending: Bool = false) {
-        heartbeatTimer?.invalidate()
+    func disconnect(clearPending: Bool = false) async {
+        await disconnectInternal(clearPending: clearPending)
+    }
+
+    private func disconnectInternal(clearPending: Bool) async {
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
-        resetConnectionState(clearPending: clearPending)
+        await connectionActor.markDisconnected(clearPending: clearPending)
     }
 
-    private func resetConnectionState(clearPending: Bool) {
-        transition(to: .disconnected)
-        isReadyToSubscribe = false
-        subscribedSymbols.removeAll()
-        messageQueue.removeAll()
-        subscribeRetryAttempts = 0
-        if clearPending { pendingSymbols.removeAll() }
-    }
-
-    private func reconnect() {
-        guard connectionState != .reconnecting else { return }
-        if reconnectManager.hasReachedMaxAttempts {
+    private func reconnect() async {
+        let state = await connectionActor.connectionState
+        guard state != .reconnecting else { return }
+        let maxed = await reconnectManager.hasReachedMaxAttempts
+        if maxed {
             AppLogger.warning("Max reconnect attempts reached", category: AppLogger.webSocket)
             return
         }
-        transition(to: .reconnecting)
-        reconnectManager.scheduleRetry(taskName: "Finnhub Reconnect") { [weak self] in self?.connect() }
+        await connectionActor.transition(to: .reconnecting)
+        await reconnectManager.scheduleRetry(taskName: "Finnhub Reconnect") { [weak self] in
+            await self?.connect()
+        }
     }
 
+    /// Heartbeat using structured concurrency — replaces Timer.scheduledTimer.
+    ///
+    /// Migration note: Timer requires RunLoop and isn't cancellation-aware.
+    /// Task.sleep integrates with Swift's cooperative cancellation system.
     private func startHeartbeat() {
-        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: AppConstants.heartbeatIntervalSeconds, repeats: true) { [weak self] _ in
-            self?.sendJSON(["type": "heartbeat"])
+        heartbeatTask?.cancel()
+        heartbeatTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(AppConstants.heartbeatIntervalSeconds))
+                guard !Task.isCancelled else { break }
+                self?.sendJSON(["type": "heartbeat"])
+            }
         }
     }
 
     // MARK: - Sending Messages
-    func send(_ message: URLSessionWebSocketTask.Message) {
-        guard connectionState == .connected else {
-            guard messageQueue.count < AppConstants.maxWebSocketMessageQueueSize else {
-                AppLogger.warning("WebSocket message queue full — applying backpressure, dropping message", category: AppLogger.webSocket)
-                return
-            }
-            messageQueue.append(message)
+
+    func send(_ data: Data) async {
+        let state = await connectionActor.connectionState
+        guard state == .connected else {
+            let _ = await connectionActor.enqueueMessage(data)
             return
         }
-        webSocketTask?.send(message) { error in
+        webSocketTask?.send(.data(data)) { error in
             if let error = error {
                 AppLogger.error("Send failed", category: AppLogger.webSocket, error: error)
             }
@@ -169,38 +156,25 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
 
     private func sendJSON(_ payload: [String: Any]) {
         guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
-        send(.data(data))
+        Task { await send(data) }
     }
 
     // MARK: - Subscriptions
-    func subscribe(to symbols: [String]) {
-        let newSymbols = Set(symbols).subtracting(subscribedSymbols)
-        guard !newSymbols.isEmpty else { return }
-        pendingSymbols.formUnion(newSymbols)
-        retryConnectIfNeeded(triggeredBy: "subscribe")
-        subscribeToPendingSymbolsIfNeeded()
-    }
 
-    private func subscribeToPendingSymbolsIfNeeded() {
-        guard connectionState == .connected, isReadyToSubscribe, !pendingSymbols.isEmpty else { return }
-        for symbol in pendingSymbols {
-            sendJSON(["type": "subscribe", "symbol": symbol])
+    func subscribe(to symbols: [String]) async {
+        let result = await connectionActor.addSymbols(symbols)
+
+        if result.shouldSubscribeNow {
+            for symbol in result.newSymbols {
+                sendJSON(["type": "subscribe", "symbol": symbol])
+            }
+        } else if result.needsReconnect {
+            await reconnect()
         }
-        subscribedSymbols.formUnion(pendingSymbols)
-        pendingSymbols.removeAll()
-    }
-
-    private func retryConnectIfNeeded(triggeredBy: String) {
-        guard connectionState != .connected && connectionState != .connecting else { return }
-        reconnect()
-    }
-
-    private func flushMessageQueue() {
-        messageQueue.forEach { send($0) }
-        messageQueue.removeAll()
     }
 
     // MARK: - Listening
+
     private func listen() {
         webSocketTask?.receive { [weak self] result in
             guard let self else { return }
@@ -218,15 +192,15 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
                 }
             case .failure(let error):
                 AppLogger.error("Receive error", category: AppLogger.webSocket, error: error)
-                self.transition(to: .disconnected)
-                self.isReadyToSubscribe = false
-                self.reconnect()
+                Task {
+                    await self.connectionActor.markDisconnected(clearPending: false)
+                    await self.reconnect()
+                }
             }
         }
     }
 
     private func handleIncoming(_ data: Data) {
-        // Debug logging removed - only log errors
         do {
             let message = try JSONDecoder().decode(FinnhubResponseMapper.self, from: data)
             if message.type == "trade", let trades = message.data {
@@ -241,28 +215,39 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient {
     }
 }
 
-/// NOTE (Swift 6.2): nonisolated conformance because URLSession delegate callbacks
-/// are invoked by URLSession's internal machinery, not from MainActor context.
-/// The delegate queue is set to .main in init, so these run on the main thread,
-/// but the protocol conformance itself must be nonisolated to satisfy the compiler.
+// MARK: - URLSession Delegate
+
+/// NOTE (Swift 6.2): @preconcurrency bridges the pre-concurrency URLSession delegate protocol.
+/// Delegate callbacks arrive on .main (delegateQueue set in init), then forward to the actor.
 extension FinnhubWebSocketClient: @preconcurrency URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         #if DEBUG
         MainActor.assertIsolated("WebSocket delegate must run on main thread — delegateQueue is .main")
         #endif
         AppLogger.info("Connected", category: AppLogger.webSocket)
-        transition(to: .connected)
-        isReadyToSubscribe = true
-        reconnectManager.reset()
-        flushMessageQueue()
-        subscribeToPendingSymbolsIfNeeded()
+
+        Task {
+            let (symbolsToSubscribe, queuedMessages) = await connectionActor.markConnected()
+            await reconnectManager.reset()
+
+            // Flush queued messages
+            for data in queuedMessages {
+                await send(data)
+            }
+
+            // Subscribe to pending symbols
+            for symbol in symbolsToSubscribe {
+                sendJSON(["type": "subscribe", "symbol": symbol])
+            }
+        }
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         AppLogger.info("Disconnected", category: AppLogger.webSocket)
-        transition(to: .disconnected)
-        isReadyToSubscribe = false
-        reconnect()
+        Task {
+            await connectionActor.markDisconnected(clearPending: false)
+            await reconnect()
+        }
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {

@@ -60,17 +60,48 @@
 - Add backpressure logging
 - Document collect + dedup strategy
 
-### Step 5: @concurrent Annotations
-- Mark CPU-intensive functions with `@concurrent` (mappers, batch processing)
+### Step 5: @concurrent Annotations (SE-0461)
+- Add `@concurrent` to `WatchlistsViewModel.buildWatchlists(from:existingWatchlists:)` — CPU-intensive sector grouping
+- Extract shared `buildWatchlistsSync()` as `nonisolated static` pure function
+- REST path (50+ stocks) uses async `rebuildWatchlistsOffMainActor()` → @concurrent
+- Mock/test path keeps synchronous `rebuildWatchlistsFromMasterStocks()`
 
 ### Step 6: StockFormatter Utility
 - Create centralized formatting with cached NumberFormatters
 
 ### Step 7: Sendable Conformances
 - Add explicit Sendable to all DTOs crossing isolation boundaries
+- Make `WebSocketConnectionState` explicitly `Sendable`
+- Make `WebSocketClient` protocol require `Sendable` conformance
 
 ### Step 8: nonisolated / @concurrent Audit
 - Ensure heavy computation is explicitly opted out of MainActor
+
+### Step 9: WebSocket State → Actor Extraction
+- Create `WebSocketConnectionActor` — owns all mutable WebSocket connection state
+  - connectionState, subscribedSymbols, pendingSymbols, messageQueue, isReadyToSubscribe
+  - State machine `transition(to:)` with enforced transition table
+  - `markConnected()` / `markDisconnected()` return actions for the coordinator
+  - `addSymbols()` returns whether to subscribe now or reconnect
+  - `enqueueMessage()` with bounded buffer + backpressure
+- `FinnhubWebSocketClient` becomes thin NSObject coordinator:
+  - Retains NSObject only for URLSessionWebSocketDelegate (actors can't inherit)
+  - All state access goes through `await connectionActor.*`
+  - Delegate callbacks bridge sync → async via `Task { await }`
+- Protocol becomes async: `connect() async`, `disconnect() async`, `subscribe() async`
+- Repository bridges via `Task { await }` in synchronous interface methods
+
+### Step 10: ConnectionRetryManager → Actor + Task.sleep
+- Convert from `nonisolated final class` to `actor`
+- Replace `DispatchQueue.asyncAfter` with `Task.sleep(for:)` — cancellation-aware
+- Replace `DispatchWorkItem` with `Task<Void, Never>` — structured cancellation
+- Retry closure becomes `@Sendable @escaping () async -> Void`
+- Actor isolation protects mutable retry state (attempt count, active task)
+
+### Step 11: Heartbeat Timer → Structured Concurrency
+- Replace `Timer.scheduledTimer` with `Task` + `Task.sleep` loop
+- Cooperative cancellation: `heartbeatTask?.cancel()` stops the loop cleanly
+- No RunLoop dependency — works from any isolation context
 
 ---
 
@@ -108,6 +139,21 @@ _Challenges encountered during migration are documented below as they occur._
 - **Resolution**: Marked `cancellables` as `nonisolated(unsafe)` — safe because the coordinator is only used on the main thread.
 - **Lesson**: `deinit` in MainActor classes is a known pain point in Swift 6. `nonisolated(unsafe)` is the standard workaround for properties accessed only in deinit cleanup.
 
+### Challenge 7: Actors cannot inherit from NSObject
+- **Issue**: `FinnhubWebSocketClient` inherits from `NSObject` for `URLSessionWebSocketDelegate` conformance. Actors cannot inherit from classes, so it can't be converted to an actor directly.
+- **Resolution**: Composition over inheritance — extracted a `WebSocketConnectionActor` that owns all mutable state. The class retains NSObject only for delegate conformance and delegates all state management to the actor. This is the same pattern used with `StockStateActor`.
+- **Lesson**: When migrating classes with delegate conformance to actors, use the "actor extraction" pattern: keep a thin class for the delegate protocol, move state into a dedicated actor.
+
+### Challenge 8: Sync delegate callbacks → async actor access
+- **Issue**: `URLSessionWebSocketDelegate` methods are synchronous, but accessing actor state requires `await`. You can't `await` from a synchronous context.
+- **Resolution**: Bridge with `Task { await connectionActor.markConnected() }`. The delegate runs on .main (delegateQueue set in init), and the Task inherits MainActor context, so there's no reordering issue for the happy path. State changes that need immediate effect (like flushing queued messages) are handled in the Task continuation.
+- **Lesson**: When bridging delegate-based APIs to actors, `Task { await }` is the standard pattern. Accept the one-hop delay — the alternative (keeping mutable state in a non-isolated class) is worse.
+
+### Challenge 9: Timer → Task.sleep migration in heartbeat
+- **Issue**: `Timer.scheduledTimer` requires RunLoop and isn't cancellation-aware. Also, Timer fire closures capture `self` and need careful weak-self management.
+- **Resolution**: Replaced with a `Task` containing a `while !Task.isCancelled` loop with `Task.sleep(for:)`. Cancellation is cooperative and handled automatically. `heartbeatTask?.cancel()` cleanly stops the loop.
+- **Lesson**: For periodic work, `Task.sleep` in a loop is the structured concurrency replacement for `Timer`. It's simpler (no RunLoop, no weak-self) and integrates with Swift's cancellation system.
+
 ---
 
 ## Post-Migration State
@@ -121,9 +167,12 @@ _Challenges encountered during migration are documented below as they occur._
 | nonisolated types | 0 | 77 files |
 | @unchecked Sendable | 3 | 7 (all documented) |
 | nonisolated(unsafe) | 0 | 4 (deinit, legacy patterns) |
-| DispatchQueue calls | 9 | 9 (Combine schedulers retained) |
+| DispatchQueue calls | 9 | 7 (retry + heartbeat migrated to Task.sleep) |
+| Actors | 2 | 4 (+WebSocketConnectionActor, ConnectionRetryManager) |
+| @concurrent methods | 0 | 1 (buildWatchlists sector grouping) |
+| Timer usage | 1 | 0 (heartbeat → Task.sleep loop) |
 | Test methods | 197 | 200 (+3 PortfolioActor reentrancy) |
-| New files | - | StockFormatter.swift, TradeExecutionService.swift |
+| New files | - | StockFormatter.swift, TradeExecutionService.swift, WebSocketConnectionActor.swift |
 
 ## Key Patterns Demonstrated
 
@@ -135,3 +184,7 @@ _Challenges encountered during migration are documented below as they occur._
 6. **StockFormatter** — Centralized formatting with cached NumberFormatters
 7. **@unchecked Sendable** — Used pragmatically with documented safety justification
 8. **nonisolated(unsafe)** — For `deinit` and legacy `@Published` property wrapper limitations
+9. **Actor Extraction** — WebSocketConnectionActor owns state, NSObject class handles delegates (actors can't inherit)
+10. **DispatchQueue → Task.sleep** — ConnectionRetryManager exponential backoff with cooperative cancellation
+11. **Timer → Task loop** — Heartbeat using `while !Task.isCancelled` + `Task.sleep(for:)`
+12. **@concurrent (SE-0461)** — Off-MainActor CPU work for 50+ stock sector grouping in ViewModel

@@ -172,24 +172,26 @@ extension WatchlistsViewModel {
     func loadTop50StockPricesFromServer(preservingExisting: Bool) {
         executeTop50StockLoad(isManualRefresh: false, delay: 1.5) { [weak self] newStocks in
             guard let self else { return }
-            
+
             if preservingExisting {
                 self.appendToOrUpdateWatchlist(with: newStocks)
             } else {
                 self.allFetchedStocks = newStocks
             }
-            
+
             self.useCases.saveWatchlists.saveAllStocks(self.allFetchedStocks)
-            
+
             let previousSelectedID = self.watchlists.indices.contains(self.selectedIndex)
             ? self.watchlists[self.selectedIndex].id : nil
-            
-            self.rebuildWatchlistsFromMasterStocks()
-            
-            self.selectedIndex = self.watchlists.firstIndex(where: { $0.id == previousSelectedID }) ?? 0
-            self.saveAllWatchlists()
-            self.lastUpdated = Date()
-            self.isLoading = false
+
+            // Use @concurrent path — 50+ stocks from REST API justify off-MainActor computation
+            Task {
+                await self.rebuildWatchlistsOffMainActor()
+                self.selectedIndex = self.watchlists.firstIndex(where: { $0.id == previousSelectedID }) ?? 0
+                self.saveAllWatchlists()
+                self.lastUpdated = Date()
+                self.isLoading = false
+            }
         }
     }
     
@@ -232,23 +234,62 @@ extension WatchlistsViewModel {
         }
     }
     
-    /// Rebuilds the watchlists grouped by sector from allFetchedStocks
+    /// Rebuilds watchlists synchronously — used for mock data and test setup
+    /// where the dataset is small and immediate completion is needed.
     func rebuildWatchlistsFromMasterStocks() {
-        
-        let grouped = Dictionary(grouping: allFetchedStocks, by: { stock in
+        self.watchlists = Self.buildWatchlistsSync(
+            from: allFetchedStocks,
+            existingWatchlists: watchlists
+        )
+    }
+
+    /// Rebuilds watchlists asynchronously via @concurrent — used for REST/network
+    /// paths where 50+ stocks are processed and we want to keep MainActor free.
+    func rebuildWatchlistsOffMainActor() async {
+        self.watchlists = await Self.buildWatchlists(
+            from: allFetchedStocks,
+            existingWatchlists: watchlists
+        )
+    }
+
+    // MARK: - @concurrent Computation (SE-0461)
+
+    /// Pure computation that groups stocks by sector and deduplicates per symbol.
+    ///
+    /// NOTE (Swift 6.2): @concurrent explicitly runs this on the cooperative thread pool,
+    /// NOT on MainActor — even though this class is MainActor-isolated via defaultIsolation.
+    /// This is the correct pattern for CPU-intensive work in a ViewModel:
+    ///   1. Capture inputs (value types — Stock, Watchlist are Sendable)
+    ///   2. Compute off MainActor via @concurrent
+    ///   3. Return result to caller, who assigns it back on MainActor
+    @concurrent
+    private static func buildWatchlists(
+        from stocks: [Stock],
+        existingWatchlists: [Watchlist]
+    ) async -> [Watchlist] {
+        buildWatchlistsSync(from: stocks, existingWatchlists: existingWatchlists)
+    }
+
+    /// Synchronous implementation shared by both sync and @concurrent paths.
+    /// nonisolated because this is a pure computation — no actor state accessed.
+    nonisolated private static func buildWatchlistsSync(
+        from stocks: [Stock],
+        existingWatchlists: [Watchlist]
+    ) -> [Watchlist] {
+        let grouped = Dictionary(grouping: stocks, by: { stock in
             stock.sector.isEmpty ? "Technology" : stock.sector
         })
-        
+
         var updated: [Watchlist] = []
-        
+
         for (sector, stocksInSector) in grouped {
             let deduplicated = Array(
                 Dictionary(grouping: stocksInSector, by: \.symbol)
                     .compactMap { $0.value.first }
             )
-            
-            if let existingIndex = watchlists.firstIndex(where: { $0.name == sector }) {
-                var existing = watchlists[existingIndex]
+
+            if let existingIndex = existingWatchlists.firstIndex(where: { $0.name == sector }) {
+                var existing = existingWatchlists[existingIndex]
                 existing.stocks = deduplicated
                 updated.append(existing)
             } else {
@@ -256,8 +297,8 @@ extension WatchlistsViewModel {
                 updated.append(newWatchlist)
             }
         }
-        
-        self.watchlists = updated
+
+        return updated
     }
 }
 

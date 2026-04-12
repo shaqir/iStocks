@@ -4,7 +4,6 @@
 //
 //  Created by Sakir Saiyed on 2025-07-17.
 //
-// WebSocketStockRepository.swift
 
 import Foundation
 import Combine
@@ -18,12 +17,12 @@ nonisolated final class WebSocketStockRepositoryImpl: StockLiveRepository, @unch
     private let subject = PassthroughSubject<[Stock], Never>()
     private let stateActor = StockStateActor()
     private var cancellables = Set<AnyCancellable>()
-    
+
     init(webSocket: WebSocketClient) {
         self.webSocket = webSocket
         self.bindWebSocket()
     }
-    
+
     // MARK: - Bounded Buffer with Backpressure
     //
     // Strategy: The Combine pipeline below implements bounded buffering with backpressure:
@@ -51,20 +50,20 @@ nonisolated final class WebSocketStockRepositoryImpl: StockLiveRepository, @unch
             }
             .store(in: &cancellables)
     }
-    
+
     func observeStocks() -> AnyPublisher<[Stock], Error> {
-        webSocket.connect()//Connect to web socket
+        Task { await webSocket.connect() }
         return subject.setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-    
+
     func observeTop50Stocks() -> AnyPublisher<[Stock], Error> {
         subject.setFailureType(to: Error.self).eraseToAnyPublisher()
     }
-    
+
     func subscribeToSymbols(_ symbols: [String]) {
-        webSocket.subscribe(to: symbols)
+        Task { await webSocket.subscribe(to: symbols) }
     }
-    
+
     private func handle(_ dto: StockFinnPriceDTO) {
 
         guard let symbol = dto.symbol else {
