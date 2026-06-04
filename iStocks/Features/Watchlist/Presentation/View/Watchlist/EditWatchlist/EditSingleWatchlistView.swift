@@ -144,9 +144,7 @@ struct EditSingleWatchlistView: View {
         do {
             let updatedWatchlist = try viewModel.validateAndReturnWatchlist()
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            DispatchQueue.main.async {
-                watchlistDidSave.send(updatedWatchlist)
-            }
+            watchlistDidSave.send(updatedWatchlist)
             dismiss()
         } catch {
             if let stockError = error as? StockValidationError {

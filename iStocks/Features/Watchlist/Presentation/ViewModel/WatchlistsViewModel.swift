@@ -114,10 +114,7 @@ final class WatchlistsViewModel: ObservableObject {
             subscribeToBinanceSymbols()
         }
         
-        Task {
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
-            self.isLoading = false
-        }
+        self.isLoading = false
     }
 
 }
@@ -152,10 +149,7 @@ extension WatchlistsViewModel {
         self.allFetchedStocks = MockStockData.allStocks
         self.rebuildWatchlistsFromMasterStocks()
         self.saveAllWatchlists()
-        Task {
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
-            self.isLoading = false
-        }
+        self.isLoading = false
     }
     
     private func broadcastPricesToAllWatchlists(_ stocks: [Stock]) {
@@ -170,7 +164,7 @@ extension WatchlistsViewModel {
 extension WatchlistsViewModel {
     
     func loadTop50StockPricesFromServer(preservingExisting: Bool) {
-        executeTop50StockLoad(isManualRefresh: false, delay: 1.5) { [weak self] newStocks in
+        executeTop50StockLoad(isManualRefresh: false) { [weak self] newStocks in
             guard let self else { return }
             
             if preservingExisting {
@@ -195,7 +189,6 @@ extension WatchlistsViewModel {
     
     private func executeTop50StockLoad(
         isManualRefresh: Bool = false,
-        delay: TimeInterval = 1.0,
         completion: @escaping ([Stock]) -> Void
     ) {
         if isManualRefresh {
@@ -209,11 +202,7 @@ extension WatchlistsViewModel {
             .sink(receiveCompletion: { [weak self] completionResult in
                 guard let self else { return }
                 if isManualRefresh { self.isRefreshing = false }
-                let delayNs = UInt64(delay * 1_000_000_000)
-                Task {
-                    try? await Task.sleep(nanoseconds: delayNs)
-                    self.isLoading = false
-                }
+                self.isLoading = false
                 if case .failure(let error) = completionResult {
                     self.errorMessage = error.localizedDescription
                 }

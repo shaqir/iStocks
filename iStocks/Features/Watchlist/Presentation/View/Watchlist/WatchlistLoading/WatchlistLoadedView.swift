@@ -62,7 +62,8 @@ struct WatchlistLoadedView: View {
                         // Set animated symbols for visual feedback
                         viewModel.animatedSymbols = Set(updatedStocks.map(\.symbol))
                         // Optional: Clear animation after short delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.priceAnimationDuration) {
+                        Task {
+                            try? await Task.sleep(for: .seconds(AppConstants.priceAnimationDuration))
                             viewModel.animatedSymbols.removeAll()
                         }
                     }

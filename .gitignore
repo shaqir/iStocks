@@ -54,3 +54,5 @@ playground.xcworkspace
 AGENTS.md
 CLAUDE.md
 .claude/
+.agents/
+skills-lock.json
