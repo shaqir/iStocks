@@ -138,6 +138,9 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
                         }
                         updatedRetryCounts[index] += 1
 
+                        // GCD retained: PassthroughSubject and closure aren't Sendable,
+                        // so Task {} can't capture them. Acceptable per interop.md —
+                        // "GCD is still acceptable in framework interop."
                         DispatchQueue.global().asyncAfter(deadline: .now() + self.batchDelay) { [weak self] in
                             self?.fetchSequentiallyWithRetry(
                                 batches: batches,
@@ -155,6 +158,7 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
                 }
 
                 // Proceed to next batch after delay
+                // GCD retained: same Sendable constraint as retry path above.
                 DispatchQueue.global().asyncAfter(deadline: .now() + 60) { [weak self] in
                     self?.fetchSequentiallyWithRetry(
                         batches: batches,

@@ -32,7 +32,8 @@ final class SharedAlertManager: ObservableObject {
         self.alert = alert
 
         if let seconds = seconds {
-            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(seconds))
                 self.dismiss()
             }
         }
