@@ -14,7 +14,7 @@ protocol ObserveMockStocksUseCase {
     func execute() -> AnyPublisher<[Stock], Error>
 }
 
-final class ObserveMockStocksUseCaseImpl: ObserveMockStocksUseCase {
+nonisolated final class ObserveMockStocksUseCaseImpl: ObserveMockStocksUseCase {
     private let repository: WatchlistRepository
     
     init(repository: WatchlistRepository) {

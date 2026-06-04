@@ -12,7 +12,7 @@ import Foundation
 /// NOTE: This class demonstrates how the APIEndpoint protocol's associated types
 /// provide compile-time type safety. Each endpoint struct declares its own
 /// Response type — the client automatically decodes to the correct type.
-final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
+nonisolated final class StockRepository: StockRepositoryProtocol, @unchecked Sendable {
 
     private let apiClient: APIClientProtocol
 

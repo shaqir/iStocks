@@ -13,7 +13,7 @@ protocol SaveWatchlistsUseCase {
     func saveAllStocks(_ stocks: [Stock])
 }
 
-final class SaveWatchlistsUseCaseImpl: SaveWatchlistsUseCase {
+nonisolated final class SaveWatchlistsUseCaseImpl: SaveWatchlistsUseCase {
     private let persistenceService: WatchlistPersistenceProtocol
 
     init(persistenceService: WatchlistPersistenceProtocol) {

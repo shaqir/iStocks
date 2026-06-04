@@ -49,7 +49,9 @@ final class AuthViewModel: ObservableObject {
         return .faceID
     }
 
-    deinit {
+    /// nonisolated: avoids the MainActor isolated-deinit executor hop (buggy back-deploy
+    /// shim under defaultIsolation + iOS 18.x deployment target). See EditWatchlistViewModel.
+    nonisolated deinit {
         #if DEBUG
         print("[DEBUG] AuthViewModel deallocated — no retain cycle")
         #endif

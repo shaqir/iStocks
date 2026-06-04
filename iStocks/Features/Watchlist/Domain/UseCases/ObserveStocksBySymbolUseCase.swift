@@ -13,7 +13,7 @@ protocol FetchStocksBySymbolUseCase {
     func execute(for symbols: [String]) -> AnyPublisher<[Stock], Error>
 }
 
-final class FetchStocksBySymbolUseCaseImpl: FetchStocksBySymbolUseCase {
+nonisolated final class FetchStocksBySymbolUseCaseImpl: FetchStocksBySymbolUseCase {
     
     private let repository: RestStockRepository
     

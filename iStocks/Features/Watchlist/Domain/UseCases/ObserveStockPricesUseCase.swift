@@ -15,7 +15,7 @@ protocol ObserveStockPricesUseCase {
     func subscribe(to symbols: [String])
 }
 
-final class ObserveStockPricesUseCaseImpl: ObserveStockPricesUseCase {
+nonisolated final class ObserveStockPricesUseCaseImpl: ObserveStockPricesUseCase {
     private let repository: StockLiveRepository
     
     init(repository: StockLiveRepository) {

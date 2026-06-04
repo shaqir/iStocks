@@ -65,6 +65,11 @@ final class WatchlistViewModel: ObservableObject {
         self.watchlist = watchlist
         self.availableStocks = availableStocks
     }
+
+    /// nonisolated: avoids the MainActor isolated-deinit executor hop (buggy back-deploy
+    /// shim under defaultIsolation + iOS 18.x deployment target). See EditWatchlistViewModel.
+    nonisolated deinit { }
+
     // MARK: - Public API
     
     func requestRefresh() {

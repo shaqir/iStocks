@@ -7,7 +7,7 @@
 import Foundation
 import SwiftData
 
-final class WatchlistPersistenceService {
+nonisolated final class WatchlistPersistenceService {
     let context: ModelContext
     init(context: ModelContext) { self.context = context }
 }

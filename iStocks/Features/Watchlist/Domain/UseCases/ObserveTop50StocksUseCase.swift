@@ -13,7 +13,7 @@ protocol ObserveTop50StocksUseCase {
     func execute() -> AnyPublisher<[Stock], Error>
 }
 
-final class ObserveTop50StocksUseCaseImpl: ObserveTop50StocksUseCase {
+nonisolated final class ObserveTop50StocksUseCaseImpl: ObserveTop50StocksUseCase {
     let repository: RestStockRepository
 
     init(repository: RestStockRepository) {

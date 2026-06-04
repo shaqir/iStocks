@@ -10,7 +10,7 @@ import SwiftData
 
 /// The persistence model: represents a stock stored in SwiftData
 @Model
-class StockEntity {
+nonisolated class StockEntity {
     var id: UUID
     var symbol: String
     var name: String

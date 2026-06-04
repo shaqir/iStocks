@@ -12,7 +12,7 @@ protocol LoadWatchlistsUseCase {
     func loadAllStocks() -> [Stock]
 }
 
-final class LoadWatchlistsUseCaseImpl: LoadWatchlistsUseCase {
+nonisolated final class LoadWatchlistsUseCaseImpl: LoadWatchlistsUseCase {
     private let persistenceService: WatchlistPersistenceProtocol
 
     init(persistenceService: WatchlistPersistenceProtocol) {

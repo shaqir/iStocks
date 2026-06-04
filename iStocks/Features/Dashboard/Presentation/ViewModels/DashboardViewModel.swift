@@ -77,7 +77,7 @@ final class DashboardViewModel: ObservableObject {
     /// NOTE: deinit logging is my standard practice to catch retain cycles early.
     /// If this message never prints when navigating away, there's a leak.
     /// Use Instruments > Allocations to investigate further.
-    deinit {
+    nonisolated deinit {
         #if DEBUG
         print("[DEBUG] DashboardViewModel deallocated — no retain cycle")
         #endif

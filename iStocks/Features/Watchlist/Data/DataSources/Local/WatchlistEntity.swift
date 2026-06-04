@@ -8,7 +8,7 @@ import Foundation
 import SwiftData
 
 @Model
-class WatchlistEntity {
+nonisolated class WatchlistEntity {
     @Attribute(.unique) var id: UUID
     var name: String
     var orderIndex: Int

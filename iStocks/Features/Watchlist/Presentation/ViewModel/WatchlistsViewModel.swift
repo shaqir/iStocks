@@ -50,7 +50,11 @@ final class WatchlistsViewModel: ObservableObject {
         self.viewModelProvider = viewModelProvider
         setupBindings()
     }
-    
+
+    /// nonisolated: avoids the MainActor isolated-deinit executor hop (buggy back-deploy
+    /// shim under defaultIsolation + iOS 18.x deployment target). See EditWatchlistViewModel.
+    nonisolated deinit { }
+
     private func setupBindings() {
         
         viewModelProvider.watchlistDidUpdate

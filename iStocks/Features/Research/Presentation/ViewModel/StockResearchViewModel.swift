@@ -48,6 +48,10 @@ final class StockResearchViewModel: ObservableObject {
         urlString = Self.defaultURL.absoluteString
     }
 
+    /// nonisolated: avoids the MainActor isolated-deinit executor hop (buggy back-deploy
+    /// shim under defaultIsolation + iOS 18.x deployment target). See EditWatchlistViewModel.
+    nonisolated deinit { }
+
     // MARK: - Public API
 
     /// Attempts to load the URL currently entered in the URL bar

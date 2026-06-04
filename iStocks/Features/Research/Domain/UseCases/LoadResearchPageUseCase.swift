@@ -19,7 +19,7 @@ protocol LoadResearchPageUseCaseProtocol {
 /// Exists for architectural consistency — every feature has Domain use cases
 /// that ViewModels depend on, keeping the dependency direction clean:
 /// Presentation → Domain → Data
-final class LoadResearchPageUseCase: LoadResearchPageUseCaseProtocol {
+nonisolated final class LoadResearchPageUseCase: LoadResearchPageUseCaseProtocol {
 
     private let repository: ResearchRepositoryProtocol
 

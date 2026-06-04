@@ -30,6 +30,14 @@ final class EditWatchlistViewModel: ObservableObject {
         self.isNewWatchlist = isNewWatchlist
     }
 
+    /// NOTE (Swift 6.2): nonisolated deinit. Under defaultIsolation(MainActor.self) the
+    /// synthesized deinit would be MainActor-isolated and hop to the executor via the
+    /// back-deployment shim (swift_task_deinitOnExecutorMainActorBackDeploy), which has a
+    /// double-free bug when the deployment target predates the native runtime symbol.
+    /// The stored properties here (String, [Stock], PassthroughSubject) are safe to release
+    /// off the main actor, so an explicit nonisolated deinit avoids the executor hop.
+    nonisolated deinit { }
+
     // MARK: - Filtered Stocks
     var filteredStocks: [Stock] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
