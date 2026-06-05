@@ -35,6 +35,7 @@ struct CustomTabBar: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier(AccessibilityID.Tabs.identifier("\(tab)"))
                 }
             }
             .padding(.top, 6)

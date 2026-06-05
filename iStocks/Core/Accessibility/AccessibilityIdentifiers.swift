@@ -9,6 +9,10 @@ import Foundation
 
 /// Centralized accessibility identifiers for UI testing
 nonisolated enum AccessibilityID {
+    /// Bottom tab bar buttons. `tab` is the lowercased TabViewEnum case (e.g. "watchlist").
+    enum Tabs {
+        static func identifier(_ tab: String) -> String { "tab_" + tab }
+    }
     enum Watchlist {
         static let tabBar = "watchlist_tab_bar"
         static let stockRow = "watchlist_stock_row"
