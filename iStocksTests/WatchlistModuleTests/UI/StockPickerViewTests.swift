@@ -16,8 +16,8 @@ final class StockPickerViewTests: XCTestCase {
     var viewModel: EditWatchlistViewModel!
     var selected: [Stock]!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         selected = [MockStockData.allStocks[0]]
         viewModel = EditWatchlistViewModel(
             watchlist: Watchlist(id: UUID(), name: "Test", stocks: selected),

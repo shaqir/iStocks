@@ -15,15 +15,15 @@ final class SharedAlertManagerTests: XCTestCase {
 
     private var cancellables: Set<AnyCancellable> = []
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         SharedAlertManager.shared.dismiss()//Clear any existing alerts before each test
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         SharedAlertManager.shared.dismiss()
         cancellables.removeAll()
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func test_showAlert_shouldPublishCorrectAlert() {

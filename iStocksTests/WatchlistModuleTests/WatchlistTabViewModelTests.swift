@@ -17,18 +17,18 @@ final class WatchlistTabViewModelTests: XCTestCase {
     var mockPersistence: MockWatchlistPersistenceService!
     var cancellables: Set<AnyCancellable>!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockPersistence = MockWatchlistPersistenceService()
         sut = WatchlistTabViewModel(persistenceService: mockPersistence, availableStocks: MockStockData.allStocks)
         cancellables = []
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         cancellables = nil
         sut = nil
         mockPersistence = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func test_init_shouldLoadWatchlists() {

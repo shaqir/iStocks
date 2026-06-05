@@ -14,16 +14,16 @@ final class DashboardViewModelTests: XCTestCase {
     var sut: DashboardViewModel!
     var mockUseCase: MockFetchDashboardUseCase!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockUseCase = MockFetchDashboardUseCase()
         sut = DashboardViewModel(fetchDashboardUseCase: mockUseCase)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         sut = nil
         mockUseCase = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Success
