@@ -18,8 +18,13 @@ nonisolated class StockEntity {
     var previousPrice: Double
     var isPriceUp: Bool
     var sector: String
-    var currency: String
-    var exchange: String
+    // Default values keep SwiftData *lightweight* migration working: these attributes were
+    // added after the initial schema, and a non-optional attribute with no default fails
+    // in-place migration ("missing attribute values on mandatory destination attribute"),
+    // which forces a store rebuild (data loss). Defaults let existing rows migrate cleanly.
+    // (For destructive/complex changes you'd use a VersionedSchema + SchemaMigrationPlan.)
+    var currency: String = "USD"
+    var exchange: String = ""
     
     @Relationship var watchlist: WatchlistEntity?  // inverse relationship here
 

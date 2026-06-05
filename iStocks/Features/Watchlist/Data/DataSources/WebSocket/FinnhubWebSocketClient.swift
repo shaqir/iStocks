@@ -217,9 +217,10 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient, @unch
 
 // MARK: - URLSession Delegate
 
-/// NOTE (Swift 6.2): @preconcurrency bridges the pre-concurrency URLSession delegate protocol.
 /// Delegate callbacks arrive on .main (delegateQueue set in init), then forward to the actor.
-extension FinnhubWebSocketClient: @preconcurrency URLSessionWebSocketDelegate {
+/// (URLSessionWebSocketDelegate is already concurrency-annotated in the current SDK, so no
+/// @preconcurrency is needed on the conformance.)
+extension FinnhubWebSocketClient: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         #if DEBUG
         MainActor.assertIsolated("WebSocket delegate must run on main thread — delegateQueue is .main")

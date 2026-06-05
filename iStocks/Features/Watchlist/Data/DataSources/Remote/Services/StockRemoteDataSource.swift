@@ -5,7 +5,10 @@
 //  Created by Sakir Saiyed on 2025-06-29.
 //
 import Foundation
-import Combine
+// @preconcurrency: Combine predates Swift concurrency, so its types (PassthroughSubject,
+// AnyCancellable) are not Sendable. This import treats those Sendable-crossing diagnostics
+// as the framework-interop case they are, rather than hard errors under strict concurrency.
+@preconcurrency import Combine
 
 // MARK: - Protocol
 
@@ -138,15 +141,17 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
                         }
                         updatedRetryCounts[index] += 1
 
-                        // GCD retained: PassthroughSubject and closure aren't Sendable,
-                        // so Task {} can't capture them. Acceptable per interop.md —
-                        // "GCD is still acceptable in framework interop."
-                        DispatchQueue.global().asyncAfter(deadline: .now() + self.batchDelay) { [weak self] in
+                        // Structured concurrency: cancellation-aware delay instead of GCD.
+                        // Capture an immutable copy so the var isn't referenced from the Task.
+                        let retryDelay = self.batchDelay
+                        let nextRetryCounts = updatedRetryCounts
+                        Task { [weak self] in
+                            try? await Task.sleep(for: .seconds(retryDelay))
                             self?.fetchSequentiallyWithRetry(
                                 batches: batches,
                                 subject: subject,
                                 index: index,
-                                retryCounts: updatedRetryCounts,
+                                retryCounts: nextRetryCounts,
                                 onProgress: onProgress
                             )
                         }
@@ -157,9 +162,9 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
                     }
                 }
 
-                // Proceed to next batch after delay
-                // GCD retained: same Sendable constraint as retry path above.
-                DispatchQueue.global().asyncAfter(deadline: .now() + 60) { [weak self] in
+                // Proceed to next batch after a delay (structured concurrency, cancellation-aware).
+                Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(60))
                     self?.fetchSequentiallyWithRetry(
                         batches: batches,
                         subject: subject,
