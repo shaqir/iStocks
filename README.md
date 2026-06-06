@@ -2,11 +2,12 @@
 
 > iOS stock tracking app with real-time prices, multiple data sources, and Clean Architecture.
 
-[![Swift](https://img.shields.io/badge/Swift-5.10-orange.svg)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
+[![Strict Concurrency](https://img.shields.io/badge/Strict_Concurrency-complete-brightgreen.svg)](#swift-6-strict-concurrency)
 [![iOS](https://img.shields.io/badge/iOS-18.5+-blue.svg)](https://developer.apple.com/ios/)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-100%25-green.svg)](https://developer.apple.com/xcode/swiftui/)
 [![Dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen.svg)](#tech-stack)
-[![Tests](https://img.shields.io/badge/Tests-159_passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-203_passing-brightgreen.svg)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **[Demo Video](https://youtube.com/shorts/u0Ma-Z8fVSY?feature=share)** · **[Architecture](docs/ARCHITECTURE.md)** · **[Setup Guide](docs/SETUP.md)** · **[Tech Decisions](docs/TECH_DECISIONS.md)**
@@ -19,8 +20,9 @@
 - **4 Data Sources** — Mock, REST (TwelveData), WebSocket (Finnhub), GraphQL — swap with one env var
 - **Real-time Streaming** — WebSocket prices with 1s batching, deduplication, auto-reconnect
 - **Batched API Calls** — 8 symbols/request, exponential backoff, max 2 retries
-- **Persistence** — SwiftData with bidirectional entity relationships
+- **Persistence** — SwiftData with bidirectional entity relationships and migration-safe schema
 - **Stock Research** — Integrated WKWebView with bookmarks, history, JavaScript bridge
+- **Swift 6 Strict Concurrency** — Compiled with `complete` checking + `defaultIsolation(MainActor)`; shared state isolated behind actors
 - **Accessibility** — VoiceOver identifiers across all interactive elements
 - **Zero Dependencies** — Pure Apple frameworks only (no CocoaPods, no SPM packages)
 
@@ -80,18 +82,18 @@ open iStocks.xcodeproj
 | UI | SwiftUI (100%) |
 | Architecture | Clean Architecture + MVVM |
 | Reactive | Combine (publishers, subjects, operators) |
-| Concurrency | @MainActor, DispatchQueue, async/await bridge |
+| Concurrency | Swift 6 strict (`complete`), `defaultIsolation(MainActor)`, actors, structured concurrency, `Sendable` |
 | Persistence | SwiftData (WatchlistEntity ↔ StockEntity) |
 | Networking | URLSession (HTTP + WebSocket) |
 | Logging | os.Logger with category-based filtering |
-| Testing | XCTest with protocol-based mocking |
+| Testing | XCTest + Swift Testing, protocol-based mocking |
 | Dependencies | **None** — zero external packages |
 
 ---
 
 ## Testing
 
-**159 tests** across 22 test suites, all passing.
+**203 tests** (193 XCTest + 10 Swift Testing) across 25 suites, all passing under Swift 6 strict concurrency — 0 crashes, 0 concurrency warnings.
 
 ```bash
 xcodebuild test \
@@ -101,12 +103,16 @@ xcodebuild test \
 
 | Area | Coverage |
 |------|----------|
-| ViewModels | Watchlists, Watchlist, Edit, Tab, Provider |
+| ViewModels | Watchlists, Watchlist, Edit, Tab, Provider, Dashboard |
 | Repositories | REST, Mock, GraphQL |
+| Concurrency | `PortfolioActor` (async, isolation, optimistic-rollback) — Swift Testing |
+| Domain | Holding/Dashboard P&L math (parameterized) — Swift Testing |
 | Persistence | SwiftData CRUD (in-memory) |
 | Networking | Client, endpoints, error mapping, response mappers |
 | UI Components | StockPickerView, SharedAlertManager |
 | Utilities | AppConstants, Array extensions |
+
+Both frameworks run in one target: legacy suites in **XCTest**, newer value/actor tests in **Swift Testing** (`@Suite`, parameterized `@Test(arguments:)`, `#expect`/`#require`, `await #expect(throws:)`).
 
 ---
 
@@ -126,21 +132,43 @@ iStocks/                              107 Swift source files
 │   │   ├── Data/                     4 repos, DTOs, Mappers, DataSources
 │   │   └── Presentation/            ViewModels, Views, DI container
 │   ├── Research/                     WKWebView + Domain layer
-│   └── Dashboard, Portfolio,         Placeholders (scaffolding)
-│       Orders, Positions, Settings
+│   ├── Dashboard/                    Actor-based concurrency (PortfolioActor), mocked data
+│   └── Portfolio, Orders,            Placeholders (scaffolding)
+│       Positions, Settings
 ├── Shared/
 │   ├── Networking/                   NetworkClient, Endpoint, URLSession impl
 │   ├── Components/                   AppLogger, SharedAlertManager
 │   └── TabBar/                       Custom tab navigation
 └── Resources/                        Assets, Inter fonts
 
-iStocksTests/                         31 test files
+iStocksTests/                         32 test files (XCTest + Swift Testing)
 iStocksIntegrationTests/              Integration suite
 ```
 
 ---
 
 ## Key Implementations
+
+### Swift 6 Strict Concurrency
+
+Compiled with `SWIFT_VERSION = 6.0`, `SWIFT_STRICT_CONCURRENCY = complete`, and
+`defaultIsolation(MainActor.self)` (SE-0466 approachable concurrency).
+
+| Pattern | Where |
+|---------|-------|
+| **Module-wide MainActor default** | UI (Views, ViewModels) is MainActor by default; Domain/Data types are explicitly `nonisolated` so they're usable from actors and `TaskGroup`s |
+| **Actors for shared state** | `StockStateActor` (live prices) and `PortfolioActor` (holdings) replace serial `DispatchQueue`s — no locks, races caught at compile time |
+| **Actor reentrancy** | `PortfolioActor.executeTrade` uses optimistic-mutation-then-rollback; `refreshPrices` deduplicates in-flight tasks |
+| **Structured concurrency** | `async let` + `withThrowingTaskGroup` in `FetchDashboardUseCase`; GCD retry/heartbeat loops migrated to cancellation-aware `Task.sleep` |
+| **Sendable discipline** | DTOs/entities are `Sendable`; `@preconcurrency import Combine` bridges non-Sendable `PassthroughSubject` at the framework boundary |
+
+**War story (the migration's hardest bug):** turning on strict concurrency surfaced a libmalloc
+double-free that crashed ~56 tests. The crash backtrace pointed at
+`swift_task_deinitOnExecutorMainActorBackDeploy` — under `defaultIsolation`, every MainActor
+class gets an *isolated deinit* that hops to the executor via a back-deployment shim, which is
+buggy when the deployment target predates the native runtime symbol. Fix: `nonisolated deinit`
+on the ViewModels and `nonisolated` on Domain/Data types (where they belong anyway). See
+[docs/Swift6.2-Migration-Plan.md](docs/Swift6.2-Migration-Plan.md).
 
 ### Strategy Pattern — Data Source Swapping
 4 interchangeable repository implementations behind a single `WatchlistRepository` protocol. Selected at build time via `AppConfiguration.watchlistMode` — swap between Mock, REST, WebSocket, or GraphQL without changing a single line of ViewModel or View code.
