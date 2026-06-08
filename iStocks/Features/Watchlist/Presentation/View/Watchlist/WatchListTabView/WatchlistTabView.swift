@@ -201,9 +201,13 @@ struct WatchlistTabContent: View {
     var body: some View {
         TabView(selection: selectedTabBinding) {
             ForEach(Array(viewModel.watchlists.enumerated()), id: \.element.id) { index, watchlist in
-               
-                let tabViewModel = viewModelProvider.makeWatchlistViewModel(for: watchlist)
-                
+
+                // Use the *caching* accessor. `makeWatchlistViewModel` overwrites the cache
+                // on every `body` evaluation (and SwiftUI calls `body` often), which builds a
+                // fresh ViewModel + re-subscribes Combine pipelines each pass, dropping the
+                // child VM's local state. `viewModel(for:)` reuses the cached instance.
+                let tabViewModel = viewModelProvider.viewModel(for: watchlist)
+
                 let offsetBinding = Binding<CGFloat>(
                     get: { scrollOffsets[watchlist.id, default: 0] },
                     set: { scrollOffsets[watchlist.id] = $0 }
