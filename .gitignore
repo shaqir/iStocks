@@ -56,3 +56,6 @@ CLAUDE.md
 .claude/
 .agents/
 skills-lock.json
+
+# Interview prep (local only)
+INTERVIEW_CHEATSHEET.md

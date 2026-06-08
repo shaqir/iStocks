@@ -7,10 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DF6EED432E31A61B00459154 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		22C395EF61D14FCB7D10D54F /* iStocksUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95FD172A7AC6F0D7BB719CB /* iStocksUITestsLaunchTests.swift */; };
+		360F296D2E3E1D170A37DECB /* iStocksUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E277A45D5D10D8CF521A71 /* iStocksUITests.swift */; };
+		CE0E4B7172B508292D8C5760 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B97BEDA168F32EB2B1D8EFDF /* Foundation.framework */; };
+		DF6EED432E31A61B00459154 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
+		F72DEF51C76A2A2F96767F33 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C469ECA79717DA2EB10A725D /* AccessibilityIdentifiers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D2116C8302B805EB5387094E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DF4A64C12DF49CF600F2F879 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DF4A64C82DF49CF600F2F879;
+			remoteInfo = iStocks;
+		};
 		DF4A64D92DF49CF700F2F879 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DF4A64C12DF49CF600F2F879 /* Project object */;
@@ -28,6 +39,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		15E277A45D5D10D8CF521A71 /* iStocksUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iStocksUITests.swift; sourceTree = "<group>"; };
+		B97BEDA168F32EB2B1D8EFDF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		C469ECA79717DA2EB10A725D /* AccessibilityIdentifiers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccessibilityIdentifiers.swift; path = ../iStocks/Core/Accessibility/AccessibilityIdentifiers.swift; sourceTree = "<group>"; };
+		C95FD172A7AC6F0D7BB719CB /* iStocksUITestsLaunchTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iStocksUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		DF4A64C92DF49CF600F2F879 /* iStocks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iStocks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -37,6 +52,7 @@
 		DF7F20DC2F79CAA40055F239 /* Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Dev.xcconfig; sourceTree = "<group>"; };
 		DF7F20DD2F79CAA50055F239 /* Staging.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Staging.xcconfig; sourceTree = "<group>"; };
 		DF7F20DE2F79CAA60055F239 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
+		E97726FC7FB1DEF99AF2D991 /* iStocksUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iStocksUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -74,17 +90,29 @@
 		};
 		DF4A64DB2DF49CF700F2F879 /* iStocksTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iStocksTests;
 			sourceTree = "<group>";
 		};
 		DF6EEF852E31B44400459154 /* iStocksIntegrationTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iStocksIntegrationTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3EA149B12EC8493A862EA4CB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE0E4B7172B508292D8C5760 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DF4A64C62DF49CF600F2F879 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -96,7 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF6EED432E31A61B00459154 /* (null) in Frameworks */,
+				DF6EED432E31A61B00459154 /* BuildFile in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,6 +138,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7DCE40C4E8CCFB6BB1038E62 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				B97BEDA168F32EB2B1D8EFDF /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		C2686FBD6B76F8140E93995A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7DCE40C4E8CCFB6BB1038E62 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DF4A64C02DF49CF600F2F879 = {
 			isa = PBXGroup;
 			children = (
@@ -118,6 +162,8 @@
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 				DF4A64CA2DF49CF600F2F879 /* Products */,
 				DF7F20D52F79CA870055F239 /* CI-CD */,
+				C2686FBD6B76F8140E93995A /* Frameworks */,
+				E71DEC67AEBA1BF09D766A00 /* iStocksUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -127,6 +173,7 @@
 				DF4A64C92DF49CF600F2F879 /* iStocks.app */,
 				DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */,
 				DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */,
+				E97726FC7FB1DEF99AF2D991 /* iStocksUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -168,9 +215,38 @@
 			path = Configurations;
 			sourceTree = "<group>";
 		};
+		E71DEC67AEBA1BF09D766A00 /* iStocksUITests */ = {
+			isa = PBXGroup;
+			children = (
+				15E277A45D5D10D8CF521A71 /* iStocksUITests.swift */,
+				C95FD172A7AC6F0D7BB719CB /* iStocksUITestsLaunchTests.swift */,
+				C469ECA79717DA2EB10A725D /* AccessibilityIdentifiers.swift */,
+			);
+			name = iStocksUITests;
+			path = iStocksUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2FC1E6173250FDF69305872D /* iStocksUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A92AE944C538C9BD43491767 /* Build configuration list for PBXNativeTarget "iStocksUITests" */;
+			buildPhases = (
+				E11BA473F268D5AC6D3C13F6 /* Sources */,
+				3EA149B12EC8493A862EA4CB /* Frameworks */,
+				BB6D52CC7E9EFC0F2406FE26 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2130F22DC73E7CBF80BCCB1A /* PBXTargetDependency */,
+			);
+			name = iStocksUITests;
+			productName = iStocksUITests;
+			productReference = E97726FC7FB1DEF99AF2D991 /* iStocksUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		DF4A64C82DF49CF600F2F879 /* iStocks */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DF4A64EC2DF49CF700F2F879 /* Build configuration list for PBXNativeTarget "iStocks" */;
@@ -187,8 +263,6 @@
 				DF4A64CB2DF49CF600F2F879 /* iStocks */,
 			);
 			name = iStocks;
-			packageProductDependencies = (
-			);
 			productName = iStocks;
 			productReference = DF4A64C92DF49CF600F2F879 /* iStocks.app */;
 			productType = "com.apple.product-type.application";
@@ -210,8 +284,6 @@
 				DF4A64DB2DF49CF700F2F879 /* iStocksTests */,
 			);
 			name = iStocksTests;
-			packageProductDependencies = (
-			);
 			productName = iStocksTests;
 			productReference = DF4A64D82DF49CF700F2F879 /* iStocksTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -233,8 +305,6 @@
 				DF6EEF852E31B44400459154 /* iStocksIntegrationTests */,
 			);
 			name = iStocksIntegrationTests;
-			packageProductDependencies = (
-			);
 			productName = iStocksIntegrationTests;
 			productReference = DF6EEF842E31B44400459154 /* iStocksIntegrationTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -249,6 +319,10 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					2FC1E6173250FDF69305872D = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = DF4A64C82DF49CF600F2F879;
+					};
 					DF4A64C82DF49CF600F2F879 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -271,8 +345,6 @@
 			);
 			mainGroup = DF4A64C02DF49CF600F2F879;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DF4A64CA2DF49CF600F2F879 /* Products */;
 			projectDirPath = "";
@@ -281,11 +353,19 @@
 				DF4A64C82DF49CF600F2F879 /* iStocks */,
 				DF4A64D72DF49CF700F2F879 /* iStocksTests */,
 				DF6EEF832E31B44400459154 /* iStocksIntegrationTests */,
+				2FC1E6173250FDF69305872D /* iStocksUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		BB6D52CC7E9EFC0F2406FE26 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DF4A64C72DF49CF600F2F879 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -331,9 +411,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E11BA473F268D5AC6D3C13F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				360F296D2E3E1D170A37DECB /* iStocksUITests.swift in Sources */,
+				22C395EF61D14FCB7D10D54F /* iStocksUITestsLaunchTests.swift in Sources */,
+				F72DEF51C76A2A2F96767F33 /* AccessibilityIdentifiers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2130F22DC73E7CBF80BCCB1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = iStocks;
+			target = DF4A64C82DF49CF600F2F879 /* iStocks */;
+			targetProxy = D2116C8302B805EB5387094E /* PBXContainerItemProxy */;
+		};
 		DF4A64DA2DF49CF700F2F879 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DF4A64C82DF49CF600F2F879 /* iStocks */;
@@ -347,6 +443,47 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1AE07FA3B9CED4E6C0ECCB93 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iosRoadMapDemos.iStocksUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iStocks;
+			};
+			name = Debug;
+		};
+		393980E572E48B24194F4B2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iosRoadMapDemos.iStocksUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iStocks;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		DF4A64EA2DF49CF700F2F879 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -611,6 +748,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A92AE944C538C9BD43491767 /* Build configuration list for PBXNativeTarget "iStocksUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				393980E572E48B24194F4B2F /* Release */,
+				1AE07FA3B9CED4E6C0ECCB93 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DF4A64C42DF49CF600F2F879 /* Build configuration list for PBXProject "iStocks" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
