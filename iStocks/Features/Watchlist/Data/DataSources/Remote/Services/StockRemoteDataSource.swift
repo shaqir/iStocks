@@ -218,9 +218,16 @@ extension StockRemoteDataSource {
             self.fetchRealtimePrices(for: symbols)
                 .sink(receiveCompletion: { completion in
                     guard !didResume else { return }
-                    if case let .failure(error) = completion {
-                        didResume = true
+                    didResume = true
+                    switch completion {
+                    case .failure(let error):
                         continuation.resume(throwing: error)
+                    case .finished:
+                        // A publisher that finishes WITHOUT emitting a value would otherwise
+                        // leave the continuation suspended forever (a hang). Resume with a
+                        // typed error so the caller's catch path handles it like any failure.
+                        continuation.resume(throwing: AppError.api(
+                            message: "Empty response — publisher finished without emitting a value"))
                     }
                 }, receiveValue: { stocks in
                     guard !didResume else { return }
@@ -239,9 +246,15 @@ extension StockRemoteDataSource {
             self.fetchPrices(for: symbols)
                 .sink(receiveCompletion: { completion in
                     guard !didResume else { return }
-                    if case let .failure(error) = completion {
-                        didResume = true
+                    didResume = true
+                    switch completion {
+                    case .failure(let error):
                         continuation.resume(throwing: error)
+                    case .finished:
+                        // See fetchRealtimePricesAsync: guard against a no-value `.finished`
+                        // hanging the continuation. Throwing routes into the batch retry loop.
+                        continuation.resume(throwing: AppError.api(
+                            message: "Empty response — publisher finished without emitting a value"))
                     }
                 }, receiveValue: { stocks in
                     guard !didResume else { return }

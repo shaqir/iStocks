@@ -33,6 +33,13 @@
         "identifier" : "DF4A64D72DF49CF700F2F879",
         "name" : "iStocksTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:iStocks.xcodeproj",
+        "identifier" : "2FC1E6173250FDF69305872D",
+        "name" : "iStocksUITests"
+      }
     }
   ],
   "version" : 1

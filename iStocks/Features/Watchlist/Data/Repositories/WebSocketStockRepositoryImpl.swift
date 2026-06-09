@@ -76,10 +76,13 @@ nonisolated final class WebSocketStockRepositoryImpl: StockLiveRepository, @unch
         // goes through `await`, eliminating data races at compile time.
         Task { [weak self] in
             guard let self else { return }
-            let snapshot = await self.stateActor.snapshot()
-            let oldPrice = snapshot.first(where: { $0.symbol == symbol })?.price ?? 0
-            if let stock = dto.toDomainModel(previousPrice: oldPrice) {
-                let allStocks = await self.stateActor.update(symbol: symbol, stock: stock)
+            // Atomic read-modify-write inside the actor: the previous price is read and the
+            // new price stored in a single hop, so concurrent trades for the same symbol
+            // can't interleave and produce a wrong price-direction from a stale snapshot.
+            let allStocks = await self.stateActor.apply(symbol: symbol) { previousPrice in
+                dto.toDomainModel(previousPrice: previousPrice)
+            }
+            if let allStocks {
                 self.subject.send(allStocks)
             } else {
                 AppLogger.error("Invalid StockDTO, could not convert to Stock: \(symbol)", category: AppLogger.webSocket)
