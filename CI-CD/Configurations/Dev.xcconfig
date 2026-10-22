@@ -1,5 +1,0 @@
-// Dev.xcconfig — Development environment configuration
-
-API_BASE_URL = https://api.twelvedata.com
-ENABLE_LOGGING = YES
-SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
