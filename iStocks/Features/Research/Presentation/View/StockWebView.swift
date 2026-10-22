@@ -43,6 +43,14 @@ struct StockWebView: UIViewRepresentable {
         // Intentionally empty — navigation is driven by Combine subjects
     }
 
+    /// WKUserContentController retains its script message handler (the coordinator),
+    /// so the handler must be removed here — a deinit would never run while the cycle exists.
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        uiView.configuration.userContentController.removeScriptMessageHandler(
+            forName: JavaScriptBridge.handlerName
+        )
+    }
+
     // MARK: - Coordinator
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
@@ -75,11 +83,6 @@ struct StockWebView: UIViewRepresentable {
 
             // Cancel Combine subscriptions
             cancellables.removeAll()
-
-            // Remove script message handler to break the retain cycle
-            webView?.configuration.userContentController.removeScriptMessageHandler(
-                forName: JavaScriptBridge.handlerName
-            )
         }
 
         // MARK: - Configuration
@@ -133,7 +136,9 @@ struct StockWebView: UIViewRepresentable {
             }
         }
 
-        private func syncNavigationState(_ webView: WKWebView) {
+        /// nonisolated because KVO change handlers are not main-actor isolated;
+        /// the state read and ViewModel update hop to the main actor.
+        nonisolated private func syncNavigationState(_ webView: WKWebView) {
             Task { @MainActor [weak self] in
                 self?.viewModel?.updateNavigationState(
                     canGoBack: webView.canGoBack,
@@ -176,25 +181,22 @@ struct StockWebView: UIViewRepresentable {
 
         // MARK: - WKNavigationDelegate
 
+        /// Async variant: returns the policy instead of calling a completion handler, so the
+        /// signature can't silently drift from the SDK's (the handler-based one did under Xcode 27).
         func webView(
             _ webView: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-        ) {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.cancel)
-                return
-            }
+            decidePolicyFor navigationAction: WKNavigationAction
+        ) async -> WKNavigationActionPolicy {
+            guard let url = navigationAction.request.url else { return .cancel }
 
             // Block non-HTTP(S) schemes (e.g. tel:, mailto:) — open them externally
             if let scheme = url.scheme, !["http", "https", "about"].contains(scheme) {
-                UIApplication.shared.open(url)
-                decisionHandler(.cancel)
-                return
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                return .cancel
             }
 
             AppLogger.debug("Navigating to: \(url.absoluteString)", category: AppLogger.ui)
-            decisionHandler(.allow)
+            return .allow
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {

@@ -4,6 +4,25 @@
 **Date**: April 6, 2026
 **Goal**: Migrate iStocks to Swift 6.2 with approachable concurrency and close all gaps between interview prep claims and actual codebase.
 
+> **Historical record.** This is the plan and log as written during the migration (April–June 2026).
+> Counts and file names reflect that time. What actually shipped: `SWIFT_VERSION = 6.0`,
+> strict concurrency `complete`, and default isolation `MainActor` on the app target.
+> The `SWIFT_APPROACHABLE_CONCURRENCY` build setting was *not* enabled. For the current
+> state see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Post-migration lesson: the isolated-deinit double-free
+
+Turning on default isolation surfaced a libmalloc double-free (`pointer being freed was not
+allocated`) that crashed ~56 tests. The backtrace pointed at
+`swift_task_deinitOnExecutorMainActorBackDeploy`: with `defaultIsolation(MainActor.self)`,
+every MainActor class gets an *isolated deinit*, which hops to the main executor through a
+back-deployment shim when the deployment target (iOS 18.x) predates the native runtime
+symbol, and that shim double-freed. Explicit `@MainActor` does not isolate deinit; only
+default isolation does.
+
+**Fix:** `nonisolated deinit` on the ViewModels, and `nonisolated` on Domain use cases, Data
+repositories and SwiftData entities (which belong outside the main actor anyway).
+
 ---
 
 ## Pre-Migration State

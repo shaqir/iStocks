@@ -10,7 +10,7 @@
 		22C395EF61D14FCB7D10D54F /* iStocksUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95FD172A7AC6F0D7BB719CB /* iStocksUITestsLaunchTests.swift */; };
 		360F296D2E3E1D170A37DECB /* iStocksUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E277A45D5D10D8CF521A71 /* iStocksUITests.swift */; };
 		CE0E4B7172B508292D8C5760 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B97BEDA168F32EB2B1D8EFDF /* Foundation.framework */; };
-		DF6EED432E31A61B00459154 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
+		DF6EED432E31A61B00459154 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		F72DEF51C76A2A2F96767F33 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C469ECA79717DA2EB10A725D /* AccessibilityIdentifiers.swift */; };
 /* End PBXBuildFile section */
 
@@ -90,15 +90,11 @@
 		};
 		DF4A64DB2DF49CF700F2F879 /* iStocksTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = iStocksTests;
 			sourceTree = "<group>";
 		};
 		DF6EEF852E31B44400459154 /* iStocksIntegrationTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = iStocksIntegrationTests;
 			sourceTree = "<group>";
 		};
@@ -124,7 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF6EED432E31A61B00459154 /* BuildFile in Frameworks */,
+				DF6EED432E31A61B00459154 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,7 +218,6 @@
 				C95FD172A7AC6F0D7BB719CB /* iStocksUITestsLaunchTests.swift */,
 				C469ECA79717DA2EB10A725D /* AccessibilityIdentifiers.swift */,
 			);
-			name = iStocksUITests;
 			path = iStocksUITests;
 			sourceTree = "<group>";
 		};
@@ -614,9 +609,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7FN5H72266;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iStocks/Resources/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "We use Face ID to securely unlock your portfolio and protect your financial data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -645,9 +642,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7FN5H72266;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iStocks/Resources/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "We use Face ID to securely unlock your portfolio and protect your financial data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -29,7 +29,7 @@ nonisolated enum JavaScriptBridge {
 
     /// Scans the page for stock ticker patterns (e.g. $AAPL) and wraps them in
     /// tappable spans that post a message back to the native layer.
-    static var extractTickerScript: WKUserScript {
+    @MainActor static var extractTickerScript: WKUserScript {
         let source = """
         (function() {
             function highlightTickers() {
@@ -107,7 +107,7 @@ nonisolated enum JavaScriptBridge {
     }
 
     /// Injects lightweight CSS overrides to improve readability on financial pages
-    static var customStyleScript: WKUserScript {
+    @MainActor static var customStyleScript: WKUserScript {
         let source = """
         (function() {
             var style = document.createElement('style');
