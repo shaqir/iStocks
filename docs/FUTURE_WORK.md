@@ -39,7 +39,15 @@ no GraphQL API, so the mode could never run against a real server. It also sent 
 - **Logging:** default `AppLogger` to private formatting with an explicit public variant.
 - **Auth:** `.deviceOwnerAuthentication` (passcode fallback), re-lock on background.
 - **Observation:** migrate ViewModels to `@Observable`.
-- **Warnings:** UI test classes need `@MainActor` (Xcode 27 warnings).
+- **Fastlane:** `test` targets `iPhone 16` (not available under Xcode 27); `Appfile` and
+  `Matchfile` hold placeholders, and the Matchfile bundle id (`com.sakirsaiyed.iStocks`)
+  differs from the app's (`com.iosRoadMapDemos.iStocks`). Fix the `test` lane and either
+  configure or remove `beta`/`match`.
+- **`@unchecked Sendable`:** 8 types use it (use cases, repositories, data sources,
+  `APIClient`, `FinnhubWebSocketClient`). Document why each is safe, or make them
+  `Sendable` by construction.
+- **Project settings:** the project-level deployment target is 18.5 (every target
+  overrides it to 18.2); the integration test bundle id is `com.example.download…`.
 
 ## Removed as unused
 
