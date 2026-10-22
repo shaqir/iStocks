@@ -89,7 +89,8 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient, @unch
 
         await disconnectInternal(clearPending: false)
         await connectionActor.transition(to: .connecting)
-        AppLogger.info("Connecting to \(url.absoluteString)", category: AppLogger.webSocket)
+        // Log only the host — the full URL carries the API token as a query item.
+        AppLogger.info("Connecting to \(url.host ?? "WebSocket")", category: AppLogger.webSocket)
 
         let request = URLRequest(url: url)
         webSocketTask = session.webSocketTask(with: request)
@@ -175,13 +176,17 @@ nonisolated final class FinnhubWebSocketClient: NSObject, WebSocketClient, @unch
 
     // MARK: - Listening
 
+    /// Re-arms itself only after a successful receive on the *current* task. Callbacks
+    /// from a replaced or cancelled task are ignored, so a reconnect never stacks
+    /// listeners or triggers a second reconnect.
     private func listen() {
-        webSocketTask?.receive { [weak self] result in
-            guard let self else { return }
-            defer { self.listen() }
+        guard let task = webSocketTask else { return }
+        task.receive { [weak self] result in
+            guard let self, task === self.webSocketTask else { return }
 
             switch result {
             case .success(let message):
+                defer { self.listen() }
                 switch message {
                 case .data(let data):
                     self.handleIncoming(data)

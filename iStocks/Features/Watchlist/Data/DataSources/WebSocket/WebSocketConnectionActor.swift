@@ -49,14 +49,19 @@ actor WebSocketConnectionActor {
     /// Enforces valid WebSocket state transitions. Returns true if transition succeeded.
     ///
     /// Valid transitions:
-    /// - disconnected  → connecting
+    /// - disconnected  → connecting | reconnecting
     /// - connecting    → connected | disconnected
     /// - connected     → disconnected | reconnecting
     /// - reconnecting  → connecting | disconnected
+    ///
+    /// Transitioning to the current state is a no-op (e.g. `connect()` resets the
+    /// socket via `markDisconnected` even when it was never connected).
     @discardableResult
     func transition(to newState: WebSocketConnectionState) -> Bool {
+        guard newState != connectionState else { return true }
+
         let validTransitions: [WebSocketConnectionState: Set<WebSocketConnectionState>] = [
-            .disconnected: [.connecting],
+            .disconnected: [.connecting, .reconnecting],
             .connecting:   [.connected, .disconnected],
             .connected:    [.disconnected, .reconnecting],
             .reconnecting: [.connecting, .disconnected],
@@ -96,14 +101,19 @@ actor WebSocketConnectionActor {
         return (symbols, messages)
     }
 
-    /// Called when WebSocket disconnects. Preserves pending symbols for reconnect.
+    /// Called when WebSocket disconnects. Moves subscribed symbols back to pending so
+    /// the next `markConnected()` resubscribes them, unless `clearPending` is set.
     func markDisconnected(clearPending: Bool) {
         transition(to: .disconnected)
         isReadyToSubscribe = false
+        if clearPending {
+            pendingSymbols.removeAll()
+        } else {
+            pendingSymbols.formUnion(subscribedSymbols)
+        }
         subscribedSymbols.removeAll()
         messageQueue.removeAll()
         subscribeRetryAttempts = 0
-        if clearPending { pendingSymbols.removeAll() }
     }
 
     // MARK: - Subscriptions
