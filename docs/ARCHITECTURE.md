@@ -1,287 +1,112 @@
-# iStocks Architecture Documentation
+# iStocks — Architecture
 
-## Overview
+> Written from the source on `main` (October 2026). Known gaps are listed at the end and
+> deferred work is in [FUTURE_WORK.md](FUTURE_WORK.md).
 
-iStocks is an iOS stock market tracking application built using Clean Architecture principles with MVVM pattern. The app supports multiple data sources (Mock, REST API, WebSocket) and provides real-time stock price updates.
+## What the app is
 
-## Architecture Layers
+A SwiftUI stock watchlist app built as a personal learning project: Clean Architecture,
+MVVM, Combine, Swift 6 strict concurrency, and actors, applied to a real-ish domain.
 
-### 1. Domain Layer (Business Logic)
-**Location**: `Features/Watchlist/Domain/`
+**Implemented**
+- **Watchlist** (full Clean Architecture): up to 10 watchlists × 10 stocks, add / rename /
+  delete, a stock picker over 50 preset NYSE symbols, and a local symbol filter.
+- **Portfolio tab** (`DashboardView`): holdings, P&L and news. Holdings and news are
+  always mock data; prices are mock in Debug builds. It exists to show `async let`,
+  `TaskGroup` and actor isolation.
+- **Research**: `WKWebView` with a JavaScript bridge, bookmarks and history.
+- **Auth gate**: Face ID / Touch ID via `LAContext` (skipped on the simulator).
 
-The domain layer contains pure Swift code with no external dependencies.
+**Placeholders**: Orders and Settings tabs.
 
-#### Entities
-- **Stock**: Core business model representing a stock with price, quantity, P&L calculations
-- **Watchlist**: Collection of stocks grouped by sector or user preference
+## At a glance
 
-#### Use Cases
-- `ObserveMockStocksUseCase`: Observe mock stock data for testing
-- `ObserveTop50StocksUseCase`: Fetch top 50 NYSE stocks
-- `ObserveStockPricesUseCase`: Real-time price updates via WebSocket
-- `ObserveWatchlistStocksUseCase`: Watch specific stocks
-- `FetchStocksBySymbolUseCase`: Fetch quotes for specific symbols
+| Concern | Approach | Where |
+|---|---|---|
+| UI | SwiftUI, custom enum-driven tab bar | `Shared/TabBar/`, `Features/*/Presentation/` |
+| Pattern | Clean Architecture layers + MVVM, manual DI containers | `Features/*/`, `*DIContainer.swift` |
+| State | `ObservableObject` + `@Published` ViewModels | `Features/*/Presentation/ViewModel*/` |
+| Concurrency | Swift 6, strict concurrency `complete`, default isolation `MainActor` (app target), `nonisolated` Domain/Data types, 4 actors, `@concurrent` | `WatchlistsViewModel.swift`, `Data/DataSources/WebSocket/`, `PortfolioActor.swift` |
+| Reactive | Combine for Watchlist streams; async/await for Dashboard and Auth; `withCheckedThrowingContinuation` bridges | `StockRemoteDataSource.swift`, `FetchDashboardUseCase.swift` |
+| Networking | `Endpoint` builder + `NetworkClient` protocol (Combine and async), generic `APIClient` with associated-type endpoints | `Shared/Networking/` |
+| Errors | `AppError` hierarchy with `NetworkError`, `PersistenceError`, `ValidationError`, `WebSocketError`, `ConfigurationError` | `Core/Utilities/AppError.swift` |
+| Persistence | SwiftData (`WatchlistEntity` ↔ `StockEntity`), local only | `Watchlist/Data/DataSources/Local/` |
+| Logging | `AppLogger` over `os_log`, per-category | `Shared/Components/Logging/Logger.swift` |
+| Testing | XCTest + Swift Testing (unit), XCUITest (UI), live integration suite | `iStocksTests/`, `iStocksUITests/`, `iStocksIntegrationTests/` |
 
-#### Repositories (Protocols)
-- `WatchlistRepository`: Base protocol
-- `RestStockRepository`: REST API operations
-- `StockLiveRepository`: WebSocket operations
-- `MockWatchlistRepository`: Mock data for testing
+## Layers
 
-### 2. Data Layer (Data Management)
-**Location**: `Features/Watchlist/Data/`
-
-#### Data Sources
-- **Local**: SwiftData persistence (WatchlistEntity, StockEntity)
-- **Remote**: REST API integration (TwelveData)
-- **WebSocket**: Real-time updates (Finnhub)
-- **Mock**: Testing and development
-
-#### DTOs (Data Transfer Objects)
-- `StockDTO`: API response mapping
-- `StockPriceDTO`: Price data from REST
-- `StockFinnPriceDTO`: Price data from WebSocket
-- `StockQuoteDTO`: Quote information
-
-#### Mappers
-- Convert DTOs to domain models
-- Handle response wrapping and error mapping
-
-#### Repository Implementations
-- `MockStockRepositoryImpl`: Returns mock data
-- `RestStockRepositoryImpl`: REST API with batch processing
-- `WebSocketStockRepositoryImpl`: WebSocket subscriptions
-
-### 3. Presentation Layer (UI & ViewModels)
-**Location**: `Features/Watchlist/Presentation/`
-
-#### ViewModels
-- **WatchlistsViewModel**: Manages multiple watchlists, coordinates data loading
-- **WatchlistViewModel**: Single watchlist with stock updates
-- **EditWatchlistViewModel**: Watchlist creation and editing
-
-#### Views
-- SwiftUI views organized by feature
-- Reusable components (WatchlistRow, SearchBar, etc.)
-- Error and loading states
-
-### 4. Shared/Core Layer
-**Location**: `Shared/` and `Core/`
-
-#### Networking
-- `NetworkClient`: Protocol for network operations
-- `URLSessionNetworkClient`: Implementation with Combine/async-await
-- Error handling with `NetworkError`
-
-#### Logging
-- `AppLogger`: Production-grade logging using os.Logger
-- Category-based logging (network, websocket, persistence, etc.)
-
-#### Configuration
-- `AppConfiguration`: Environment-based settings
-- Feature flags and build configurations
-
-#### Utilities
-- Extensions for Double, Color, Font, Array
-- Constants for app-wide values
-- Error types and validation
-
-## Data Flow
-
-### Mock Mode
 ```
-WatchlistsViewModel
-    ↓
-ObserveMockStocksUseCase
-    ↓
-MockStockRepositoryImpl
-    ↓
-MockStockData (static data)
+App/            composition root — iStocksApp, modelContainer, AuthGate
+Core/           AppError, AppConfiguration, SecureAPIKeyManager, AppConstants, a11y IDs
+Shared/         Networking, Logging, TabBar, Alert coordination
+Features/{F}/
+  Domain/       entities, repository protocols, use cases
+  Data/         repository impls, DataSources (Local / Remote / WebSocket / Mock), DTOs, Mappers
+  Presentation/ SwiftUI Views, ViewModels, DI container
 ```
 
-### REST API Mode
+Dependency rule: `Presentation → Domain ← Data`. ViewModels receive use-case protocols
+through their initializer; use cases depend on repository protocols.
+
+**Deliberate trade-off:** Domain uses Combine as its stream abstraction — repository
+protocols return `AnyPublisher` — so Domain imports Foundation and Combine, not UIKit,
+SwiftUI or SwiftData.
+
+## Data source modes
+
+One `WatchlistRepository` protocol, three implementations, chosen at launch:
+
+| `WATCHLIST_MODE` | Source | Notes |
+|---|---|---|
+| `mock` (Debug default) | `MockStockRepositoryImpl` | Simulated prices, no keys |
+| `rest` (Release always) | `RestStockRepositoryImpl` | Twelve Data `/quote` and `/price` |
+| `websocket` | `WebSocketStockRepositoryImpl` | Finnhub stream (currently `BINANCE:BTCUSDT`) + REST for the initial list |
+
+The env var is read only in Debug builds (`AppConfiguration.watchlistMode`). API keys
+`TWELVE_DATA_API_KEY` / `FINNHUB_API_KEY` come from the environment or Info.plist.
+
+### REST (Twelve Data)
+- 50 preset symbols are fetched in batches of 8. A failed batch is retried up to 2 times
+  with a fixed 60s delay (free-tier rate limit) — not exponential backoff.
+- HTTP status mapping: 401 → `unauthorized`, 429 → `rateLimited`, 5xx → `serverError`;
+  everything surfaces as `AppError`.
+
+### WebSocket (Finnhub)
+- States: `disconnected → connecting → connected`, with `reconnecting` on a drop. The
+  transitions are validated in `WebSocketConnectionActor.transition(to:)`.
+- Reconnect: `ConnectionRetryManager` actor, delay = 2ⁿ s (1, 2, 4, 8, 16), 60s cap,
+  gives up after 5 attempts, resets on a successful connect.
+- Subscriptions survive a reconnect (subscribed symbols move back to pending).
+- An app-level heartbeat message every 10s; outgoing messages queue (max 1000) while
+  disconnected.
+- Updates are batched with `collect(.byTime(1s))`, reduced to the latest price per symbol,
+  then applied atomically in `StockStateActor`.
+
+## Build & test
+
+```bash
+# Build
+xcodebuild build -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+
+# Unit + UI tests (no API keys needed)
+xcodebuild test -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -skip-testing:iStocksIntegrationTests
 ```
-WatchlistsViewModel
-    ↓
-ObserveTop50StocksUseCase
-    ↓
-RestStockRepositoryImpl
-    ↓
-StockRemoteDataSource
-    ↓
-URLSessionNetworkClient
-    ↓
-TwelveData API
-```
 
-### WebSocket Mode
-```
-WatchlistsViewModel
-    ↓
-ObserveStockPricesUseCase
-    ↓
-WebSocketStockRepositoryImpl
-    ↓
-FinnhubWebSocketClient
-    ↓
-Finnhub WebSocket
-```
+Integration tests call the live Twelve Data API and fail with HTTP 401 without a real
+`TWELVE_DATA_API_KEY`.
 
-## Dependency Injection
+## Known gaps
 
-The app uses a centralized DI container:
-
-```swift
-@MainActor
-final class WatchlistDIContainer {
-    static func makeWatchlistUseCases(context: ModelContext) -> WatchlistUseCases
-    static func makeWatchlistsViewModel(...) -> WatchlistsViewModel
-}
-```
-
-**Benefits**:
-- Testability: Easy to inject mocks
-- Flexibility: Switch between data sources
-- Thread Safety: @MainActor annotation
-- Caching: Singleton repositories
-
-## Threading Model
-
-### Main Thread (@MainActor)
-- All ViewModels marked with @Published
-- DI Container operations
-- UI updates
-
-### Background Threads
-- Network requests automatically dispatched
-- Results returned to main thread via `.receive(on: DispatchQueue.main)`
-
-### WebSocket
-- Dedicated URLSession delegate queue
-- Message processing on main thread
-
-## State Management
-
-### Published Properties
-ViewModels expose state via `@Published` properties:
-- `watchlists`: Current watchlist data
-- `isLoading`: Loading state
-- `errorMessage`: Error display
-- `selectedIndex`: Current tab
-
-### Combine Publishers
-- Price updates flow through Combine pipelines
-- PassthroughSubject for events
-- AnyPublisher for exposed streams
-
-## Persistence
-
-### SwiftData
-- `WatchlistEntity`: Persistent watchlist storage
-- `StockEntity`: Stock data with relationships
-- In-memory contexts for testing
-
-### Strategy
-- Save on mutations (add/update/delete)
-- Load on app launch
-- Incremental updates for REST mode
-
-## Error Handling
-
-### Error Types
-- `NetworkError`: HTTP and network issues
-- `PersistenceError`: Database failures
-- `ValidationError`: Business rule violations
-- `WebSocketError`: WebSocket connection issues
-- `ConfigurationError`: Missing or invalid configuration
-
-### Error Recovery
-- Automatic retry for retryable errors
-- User-facing error messages with suggestions
-- Logging for debugging
-
-## Configuration Management
-
-### Build Configurations
-- **Development**: Mock data, verbose logging
-- **Staging**: REST API, moderate logging
-- **Production**: REST API, minimal logging
-
-### Feature Flags
-- `isWebSocketEnabled`: Toggle WebSocket support
-- `isMockDataEnabled`: Allow mock data
-- Environment variables for runtime config
-
-## Testing Strategy
-
-### Unit Tests
-- ViewModels with mock repositories
-- Repository implementations
-- Use cases
-- Mappers and DTOs
-
-### Integration Tests
-- End-to-end data flow
-- Persistence layer
-- Network layer
-
-### Test Helpers
-- In-memory SwiftData contexts
-- Mock implementations
-- Test fixtures
-
-## Security
-
-### API Key Management
-- `SecureAPIKeyManager`: Centralized key access
-- Environment variables preferred
-- Info.plist fallback
-- No hardcoded keys in source
-
-### Data Protection
-- SwiftData encryption (when enabled)
-- No sensitive data in logs (production)
-
-## Performance Optimizations
-
-### Caching
-- Repository singleton pattern
-- ViewModel reuse via provider
-- Symbol-based stock lookup dictionary
-
-### Batch Processing
-- REST API batch requests (8 stocks at a time)
-- Progress tracking for UX
-- Rate limit handling
-
-### WebSocket
-- Selective symbol subscription
-- Heartbeat for connection keep-alive
-- Automatic reconnection with backoff
-
-## Future Improvements
-
-1. **GraphQL Integration**: Planned data source
-2. **Offline Mode**: Enhanced local caching
-3. **Push Notifications**: Price alerts
-4. **SwiftUI Lifecycle**: Full async/await migration
-5. **Accessibility**: VoiceOver and Dynamic Type
-6. **Analytics**: User behavior tracking
-7. **Crash Reporting**: Production monitoring
-
-## Code Style Guidelines
-
-- PascalCase for types
-- camelCase for properties/methods
-- 4-space indentation
-- Protocol-oriented design
-- Value types (structs) preferred
-- Comprehensive documentation comments
-- Error handling over force unwrapping
-
-## Resources
-
-- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [MVVM Pattern](https://www.swiftbysundell.com/articles/different-flavors-of-view-models-in-swift/)
-- [SwiftUI Best Practices](https://developer.apple.com/tutorials/swiftui)
-- [Combine Framework](https://developer.apple.com/documentation/combine)
+- **Persistence** swallows errors, drops empty watchlists, isn't a `@ModelActor`, and
+  `saveAllStocks` also clears stocks that belong to watchlists.
+- **REST prices aren't refreshed** once all 50 symbols are cached; there's no
+  "last updated" timestamp.
+- **Abstraction leak:** `WatchlistsViewModel` downcasts to `RestStockRepositoryImpl` for
+  batch progress.
+- **`PortfolioActor.executeTrade`** rolls back to a pre-`await` snapshot, which can drop
+  trades made concurrently.
+- **Logging** marks messages `%{public}`; callers must not log secrets.
+- **Auth** is biometrics-only (no passcode fallback).
+- **No CI** at the moment (see FUTURE_WORK).
