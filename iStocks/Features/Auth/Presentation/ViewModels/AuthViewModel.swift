@@ -53,7 +53,7 @@ final class AuthViewModel: ObservableObject {
     /// shim under defaultIsolation + iOS 18.x deployment target). See EditWatchlistViewModel.
     nonisolated deinit {
         #if DEBUG
-        print("[DEBUG] AuthViewModel deallocated — no retain cycle")
+        AppLogger.debug("AuthViewModel deallocated — no retain cycle", category: AppLogger.viewModel)
         #endif
     }
 }
