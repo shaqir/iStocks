@@ -87,10 +87,10 @@ The env var is read only in Debug builds (`AppConfiguration.watchlistMode`). API
 
 ```bash
 # Build
-xcodebuild build -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+xcodebuild build -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 
 # Unit + UI tests (no API keys needed)
-xcodebuild test -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+xcodebuild test -scheme iStocks -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -skip-testing:iStocksIntegrationTests
 ```
 

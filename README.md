@@ -98,7 +98,7 @@ open iStocks.xcodeproj
 ```bash
 xcodebuild test \
   -scheme iStocks \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -skip-testing:iStocksIntegrationTests
 ```
 
@@ -210,7 +210,7 @@ Each case provides `errorDescription`, `failureReason`, `recoverySuggestion`, an
 | `viewModel` | State transitions, user actions |
 | `startup` | App configuration, mode selection |
 
-Filterable in Console.app by subsystem and category. Messages are logged as public, so secrets (API keys, tokens) are never logged.
+Filterable in Console.app by subsystem and category. Messages are logged with `%{public}` so they stay readable in Console.app — which means callers must never log secrets (API keys, tokens).
 
 ---
 
