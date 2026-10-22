@@ -46,7 +46,6 @@ nonisolated enum AppConfiguration {
             switch mode.lowercased() {
             case "rest": return .restAPI
             case "websocket": return .websocket
-            case "graphql": return .graphQL
             default: return .mock
             }
         } ?? .mock

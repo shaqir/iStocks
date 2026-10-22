@@ -12,7 +12,6 @@ import SwiftData
         case mock       // development and testing
         case restAPI    // standard client
         case websocket  // real-time streaming
-        case graphQL    // experiment
     }
 
 // MARK: - DI Container
@@ -30,7 +29,6 @@ final class WatchlistDIContainer {
     private static var cachedMockRepository: MockWatchlistRepository?
     private static var cachedRestRepository: RestStockRepository?
     private static var cachedWebSocketRepository: StockLiveRepository?
-    private static var cachedGraphQLRepository: RestStockRepository?
     
     // MARK: - Repository Factories
     
@@ -62,21 +60,6 @@ final class WatchlistDIContainer {
            cachedWebSocketRepository = webSocketRepo
            return webSocketRepo
        }
-    private static func makeGraphQLRepository(context: ModelContext) -> RestStockRepository {
-        if let cached = cachedGraphQLRepository {
-            return cached
-        }
-        guard let baseURL = URL(string: API.graphQLBaseURL) else {
-            fatalError("Invalid GraphQL base URL configured in NetworkConstants")
-        }
-        let graphQLClient = GraphQLClient(baseURL: baseURL)
-        let dataSource = StockGraphQLDataSource(graphQLClient: graphQLClient)
-        let persistence = WatchlistPersistenceService(context: context)
-        let graphQLRepo = GraphQLStockRepositoryImpl(dataSource: dataSource, persistenceService: persistence)
-        cachedGraphQLRepository = graphQLRepo
-        return graphQLRepo
-    }
-
     private static func makePersistenceService(context: ModelContext) -> WatchlistPersistenceService {
         WatchlistPersistenceService(context: context)
     }
@@ -92,7 +75,6 @@ final class WatchlistDIContainer {
             cachedMockRepository = nil
             cachedRestRepository = nil
             cachedWebSocketRepository = nil
-            cachedGraphQLRepository = nil
         }
         cachedMode = mode
 
@@ -136,17 +118,6 @@ final class WatchlistDIContainer {
                 loadWatchlists: LoadWatchlistsUseCaseImpl(persistenceService: persistence)
             )
 
-        case .graphQL:
-            let graphQLRepo = makeGraphQLRepository(context: context)
-            let persistence = makePersistenceService(context: context)
-            useCases = WatchlistUseCases(
-                observeMock: ObserveMockStocksUseCaseImpl(repository: graphQLRepo),
-                observeTop50: ObserveTop50StocksUseCaseImpl(repository: graphQLRepo),
-                observeLiveWebSocket: ObserveStockPricesUseCaseImpl(repository: graphQLRepo),
-                fetchQuotesBySymbols: FetchStocksBySymbolUseCaseImpl(repository: graphQLRepo),
-                saveWatchlists: SaveWatchlistsUseCaseImpl(persistenceService: persistence),
-                loadWatchlists: LoadWatchlistsUseCaseImpl(persistenceService: persistence)
-            )
         }
         
         cachedUseCases = useCases
@@ -181,6 +152,5 @@ extension WatchlistDIContainer {
         cachedMockRepository = nil
         cachedRestRepository = nil
         cachedWebSocketRepository = nil
-        cachedGraphQLRepository = nil
     }
 }
