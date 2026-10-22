@@ -205,4 +205,30 @@ final class StockRemoteDataSourceTests: XCTestCase {
         XCTAssertEqual(mockClient.requestedEndpoints.first?.path, "/quote")
         XCTAssertEqual(mockClient.requestedEndpoints.first?.method, .get)
     }
+
+    // MARK: - Batched Fetch
+
+    func test_fetchTop50InBatches_shouldUseInjectedDelayAndFinishAfterLastBatch() {
+        // Before the fix, batches were paced by a hardcoded 60s (ignoring batchDelay)
+        // and the publisher waited another 60s after the last batch before finishing.
+        let symbols = ["AAPL", "MSFT", "GOOGL"]
+        mockClient.resultData = try! JSONSerialization.data(withJSONObject: ["AAPL": ["price": 150.0]])
+
+        let expectation = expectation(description: "All batches finished")
+
+        sut.fetchRealtimePricesForTop50InBatches(symbols, batchSize: 1)
+            .sink(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    XCTFail("Unexpected failure: \(error)")
+                }
+                expectation.fulfill()
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        // Finishing well inside the timeout proves no 60s wait. Values aren't counted: the
+        // mock responds synchronously, so batch 1 is sent before the subject has a subscriber.
+        wait(for: [expectation], timeout: 3.0)
+
+        XCTAssertEqual(mockClient.requestCallCount, 3)
+    }
 }

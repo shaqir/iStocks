@@ -35,6 +35,8 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
     
     // MARK: - Init
 
+    /// `batchDelay` paces batches and retries. 60s matches the Twelve Data free tier
+    /// (8 credits/minute, one credit per symbol, batches of 8).
     init(networkClient: NetworkClient, batchDelay: TimeInterval = 60) {
             self.networkClient = networkClient
             self.batchDelay = batchDelay
@@ -132,7 +134,7 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
 
                 case .failure:
                     if currentRetry < 2 {
-                        AppLogger.warning("Retrying batch \(index + 1) in 60s (Attempt \(currentRetry + 2))", category: AppLogger.network)
+                        AppLogger.warning("Retrying batch \(index + 1) in \(Int(self.batchDelay))s (Attempt \(currentRetry + 2))", category: AppLogger.network)
                         onProgress?(index + 1, totalBatches, currentRetry + 1, false)
 
                         var updatedRetryCounts = retryCounts
@@ -162,9 +164,16 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
                     }
                 }
 
-                // Proceed to next batch after a delay (structured concurrency, cancellation-aware).
+                // Last batch: finish now instead of waiting out a rate-limit delay for nothing.
+                guard index + 1 < totalBatches else {
+                    subject.send(completion: .finished)
+                    return
+                }
+
+                // Proceed to next batch after the rate-limit delay (cancellation-aware).
+                let batchDelay = self.batchDelay
                 Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(60))
+                    try? await Task.sleep(for: .seconds(batchDelay))
                     self?.fetchSequentiallyWithRetry(
                         batches: batches,
                         subject: subject,
@@ -200,7 +209,7 @@ nonisolated final class StockRemoteDataSource: StockRemoteDataSourceProtocol, @u
 // MARK: - Structured Concurrency (Migration)
 //
 // This extension adds a TaskGroup-based alternative to fetchSequentiallyWithRetry.
-// The Combine version above uses recursive closures + DispatchQueue.global().asyncAfter,
+// The Combine version above uses recursive closures + Task.sleep,
 // which is functional but hard to follow. This version reads top-to-bottom with:
 //   - Automatic cancellation via structured concurrency
 //   - Simple for-loop retry logic (no recursive parameter threading)

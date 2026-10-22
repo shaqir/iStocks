@@ -7,7 +7,7 @@
 [![iOS](https://img.shields.io/badge/iOS-18.2+-blue.svg)](https://developer.apple.com/ios/)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-100%25-green.svg)](https://developer.apple.com/xcode/swiftui/)
 [![Dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen.svg)](#tech-stack)
-[![Tests](https://img.shields.io/badge/Tests-202_passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-203_passing-brightgreen.svg)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **[Demo Video](https://youtube.com/shorts/u0Ma-Z8fVSY?feature=share)** · **[Architecture](docs/ARCHITECTURE.md)** · **[Future Work](docs/FUTURE_WORK.md)**
@@ -93,12 +93,12 @@ open iStocks.xcodeproj
 
 ## Testing
 
-**202 tests passing** (197 unit + 5 UI), plus a live integration suite that needs a Twelve Data key.
+**203 tests passing** (198 unit + 5 UI), plus a live integration suite that needs a Twelve Data key.
 
 ```bash
 xcodebuild test \
   -scheme iStocks \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -skip-testing:iStocksIntegrationTests
 ```
 
@@ -210,7 +210,7 @@ Each case provides `errorDescription`, `failureReason`, `recoverySuggestion`, an
 | `viewModel` | State transitions, user actions |
 | `startup` | App configuration, mode selection |
 
-Filterable in Console.app by subsystem and category. Messages are logged as public, so secrets (API keys, tokens) are never logged.
+Filterable in Console.app by subsystem and category. Messages are logged with `%{public}` so they stay readable in Console.app — which means callers must never log secrets (API keys, tokens).
 
 ---
 

@@ -79,7 +79,7 @@ final class DashboardViewModel: ObservableObject {
     /// Use Instruments > Allocations to investigate further.
     nonisolated deinit {
         #if DEBUG
-        print("[DEBUG] DashboardViewModel deallocated — no retain cycle")
+        AppLogger.debug("DashboardViewModel deallocated — no retain cycle", category: AppLogger.viewModel)
         #endif
     }
 }
